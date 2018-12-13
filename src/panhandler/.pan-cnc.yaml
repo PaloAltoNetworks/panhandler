@@ -1,0 +1,28 @@
+name: nates_test_app
+
+views:
+  - name: ''
+    class: CNCView
+    menu: Nates Test App
+    menu_option: LETS GO
+    attributes:
+      template_name: pan_cnc/welcome.html
+    context:
+      title: Nates TEST APP
+      description: Some nice long descrition here!
+      documentation_link: http://natestestapp.readthedocs.io
+
+  - name: 'configure'
+    class: ChooseSnippetView
+    menu: Nates Test App
+    menu_option: GPCS
+    attributes:
+      snippet: cnc-conf-gpcs
+      header: Step 1
+      title: Choose GPCS Snippet
+
+  - name: 'provision'
+    class: ProvisionSnippetView
+
+
+
