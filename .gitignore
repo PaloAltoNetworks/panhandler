@@ -1,5 +1,7 @@
 .idea
 cnc/db.sqlite3
+venv
+venv3
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
