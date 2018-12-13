@@ -1,28 +1,29 @@
-name: nates_test_app
+name: panhandler
 
 views:
   - name: ''
     class: CNCView
-    menu: Nates Test App
-    menu_option: LETS GO
+    menu: Panhandler
+    menu_option: Welcome
     attributes:
       template_name: pan_cnc/welcome.html
     context:
-      title: Nates TEST APP
-      description: Some nice long descrition here!
-      documentation_link: http://natestestapp.readthedocs.io
+      title: Panhandler
+      description: Panhandler is a tool to allow sharing of git repositories, which can contain virtually anything.
+      documentation_link: https://github.com/PaloAltoNetworks/panhandler/blob/master/docs/snippet_configuration.rst
 
-  - name: 'configure'
-    class: ChooseSnippetView
-    menu: Nates Test App
-    menu_option: GPCS
+  - name: import
+    class: ImportRepoView
+    menu: Panhandler
+    menu_option: Import Snippets
     attributes:
-      snippet: cnc-conf-gpcs
-      header: Step 1
-      title: Choose GPCS Snippet
+      snippet: import_repo
+      header: Import Repository
+      title: Enter a valid git url and desired branch below
+      next_url: view_snippets
 
-  - name: 'provision'
-    class: ProvisionSnippetView
+  - name: 'view_snippets'
+    class: ViewSnippetsView
 
 
 

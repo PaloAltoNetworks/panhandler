@@ -1,0 +1,27 @@
+name: import_repo
+label: Import Git Repository
+description: Imports a git repository
+type: template
+extends:
+
+labels:
+  service_type: docker
+
+variables:
+- name: repo_name
+  description: Repository Name
+  default: Iron-Skillet
+  type_hint: text
+- name: url
+  description: Git URL
+  default: https://github.com/PaloAltoNetworks/iron-skillet.git
+  type_hint: text
+- name: branch
+  description: Branch
+  default: master
+  type_hint: text
+
+snippets:
+  - name: gitconfig
+    file: gitconfig
+
