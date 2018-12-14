@@ -9,6 +9,7 @@ from pan_cnc.views import *
 class ImportRepoView(CNCBaseFormView):
     # define initial dynamic form from this snippet metadata
     snippet = 'import_repo'
+    next_url = '/panhandler/provision'
 
     # once the form has been submitted and we have all the values placed in the workflow, execute this
     def form_valid(self, form):
@@ -52,3 +53,89 @@ class ImportRepoView(CNCBaseFormView):
         context = dict()
         context['results'] = r
         return render(self.request, 'pan_cnc/results.html', context)
+
+
+class ListSnippetGroupsView(CNCView):
+    template_name = 'pan_cnc/snippet_groups.html'
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        print('Getting all snippets')
+        all_snippets = snippet_utils.load_snippets_of_type(snippet_type=None, app_dir='panhandler')
+        snippets_by_group = dict()
+        for snippet in all_snippets:
+            print('checking snippet: %s' % snippet['name'])
+            if 'labels' in snippet and 'service_type' in snippet['labels']:
+                group = snippet['labels']['service_type']
+                snippets_by_group[group] = snippet
+
+        context['snippets'] = snippets_by_group
+        return context
+
+
+class ListSnippetsByGroup(CNCBaseAuth, CNCBaseFormView):
+    next_url = '/panhandler/provision'
+
+    def get_snippet(self):
+        print('Getting snippet here in get_snippet RIGHT HERE')
+        if 'snippet_name' in self.request.POST:
+            print('FOUND IT RIGHT HERE')
+            snippet_name = self.request.POST['snippet_name']
+            print(snippet_name)
+            return snippet_name
+        else:
+            print('what happened here? WTF')
+            return self.snippet
+
+    def save_workflow_to_session(self) -> None:
+        """
+        Save the current user input to the session
+        :return: None
+        """
+
+        if self.app_dir in self.request.session:
+            current_workflow = self.request.session[self.app_dir]
+        else:
+            current_workflow = dict()
+
+        # there is not service here, override with hard coded snippet_name value
+        var_name = 'snippet_name'
+        if var_name in self.request.POST:
+            print('Adding variable %s to session' % var_name)
+            current_workflow[var_name] = self.request.POST.get(var_name)
+
+        self.request.session[self.app_dir] = current_workflow
+
+    def get_context_data(self, **kwargs):
+        snippet_group = self.kwargs['service_type']
+        print(snippet_group)
+
+        context = super().get_context_data(**kwargs)
+
+        context['title'] = 'All snippets in group: %s' % snippet_group
+        context['header'] = 'Snippet Library'
+        services = snippet_utils.load_snippets_by_label('service_type', snippet_group, self.app_dir)
+
+        form = context['form']
+
+        # we need to construct a new ChoiceField with the following basic format
+        # snippet_name = forms.ChoiceField(choices=(('gold', 'Gold'), ('silver', 'Silver'), ('bronze', 'Bronze')))
+        choices_list = list()
+        # grab each service and construct a simple tuple with name and label, append to the list
+        for service in services:
+            choice = (service['name'], service['label'])
+            choices_list.append(choice)
+
+        # let's sort the list by the label attribute (index 1 in the tuple)
+        choices_list = sorted(choices_list, key=lambda k: k[1])
+        # convert our list of tuples into a tuple itself
+        choices_set = tuple(choices_list)
+        # make our new field
+        new_choices_field = forms.ChoiceField(choices=choices_set, label='Choose Snippet:')
+        # set it on the original form, overwriting the hardcoded GSB version
+
+        form.fields['snippet_name'] = new_choices_field
+
+        context['form'] = form
+        return context

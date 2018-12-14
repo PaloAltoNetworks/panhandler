@@ -22,8 +22,14 @@ views:
       title: Enter a valid git url and desired branch below
       next_url: view_snippets
 
-  - name: 'view_snippets'
-    class: ViewSnippetsView
+  - name: snippet_groups
+    class: ListSnippetGroupsView
+    menu: Panhandler
+    menu_option: Snippet Library
 
+  - name: snippets_by_group
+    class: ListSnippetsByGroup
+    parameter: service_type
 
-
+  - name: provision
+    class: ProvisionSnippetView
