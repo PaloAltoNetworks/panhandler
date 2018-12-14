@@ -22,6 +22,4 @@ variables:
   type_hint: text
 
 snippets:
-  - name: gitconfig
-    file: gitconfig
 
