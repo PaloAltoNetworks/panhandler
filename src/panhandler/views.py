@@ -37,8 +37,6 @@ class ImportRepoView(CNCBaseFormView):
         docker_cmd = f'clone --config http.sslVerify=false -b {branch} --depth 1 \
         --shallow-submodules {url} /git'
 
-        template = snippet_utils.render_snippet_template(self.service, self.app_dir, workflow)
-
         # create our generc docker client
         docker_client = DockerAction()
         docker_client.docker_image = docker_image
