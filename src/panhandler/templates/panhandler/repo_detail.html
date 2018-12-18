@@ -1,0 +1,42 @@
+{% extends "pan_cnc/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="card border-primary mb-6 shadow-lg">
+    <div class="card-header">Repository Detail for {{ repo_name }}</div>
+    <div class="card-body">
+        <h5 class="card-title">Details</h5>
+        <p class="card-text">
+            {{ repo_detail.description }}
+            <div class="mt-3 mb-5">
+                <a href="{{ repo_detail.url }}">{{ repo_detail.url }}</a>
+            </div>
+        </p>
+        <h5 class="card-title">Last Update</h5>
+        <p class="card-text">
+        <table class="table">
+            <caption>Commit History for branch: {{ repo_detail.branch }}</caption>
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Message</th>
+                <th scope="col">Author</th>
+                <th scope="col">Date</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for c in repo_detail.commits %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>{{ c.message }}</td>
+                <td>{{ c.author }}</td>
+                <td>{{ c.time }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </p>
+        <a href="/panhandler/update_repo/{{ repo_name }}" class="btn btn-secondary">Update To Latest</a>
+    </div>
+</div>
+{%  endblock %}

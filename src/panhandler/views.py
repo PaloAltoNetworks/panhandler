@@ -1,9 +1,16 @@
 import os
 
 from django.conf import settings
+from django.views.generic.base import RedirectView
 
 from pan_cnc.lib.actions.DockerAction import DockerAction
+from pan_cnc.lib import git_utils
+
 from pan_cnc.views import *
+from pathlib import Path
+from itertools import islice
+
+from django.contrib import messages
 
 
 class ImportRepoView(CNCBaseFormView):
@@ -23,6 +30,7 @@ class ImportRepoView(CNCBaseFormView):
         url = workflow.get('url')
         branch = workflow.get('branch')
         repo_name = workflow.get('repo_name')
+        # FIXME - Ensure repo_name is unique
 
         # we are going to keep the snippets in the snippets dir in the panhandler app
         # get the dir where all apps are installed
@@ -35,7 +43,7 @@ class ImportRepoView(CNCBaseFormView):
         new_repo_snippets_dir = os.path.join(snippets_dir, repo_name)
 
         # create our docker command to pass to git
-        docker_cmd = f'clone --config http.sslVerify=false -b {branch} --depth 1 \
+        docker_cmd = f'clone --config http.sslVerify=false -b {branch} --depth 3 \
         --shallow-submodules {url} /git'
 
         # create our generc docker client
@@ -55,8 +63,76 @@ class ImportRepoView(CNCBaseFormView):
         return render(self.request, 'pan_cnc/results.html', context)
 
 
+class ListReposView(CNCView):
+    template_name = 'panhandler/repos.html'
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        snippets_dir = Path(os.path.join(settings.SRC_PATH, 'panhandler', 'snippets'))
+        repos = list()
+        for d in snippets_dir.rglob('./*'):
+            print(d)
+            git_dir = os.path.join(d, '.git')
+            if os.path.isdir(git_dir):
+                repo_name = os.path.basename(d)
+                repo_detail = git_utils.get_repo_details(repo_name, d)
+                repos.append(repo_detail)
+
+        context['repos'] = repos
+        return context
+
+
+class RepoDetailsView(CNCView):
+    template_name = 'panhandler/repo_detail.html'
+    # define initial dynamic form from this snippet metadata
+
+    def get_context_data(self, **kwargs):
+
+        repo_name = self.kwargs['repo_name']
+
+        # we are going to keep the snippets in the snippets dir in the panhandler app
+        # get the dir where all apps are installed
+        src_dir = settings.SRC_PATH
+        # get the panhandler app dir
+        panhandler_dir = os.path.join(src_dir, 'panhandler')
+        # get the snippets dir under that
+        snippets_dir = os.path.join(panhandler_dir, 'snippets')
+        repo_dir = os.path.join(snippets_dir, repo_name)
+        repo_detail = git_utils.get_repo_details(repo_name, repo_dir)
+
+        # create our docker command to pass to git
+        context = dict()
+        context['repo_detail'] = repo_detail
+        context['repo_name'] = repo_name
+        return context
+
+
+class UpdateRepoView(RedirectView):
+
+    def get_redirect_url(self, *args, **kwargs):
+        repo_name = kwargs['repo_name']
+        # we are going to keep the snippets in the snippets dir in the panhandler app
+        # get the dir where all apps are installed
+        src_dir = settings.SRC_PATH
+        # get the panhandler app dir
+        panhandler_dir = os.path.join(src_dir, 'panhandler')
+        # get the snippets dir under that
+        snippets_dir = os.path.join(panhandler_dir, 'snippets')
+        repo_dir = os.path.join(snippets_dir, repo_name)
+
+        msg = git_utils.update_repo(repo_dir)
+        if 'Error' in msg:
+            level = messages.ERROR
+        else:
+            level = messages.INFO
+
+        messages.add_message(self.request, level, msg)
+        return f'/panhandler/repo_detail/{repo_name}'
+
+
 class ListSnippetGroupsView(CNCView):
-    template_name = 'pan_cnc/snippet_groups.html'
+    template_name = 'panhandler/snippet_groups.html'
 
     def get_context_data(self, **kwargs):
 

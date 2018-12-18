@@ -1,0 +1,27 @@
+{% extends base_html %}
+{% load static %}
+
+{% block content %}
+
+{% for repo in repos %}
+
+{% if forloop.counter0|divisibleby:2 %}
+{% if forloop.first %}
+<div class="row mb-4">
+    {% else %}
+</div><div class="row mb-4">
+    {% endif %}
+    {% endif %}
+    <div class="col-sm-6">
+        <div class="card shadow-lg">
+            <div class="card-body">
+                <h5 class="card-title">{{ repo.name }}</h5>
+                <p class="card-text">{{ repo.description }}</p>
+                <a href="/panhandler/repo_detail/{{ repo.name }}" class="btn btn-primary">Detail</a>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+</div>
+
+{% endblock %}

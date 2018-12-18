@@ -31,5 +31,18 @@ views:
     class: ListSnippetsByGroup
     parameter: service_type
 
+  - name: repos
+    class: ListReposView
+    menu: Panhandler
+    menu_option: Snippet Sources
+
+  - name: repo_detail
+    class: RepoDetailsView
+    parameter: repo_name
+
+  - name: update_repo
+    class: UpdateRepoView
+    parameter: repo_name
+
   - name: provision
     class: ProvisionSnippetView
