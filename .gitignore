@@ -2,7 +2,8 @@
 cnc/db.sqlite3
 venv
 venv3
-
+!snippets/import_repo
+snippets
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

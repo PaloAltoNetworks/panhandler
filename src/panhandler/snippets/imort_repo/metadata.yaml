@@ -1,6 +1,6 @@
 name: import_repo
 label: Import Git Repository
-description: Imports a git repository
+description: Imports a Git repository
 type: template
 extends:
 

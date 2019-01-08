@@ -1,16 +1,13 @@
 import os
+from pathlib import Path
 
 from django.conf import settings
+from django.contrib import messages
 from django.views.generic.base import RedirectView
 
-from pan_cnc.lib.actions.DockerAction import DockerAction
 from pan_cnc.lib import git_utils
-
+from pan_cnc.lib.actions.DockerAction import DockerAction
 from pan_cnc.views import *
-from pathlib import Path
-from itertools import islice
-
-from django.contrib import messages
 
 
 class ImportRepoView(CNCBaseFormView):
@@ -85,10 +82,10 @@ class ListReposView(CNCView):
 
 class RepoDetailsView(CNCView):
     template_name = 'panhandler/repo_detail.html'
+
     # define initial dynamic form from this snippet metadata
 
     def get_context_data(self, **kwargs):
-
         repo_name = self.kwargs['repo_name']
 
         # we are going to keep the snippets in the snippets dir in the panhandler app
