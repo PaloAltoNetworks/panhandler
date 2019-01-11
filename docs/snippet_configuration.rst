@@ -43,7 +43,7 @@ Each 'Service' or 'Change' metadata.yaml file must contain the following top-lev
     - name: name of this change
     - description: Short description of this change
     - extends: name of another change that is a dependency of this change
-    - target_version: String refering to target version requirements. I.E This change applies only to Pan-OS 8.1
+    - target_version: String referring to target version requirements. I.E This change applies only to Pan-OS 8.1
         or higher
     - variables: Described in detail below
     - snippets: a dict containing the following keys:

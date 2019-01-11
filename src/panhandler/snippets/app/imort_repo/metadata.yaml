@@ -1,6 +1,6 @@
 name: import_repo
 label: Import Git Repository
-description: Imports a Git repository
+description: Imports a git repository
 type: template
 extends:
 
@@ -13,7 +13,7 @@ variables:
   default: Iron-Skillet
   type_hint: text
 - name: url
-  description: Git URL
+  description: Git Repository URL
   default: https://github.com/PaloAltoNetworks/iron-skillet.git
   type_hint: text
 - name: branch
