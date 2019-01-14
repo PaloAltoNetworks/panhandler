@@ -29,8 +29,6 @@ import os
 from pathlib import Path
 
 from django.conf import settings
-from django.contrib import messages
-from django.views.generic.base import RedirectView
 
 from pan_cnc.lib import git_utils
 from pan_cnc.lib.actions.DockerAction import DockerAction
@@ -155,22 +153,25 @@ class UpdateRepoView(RedirectView):
         return f'/panhandler/repo_detail/{repo_name}'
 
 
-class ListSnippetGroupsView(CNCView):
-    template_name = 'panhandler/snippet_groups.html'
+class ListSnippetTypesView(CNCView):
+    template_name = 'panhandler/snippet_types.html'
 
     def get_context_data(self, **kwargs):
 
         context = super().get_context_data(**kwargs)
         print('Getting all snippets')
-        all_snippets = snippet_utils.load_snippets_of_type(snippet_type=None, app_dir='panhandler')
-        snippets_by_group = dict()
-        for snippet in all_snippets:
-            print('checking snippet: %s' % snippet['name'])
-            if 'labels' in snippet and 'service_type' in snippet['labels']:
-                group = snippet['labels']['service_type']
-                snippets_by_group[group] = snippet
+        panos_snippets = snippet_utils.load_snippets_of_type(snippet_type='panos', app_dir='panhandler')
+        panorama_snippets = snippet_utils.load_snippets_of_type(snippet_type='panorama', app_dir='panhandler')
+        panorama_gpcs_snippets = snippet_utils.load_snippets_of_type(snippet_type='panorama-gpcs', app_dir='panhandler')
+        template_snippets = snippet_utils.load_snippets_of_type(snippet_type='template', app_dir='panhandler')
 
-        context['snippets'] = snippets_by_group
+        snippets_by_type = dict()
+        snippets_by_type['panos'] = panos_snippets
+        snippets_by_type['panorama'] = panorama_snippets
+        snippets_by_type['panorama-gpcs'] = panorama_gpcs_snippets
+        snippets_by_type['template'] = template_snippets
+
+        context['snippets'] = snippets_by_type
         return context
 
 
@@ -185,7 +186,7 @@ class ListSnippetsByGroup(CNCBaseFormView):
             print(snippet_name)
             return snippet_name
         else:
-            print('what happened here? WTF')
+            print('what happened here?')
             return self.snippet
 
     def save_workflow_to_session(self) -> None:
@@ -208,14 +209,14 @@ class ListSnippetsByGroup(CNCBaseFormView):
         self.request.session[self.app_dir] = current_workflow
 
     def get_context_data(self, **kwargs):
-        snippet_group = self.kwargs['service_type']
-        print(snippet_group)
+        snippet_type = self.kwargs['service_type']
+        print(snippet_type)
 
         context = super().get_context_data(**kwargs)
 
-        context['title'] = 'All snippets in group: %s' % snippet_group
+        context['title'] = 'All snippets with type: %s' % snippet_type
         context['header'] = 'Snippet Library'
-        services = snippet_utils.load_snippets_by_label('service_type', snippet_group, self.app_dir)
+        services = snippet_utils.load_snippets_of_type(snippet_type, self.app_dir)
 
         form = context['form']
 

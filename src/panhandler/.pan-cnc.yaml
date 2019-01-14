@@ -1,5 +1,16 @@
 name: panhandler
 
+repositories:
+  - name: Iron-Skillet-v81
+    url: https://github.com/PaloAltoNetworks/iron-skillet.git
+    branch: panos_v8.1
+    destination_directory: iron_skillet_v81
+    repositories:
+  - name: MSSP Templates
+    url:  https://github.com/scotchoaf/mssp-templates.git
+    branch: panos_v8.1
+    destination_directory: mssp_templates_v81
+
 views:
   - name: ''
     class: CNCView
@@ -21,13 +32,16 @@ views:
       header: Import Repository
       title: Enter a valid git url and desired branch below
       next_url: view_snippets
+      help_text: >
+        This view imports a new git repository. Any CCF metadata files will then be available to the panhandler
+        application
 
-  - name: snippet_groups
-    class: ListSnippetGroupsView
+  - name: snippet_types
+    class: ListSnippetTypesView
     menu: Panhandler
     menu_option: Snippet Library
 
-  - name: snippets_by_group
+  - name: snippets_by_type
     class: ListSnippetsByGroup
     parameter: service_type
 
