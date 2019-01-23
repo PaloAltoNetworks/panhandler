@@ -31,7 +31,6 @@ from pathlib import Path
 from django.conf import settings
 
 from pan_cnc.lib import git_utils
-from pan_cnc.lib.actions.DockerAction import DockerAction
 from pan_cnc.views import *
 
 
@@ -68,7 +67,7 @@ class ImportRepoView(CNCBaseFormView):
         docker_cmd = f'clone --config http.sslVerify=false -b {branch} --depth 3 \
         --shallow-submodules {url} /git'
 
-        # create our generc docker client
+        # create our generic docker client
         docker_client = DockerAction()
         docker_client.docker_image = docker_image
         docker_client.docker_cmd = docker_cmd
@@ -82,7 +81,9 @@ class ImportRepoView(CNCBaseFormView):
 
         context = dict()
         context['results'] = r
-        return render(self.request, 'pan_cnc/results.html', context)
+        messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
+        # return render(self.request, 'pan_cnc/results.html', context)
+        return HttpResponseRedirect('repos')
 
 
 class ListReposView(CNCView):
@@ -94,12 +95,14 @@ class ListReposView(CNCView):
         snippets_dir = Path(os.path.join(settings.SRC_PATH, 'panhandler', 'snippets'))
         repos = list()
         for d in snippets_dir.rglob('./*'):
-            print(d)
-            git_dir = os.path.join(d, '.git')
-            if os.path.isdir(git_dir):
+            # git_dir = os.path.join(d, '.git')
+            git_dir = d.joinpath('.git')
+            if git_dir.exists() and git_dir.is_dir():
+                print(d)
                 repo_name = os.path.basename(d)
                 repo_detail = git_utils.get_repo_details(repo_name, d)
                 repos.append(repo_detail)
+                continue
 
         context['repos'] = repos
         return context
@@ -157,19 +160,20 @@ class ListSnippetTypesView(CNCView):
     template_name = 'panhandler/snippet_types.html'
 
     def get_context_data(self, **kwargs):
-
         context = super().get_context_data(**kwargs)
         print('Getting all snippets')
         panos_snippets = snippet_utils.load_snippets_of_type(snippet_type='panos', app_dir='panhandler')
         panorama_snippets = snippet_utils.load_snippets_of_type(snippet_type='panorama', app_dir='panhandler')
         panorama_gpcs_snippets = snippet_utils.load_snippets_of_type(snippet_type='panorama-gpcs', app_dir='panhandler')
         template_snippets = snippet_utils.load_snippets_of_type(snippet_type='template', app_dir='panhandler')
+        terraform_templates = snippet_utils.load_snippets_of_type(snippet_type='terraform', app_dir='panhandler')
 
         snippets_by_type = dict()
         snippets_by_type['panos'] = panos_snippets
         snippets_by_type['panorama'] = panorama_snippets
         snippets_by_type['panorama-gpcs'] = panorama_gpcs_snippets
         snippets_by_type['template'] = template_snippets
+        snippets_by_type['terraform'] = terraform_templates
 
         context['snippets'] = snippets_by_type
         return context
@@ -214,8 +218,8 @@ class ListSnippetsByGroup(CNCBaseFormView):
 
         context = super().get_context_data(**kwargs)
 
-        context['title'] = 'All snippets with type: %s' % snippet_type
-        context['header'] = 'Snippet Library'
+        context['title'] = 'All Templates with type: %s' % snippet_type
+        context['header'] = 'Template Library'
         services = snippet_utils.load_snippets_of_type(snippet_type, self.app_dir)
 
         form = context['form']
@@ -233,7 +237,7 @@ class ListSnippetsByGroup(CNCBaseFormView):
         # convert our list of tuples into a tuple itself
         choices_set = tuple(choices_list)
         # make our new field
-        new_choices_field = forms.ChoiceField(choices=choices_set, label='Choose Snippet:')
+        new_choices_field = forms.ChoiceField(choices=choices_set, label='Choose Template:')
         # set it on the original form, overwriting the hardcoded GSB version
 
         form.fields['snippet_name'] = new_choices_field

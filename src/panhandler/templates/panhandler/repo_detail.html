@@ -28,7 +28,15 @@
             {% for c in repo_detail.commits %}
             <tr>
                 <th scope="row">{{ forloop.counter }}</th>
+                {% if repo_detail.commits_url %}
+                <td>
+                    <a href="{{ repo_detail.commits_url }}{{ c.id }}">
+                    {{ c.message }}
+                    </a>
+                </td>
+                {% else %}
                 <td>{{ c.message }}</td>
+                {% endif %}
                 <td>{{ c.author }}</td>
                 <td>{{ c.time }}</td>
             </tr>
@@ -36,7 +44,9 @@
             </tbody>
         </table>
         </p>
-        <a href="/panhandler/update_repo/{{ repo_name }}" class="btn btn-secondary">Update To Latest</a>
+        <a href="/panhandler/update_repo/{{ repo_name }}" class="btn btn-secondary mr-2">Update To Latest</a>
+        <a href="/panhandler/repos" class="btn btn-primary mr-2">Repositories</a>
+
     </div>
 </div>
 {%  endblock %}

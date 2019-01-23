@@ -22,11 +22,12 @@ views:
       title: Panhandler
       description: Panhandler is a tool to allow sharing of git repositories, which can contain virtually anything.
       documentation_link: https://github.com/PaloAltoNetworks/panhandler/blob/master/docs/snippet_configuration.rst
+      next: repos
 
   - name: import
     class: ImportRepoView
     menu: Panhandler
-    menu_option: Import Snippets
+    menu_option: Import Templates
     attributes:
       snippet: import_repo
       header: Import Repository
@@ -39,7 +40,7 @@ views:
   - name: snippet_types
     class: ListSnippetTypesView
     menu: Panhandler
-    menu_option: Snippet Library
+    menu_option: Template Library
 
   - name: snippets_by_type
     class: ListSnippetsByGroup
@@ -48,7 +49,7 @@ views:
   - name: repos
     class: ListReposView
     menu: Panhandler
-    menu_option: Snippet Sources
+    menu_option: Repositories
 
   - name: repo_detail
     class: RepoDetailsView
@@ -60,3 +61,5 @@ views:
 
   - name: provision
     class: ProvisionSnippetView
+
+
