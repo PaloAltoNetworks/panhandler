@@ -26,6 +26,7 @@ Use at your own risk.
 """
 
 import os
+import shutil
 from pathlib import Path
 
 from django.conf import settings
@@ -133,7 +134,7 @@ class RepoDetailsView(CNCView):
         return context
 
 
-class UpdateRepoView(RedirectView):
+class UpdateRepoView(CNCBaseAuth, RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         repo_name = kwargs['repo_name']
@@ -154,6 +155,27 @@ class UpdateRepoView(RedirectView):
 
         messages.add_message(self.request, level, msg)
         return f'/panhandler/repo_detail/{repo_name}'
+
+
+class RemoveRepoView(CNCBaseAuth, RedirectView):
+
+    def get_redirect_url(self, *args, **kwargs):
+        repo_name = kwargs['repo_name']
+        # we are going to keep the snippets in the snippets dir in the panhandler app
+        # get the dir where all apps are installed
+        src_dir = settings.SRC_PATH
+        # get the panhandler app dir
+        panhandler_dir = os.path.join(src_dir, 'panhandler')
+        # get the snippets dir under that
+        snippets_dir = os.path.join(panhandler_dir, 'snippets')
+        repo_dir = os.path.abspath(os.path.join(snippets_dir, repo_name))
+
+        if snippets_dir in repo_dir:
+            print(f'Removing repo {repo_name}')
+            shutil.rmtree(repo_dir)
+
+        messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
+        return f'/panhandler/repos'
 
 
 class ListSnippetTypesView(CNCView):
