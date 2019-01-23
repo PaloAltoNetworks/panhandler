@@ -2,7 +2,7 @@
 FROM python:alpine
 
 LABEL description="PanHandler"
-LABEL version="0.2"
+LABEL version="0.5"
 LABEL maintainer="sp-solutions@paloaltonetworks.com"
 
 WORKDIR /app
