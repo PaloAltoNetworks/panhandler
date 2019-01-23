@@ -9,9 +9,9 @@ YAML syntax
 -----------
 
 Each 'Service' or 'Change' is structured as a series of files in a single directory. This directory contains
-a number of snippet files (XML, YAML, JSON, etc) and a `metadata.yaml` file. Note the following:
+a number of snippet files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. Note the following:
 
-1. A `metadata.yaml` file that is formatted with using YAML with the following format:
+1. A `.meta-cnc.yaml` file that is formatted with using YAML with the following format:
 
 .. code-block:: yaml
 
@@ -38,7 +38,7 @@ a number of snippet files (XML, YAML, JSON, etc) and a `metadata.yaml` file. Not
 Snippet details
 ---------------
 
-Each 'Service' or 'Change' metadata.yaml file must contain the following top-level keys:
+Each 'Service' or 'Change' .meta-cnc.yaml file must contain the following top-level keys:
 
     - name: name of this change
     - description: Short description of this change
