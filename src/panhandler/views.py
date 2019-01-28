@@ -40,6 +40,9 @@ class ImportRepoView(CNCBaseFormView):
     snippet = 'import_repo'
     next_url = '/panhandler/provision'
 
+    def get_snippet(self):
+        return self.snippet
+
     # once the form has been submitted and we have all the values placed in the workflow, execute this
     def form_valid(self, form):
         workflow = self.get_workflow()
@@ -64,24 +67,34 @@ class ImportRepoView(CNCBaseFormView):
         # figure out what our new repo / snippet dir will be
         new_repo_snippets_dir = os.path.join(snippets_dir, repo_name)
 
-        # create our docker command to pass to git
-        docker_cmd = f'clone --config http.sslVerify=false -b {branch} --depth 3 \
-        --shallow-submodules {url} /git'
+        # where to clone from
+        clone_url = url
+        if 'github' in url.lower():
+            details = git_utils.get_repo_upstream_details(repo_name, url)
+            if 'clone_url' in details:
+                clone_url = details['clone_url']
 
-        # create our generic docker client
-        docker_client = DockerAction()
-        docker_client.docker_image = docker_image
-        docker_client.docker_cmd = docker_cmd
-        docker_client.storage_dir = repo_name
-        docker_client.persistent_dir = snippets_dir
+        r = git_utils.clone_repo(new_repo_snippets_dir, repo_name, clone_url, branch)
+        print(r)
 
-        docker_client.working_dir = '/git'
-        docker_client.template_name = ''
-
-        r = docker_client.execute_template(template='')
-
-        context = dict()
-        context['results'] = r
+        # # create our docker command to pass to git
+        # docker_cmd = f'clone --config http.sslVerify=false -b {branch} --depth 3 \
+        # --shallow-submodules {url} /git'
+        #
+        # # create our generic docker client
+        # docker_client = DockerAction()
+        # docker_client.docker_image = docker_image
+        # docker_client.docker_cmd = docker_cmd
+        # docker_client.storage_dir = repo_name
+        # docker_client.persistent_dir = snippets_dir
+        #
+        # docker_client.working_dir = '/git'
+        # docker_client.template_name = ''
+        #
+        # r = docker_client.execute_template(template='')
+        #
+        # context = dict()
+        # context['results'] = r
         messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
         # return render(self.request, 'pan_cnc/results.html', context)
         return HttpResponseRedirect('repos')
