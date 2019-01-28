@@ -187,13 +187,19 @@ class ListSnippetTypesView(CNCView):
         terraform_templates = snippet_utils.load_snippets_of_type(snippet_type='terraform', app_dir='panhandler')
 
         snippets_by_type = dict()
-        snippets_by_type['panos'] = panos_snippets
-        snippets_by_type['panorama'] = panorama_snippets
-        snippets_by_type['panorama-gpcs'] = panorama_gpcs_snippets
-        snippets_by_type['template'] = template_snippets
-        snippets_by_type['terraform'] = terraform_templates
+        if len(panos_snippets):
+            snippets_by_type['Pan-OS'] = panos_snippets
+        if len(panorama_snippets):
+            snippets_by_type['Panorama'] = panorama_snippets
+        if len(panorama_gpcs_snippets):
+            snippets_by_type['Panorama-GPCS'] = panorama_gpcs_snippets
+        if len(template_snippets):
+            snippets_by_type['Templates'] = template_snippets
+        if len(terraform_templates):
+            snippets_by_type['Terraform'] = terraform_templates
 
         context['snippets'] = snippets_by_type
+
         return context
 
 
@@ -236,9 +242,16 @@ class ListSnippetsByGroup(CNCBaseFormView):
 
         context = super().get_context_data(**kwargs)
 
+        snippet_labels = dict()
+        snippet_labels['Pan-OS'] = 'panos'
+        snippet_labels['Panorama'] = 'panorama'
+        snippet_labels['Panorama-GPCS'] = 'panorama-gpcs'
+        snippet_labels['Templates'] = 'template'
+        snippet_labels['Terraform'] = 'terraform'
+
         context['title'] = 'All Templates with type: %s' % snippet_type
         context['header'] = 'Template Library'
-        services = snippet_utils.load_snippets_of_type(snippet_type, self.app_dir)
+        services = snippet_utils.load_snippets_of_type(snippet_labels[snippet_type], self.app_dir)
 
         form = context['form']
 
