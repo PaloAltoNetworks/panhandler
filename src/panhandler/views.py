@@ -74,28 +74,11 @@ class ImportRepoView(CNCBaseFormView):
             if 'clone_url' in details:
                 clone_url = details['clone_url']
 
-        r = git_utils.clone_repo(new_repo_snippets_dir, repo_name, clone_url, branch)
-        print(r)
+        if not git_utils.clone_repo(new_repo_snippets_dir, repo_name, clone_url, branch):
+            messages.add_message(self.request, messages.ERROR, 'Could not Import Repository')
+        else:
+            messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 
-        # # create our docker command to pass to git
-        # docker_cmd = f'clone --config http.sslVerify=false -b {branch} --depth 3 \
-        # --shallow-submodules {url} /git'
-        #
-        # # create our generic docker client
-        # docker_client = DockerAction()
-        # docker_client.docker_image = docker_image
-        # docker_client.docker_cmd = docker_cmd
-        # docker_client.storage_dir = repo_name
-        # docker_client.persistent_dir = snippets_dir
-        #
-        # docker_client.working_dir = '/git'
-        # docker_client.template_name = ''
-        #
-        # r = docker_client.execute_template(template='')
-        #
-        # context = dict()
-        # context['results'] = r
-        messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
         # return render(self.request, 'pan_cnc/results.html', context)
         return HttpResponseRedirect('repos')
 
