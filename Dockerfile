@@ -32,7 +32,7 @@ RUN echo "===> Installing Terraform..."  && \
 
 RUN if [ -f /app/cnc/db.sqlite3 ]; then rm /app/cnc/db.sqlite3; fi
 RUN python /app/cnc/manage.py migrate
-RUN python /app/cnc/manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('pan', 'admin@example.com', 'panhandler')"
+RUN python /app/cnc/manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('paloalto', 'admin@example.com', 'panhandler')"
 
 EXPOSE 80
 #CMD ["python", "/app/cnc/manage.py", "runserver", "0.0.0.0:80"]
