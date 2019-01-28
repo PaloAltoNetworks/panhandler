@@ -12,7 +12,7 @@
                 <a href="{{ repo_detail.url }}">{{ repo_detail.url }}</a>
             </div>
         </p>
-        <h5 class="card-title">Last Update</h5>
+        <h5 class="card-title">Latest Updates</h5>
         <p class="card-text">
         <table class="table">
             <caption>Commit History for branch: {{ repo_detail.branch }}</caption>
@@ -43,10 +43,36 @@
             {% endfor %}
             </tbody>
         </table>
+
+       <h5 class="card-title">Metadata files</h5>
+        <p class="card-text">
+        <table class="table">
+            <caption>All Defined metadata files in repository: {{ repo_detail.name }}</caption>
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Label</th>
+                <th scope="col">Description</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for s in snippets %}
+            <tr>
+                <th scope="row">{{ forloop.counter }}</th>
+                <td>
+                    <a href="/debug/{{ app_dir }}/{{ s.name }}">
+                    {{ s.label }}
+                    </a>
+                </td>
+                <td>{{ s.description }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
         </p>
-        <a href="/panhandler/update_repo/{{ repo_name }}" class="btn btn-secondary mr-2">Update To Latest</a>
+        <a href="/panhandler/update_repo/{{ repo_name }}" class="btn btn-primary mr-2">Update To Latest</a>
         <a href="/panhandler/remove_repo/{{ repo_name }}" class="btn btn-danger mr-2">Remove Repository</a>
-        <a href="/panhandler/repos" class="btn btn-primary mr-2">Repositories</a>
+        <a href="/panhandler/repos" class="btn btn-secondary mr-2">Repositories</a>
 
     </div>
 </div>

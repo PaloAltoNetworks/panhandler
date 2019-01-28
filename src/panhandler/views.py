@@ -107,6 +107,7 @@ class ListReposView(CNCView):
 
 class RepoDetailsView(CNCView):
     template_name = 'panhandler/repo_detail.html'
+    app_dir = 'panhandler'
 
     # define initial dynamic form from this snippet metadata
 
@@ -123,10 +124,13 @@ class RepoDetailsView(CNCView):
         repo_dir = os.path.join(snippets_dir, repo_name)
         repo_detail = git_utils.get_repo_details(repo_name, repo_dir)
 
+        snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(repo_dir)
+
         # create our docker command to pass to git
-        context = dict()
+        context = super().get_context_data(**kwargs)
         context['repo_detail'] = repo_detail
         context['repo_name'] = repo_name
+        context['snippets'] = snippets_from_repo
         return context
 
 
