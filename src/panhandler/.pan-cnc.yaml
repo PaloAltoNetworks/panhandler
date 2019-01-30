@@ -22,7 +22,7 @@ views:
     context:
       title: Panhandler
       description: description is inline
-      documentation_link: https://github.com/PaloAltoNetworks/panhandler/blob/master/docs/snippet_configuration.rst
+      documentation_link: https://panhandler.readthedocs.io/en/latest/
       next: repos
 
   - name: import

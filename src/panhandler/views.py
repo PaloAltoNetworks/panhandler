@@ -24,7 +24,7 @@ Please see http://.readthedocs.io for more information
 This software is provided without support, warranty, or guarantee.
 Use at your own risk.
 """
-
+from django.core.cache import cache
 import os
 import shutil
 from pathlib import Path
@@ -46,10 +46,6 @@ class ImportRepoView(CNCBaseFormView):
     # once the form has been submitted and we have all the values placed in the workflow, execute this
     def form_valid(self, form):
         workflow = self.get_workflow()
-
-        # this will use the git docker container so we don't have to worry about installing anything
-        # standardize on alpine as much as possible
-        docker_image = 'alpine/git'
 
         # get the values from the user submitted form here
         url = workflow.get('url')
@@ -77,6 +73,10 @@ class ImportRepoView(CNCBaseFormView):
         if not git_utils.clone_repo(new_repo_snippets_dir, repo_name, clone_url, branch):
             messages.add_message(self.request, messages.ERROR, 'Could not Import Repository')
         else:
+            if 'all_snippets' in cache:
+                print('Invalidating snippet cache')
+                cache.set('all_snippets', [])
+
             messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 
         # return render(self.request, 'pan_cnc/results.html', context)
@@ -213,7 +213,7 @@ class ListSnippetsByGroup(CNCBaseFormView):
     def get_snippet(self):
         print('Getting snippet here in get_snippet RIGHT HERE')
         if 'snippet_name' in self.request.POST:
-            print('FOUND IT RIGHT HERE')
+            print('Found meta-cnc in POST')
             snippet_name = self.request.POST['snippet_name']
             print(snippet_name)
             return snippet_name
