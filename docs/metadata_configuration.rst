@@ -1,5 +1,5 @@
-Panhandler Snippets
-=============================
+Panhandler Metadata Files
+=========================
 
 This directory holds all configured configuration snippets. Snippets represent multiple
 bits of Pan-OS configuration, 3rd party device configurations, or other jinja templates that should be considered a
@@ -15,8 +15,8 @@ a number of snippet files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. No
 
 .. code-block:: yaml
 
-    name: snippet_name
-    description: snippet description
+    name: config_set_name
+    description: config_set description
     extends: gsb_baseline
     target_version: 8.1+
     variables:
@@ -26,11 +26,11 @@ a number of snippet files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. No
         type_hint: text
     snippets:
       - xpath: some/xpath/value/here
-        name: snippet_knickname
+        name: config_set_knickname
         file: filename of xml snippet to load that should exist in this directory
 
 
-2. Multiple configuration snippet files. Each should contain a valid template fragment and may use jinja2 variables.
+2. Multiple configuration files. Each should contain a valid template fragment and may use jinja2 variables.
  These templates may be XML, JSON, YAML, Text, etc. For Pan-OS devices, these are XML fragments from specific stanzas
  of the Pan-OS device configuration tree.
 
@@ -47,15 +47,15 @@ Each 'Service' or 'Change' .meta-cnc.yaml file must contain the following top-le
         or higher
     - variables: Described in detail below
     - snippets: a dict containing the following keys:
-        - name: knickname of the snippet
-        - file: filename of the snippet in the same directory
-        - xpath (optional): XPath where this snippet belongs in the target OS heirarchy (for XML snippets)
+        - name: knickname of the config_set
+        - file: filename of the config_set in the same directory
+        - xpath (optional): XPath where this config_set belongs in the target OS heirarchy (for XML config_sets)
 
-Each snippet can define nulitple variables that will be interpolated using the Jinja2 templating language. Each
+Each config_set can define nulitple variables that will be interpolated using the Jinja2 templating language. Each
 variable defined in the `variables` list should define the following:
 
 
-1. name: The name of the variable found in the snippets. For example:
+1. name: The name of the variable found in the config_sets. For example:
 
  .. code-block:: jinja
 
@@ -64,7 +64,7 @@ variable defined in the `variables` list should define the following:
 
 2. description: A brief description of the variable and it's purpose in the configuration
 3. label: Human friendly label to display to user
-4. extends: Name of another snippet to load
+4. extends: Name of another config_set to load
 5. default: A valid default value which will be used if not value is provided by the user
 6. type_hint: Used to constrain the types of values accepted. May be implemented by additional third party tools.
 Examples are `text`, `ip_address`, `ip_address_with_subnet`, `number`, `enum`, 'password'
@@ -73,7 +73,7 @@ Examples are `text`, `ip_address`, `ip_address_with_subnet`, `number`, `enum`, '
 hints
 -----
 
-cd into a snippet dir and run this to find all vars
+cd into a config_set dir and run this to find all vars
 
 .. code-block:: bash
 

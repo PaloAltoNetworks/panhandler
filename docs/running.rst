@@ -4,11 +4,11 @@ Running PanHandler
 
 The easiest way to run panhandler is to pull the docker container:
 
-docker run -p 80:80 nembery/panhandler
+docker run -p 80:80 paloaltonetworks/panhandler
 
 Then access the UI via http://localhost:80
 
-The default username and password is: `pan` and `panhandler`
+The default username and password is: `paloalto` and `panhandler`
 
 
 Building PanHandler
@@ -23,6 +23,25 @@ install the pip python requirements for both the app and also CNC, create the lo
     pip install -r requirements.txt
     pip install -r cnc/requirements.txt
     ./cnc/manage.py migrate
-    ./cnc/manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('pan', 'admin@example.com', 'panhandler')"
+    ./cnc/manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('paloalto', 'admin@example.com', 'panhandler')"
 
+
+Running Panhandler manually
+---------------------------
+
+To start the application on your local machine on port 80:
+
+.. code-block:: bash
+    cd panhandler/cnc
+    celery -A pan_cnc worker --loglevel=info
+    manage.py runserver 80
+
+To use a different port, supply a different argument to the runserver command above.
+
+
+Requirements
+------------
+
+Panhandler has been tested to work on Docker version: 18.09.1 (Mac) and 18.09.0 (Linux).
+Please ensure you have the latest docker version installed for the best results.
 
