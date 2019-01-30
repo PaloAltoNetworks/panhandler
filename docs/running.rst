@@ -1,4 +1,4 @@
-Running PanHandler
+Running Panhandler
 ==================
 
 
@@ -11,7 +11,7 @@ Then access the UI via http://localhost:80
 The default username and password is: `paloalto` and `panhandler`
 
 
-Building PanHandler
+Building Panhandler
 -------------------
 
 If you want to build panhandler from source (which is not recommended). You will need to update the git submodules,

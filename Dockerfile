@@ -1,7 +1,7 @@
 
 FROM python:alpine
 
-LABEL description="PanHandler"
+LABEL description="Panhandler"
 LABEL version="0.5.1"
 LABEL maintainer="sp-solutions@paloaltonetworks.com"
 
