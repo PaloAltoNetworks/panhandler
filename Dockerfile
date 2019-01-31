@@ -1,5 +1,5 @@
 
-FROM python:alpine
+FROM python:3.6-alpine
 
 LABEL description="Panhandler"
 LABEL version="1.0.3"

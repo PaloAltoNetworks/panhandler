@@ -75,7 +75,7 @@ class ImportRepoView(CNCBaseFormView):
         else:
             if 'all_snippets' in cache:
                 print('Invalidating snippet cache')
-                cache.set('all_snippets', [])
+                snippet_utils.invalidate_snippet_caches()
 
             messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 
