@@ -13,7 +13,7 @@ variables:
   default: Iron-Skillet
   type_hint: text
 - name: url
-  description: Git Repository URL
+  description: Git Repository HTTPS URL
   default: https://github.com/PaloAltoNetworks/iron-skillet.git
   type_hint: text
 - name: branch

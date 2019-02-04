@@ -24,7 +24,6 @@ Please see http://.readthedocs.io for more information
 This software is provided without support, warranty, or guarantee.
 Use at your own risk.
 """
-from django.core.cache import cache
 import os
 import shutil
 from pathlib import Path
@@ -73,9 +72,8 @@ class ImportRepoView(CNCBaseFormView):
         if not git_utils.clone_repo(new_repo_snippets_dir, repo_name, clone_url, branch):
             messages.add_message(self.request, messages.ERROR, 'Could not Import Repository')
         else:
-            if 'all_snippets' in cache:
-                print('Invalidating snippet cache')
-                snippet_utils.invalidate_snippet_caches()
+            print('Invalidating snippet cache')
+            snippet_utils.invalidate_snippet_caches()
 
             messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 
@@ -211,7 +209,7 @@ class ListSnippetsByGroup(CNCBaseFormView):
     next_url = '/panhandler/provision'
 
     def get_snippet(self):
-        print('Getting snippet here in get_snippet RIGHT HERE')
+        print('Getting snippet from POST here in ListSnippetByGroup:get_snippet')
         if 'snippet_name' in self.request.POST:
             print('Found meta-cnc in POST')
             snippet_name = self.request.POST['snippet_name']
