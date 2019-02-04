@@ -149,6 +149,8 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         if 'Error' in msg:
             level = messages.ERROR
         else:
+            print('Invalidating snippet cache')
+            snippet_utils.invalidate_snippet_caches()
             level = messages.INFO
 
         messages.add_message(self.request, level, msg)
@@ -171,6 +173,8 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
         if snippets_dir in repo_dir:
             print(f'Removing repo {repo_name}')
             shutil.rmtree(repo_dir)
+            print('Invalidating snippet cache')
+            snippet_utils.invalidate_snippet_caches()
 
         messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
         return f'/panhandler/repos'
