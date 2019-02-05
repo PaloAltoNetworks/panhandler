@@ -11,6 +11,10 @@ repositories:
     url:  https://github.com/scotchoaf/mssp-templates.git
     branch: panos_v8.1
     destination_directory: mssp_templates_v81
+  - name: Default Skillets
+    url: https://github.com/PaloAltoNetworks/Skillets.git
+    branch: master
+    destination_directory: skillets
 
 views:
   - name: ''
