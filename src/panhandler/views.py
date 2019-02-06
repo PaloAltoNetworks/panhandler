@@ -122,7 +122,11 @@ class RepoDetailsView(CNCView):
         repo_dir = os.path.join(snippets_dir, repo_name)
         repo_detail = git_utils.get_repo_details(repo_name, repo_dir)
 
-        snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(repo_dir)
+        try:
+            snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(repo_dir)
+        except CCFParserError:
+            messages.add_message(self.request, messages.ERROR, 'Could not read all snippets from repo. Parser error')
+            snippets_from_repo = list()
 
         # create our docker command to pass to git
         context = super().get_context_data(**kwargs)
