@@ -17,7 +17,10 @@ Building Panhandler
 If you want to build panhandler from source (which is not recommended). You will need to update the git submodules,
 install the pip python requirements for both the app and also CNC, create the local db, and create a local user.
 
-.. code-block::
+.. code-block:: bash
+
+    git clone https://github.com/PaloAltoNetworks/panhandler.git
+    cd panhandler
     git submodule init
     git submodule update
     pip install -r requirements.txt
@@ -32,11 +35,14 @@ Running Panhandler manually
 To start the application on your local machine on port 80:
 
 .. code-block:: bash
+
     cd panhandler/cnc
     celery -A pan_cnc worker --loglevel=info
     manage.py runserver 80
 
-To use a different port, supply a different argument to the runserver command above.
+To use a different port, supply a different argument to the runserver command above. In this case, the server will
+start up on port 80. Browse to http://localhost in a web browser to begin. The default login credentials are 'paloalto'
+and 'panhandler'
 
 
 Requirements

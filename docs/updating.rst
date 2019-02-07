@@ -15,13 +15,22 @@ Panhandler is primarily distributed as a docker image on Docker Hub_. To ensure 
 for new releases here_. To launch a newer version via docker:
 
 .. code-block::
-   docker run -p 80:80 paloaltonetworks/panhandler:v1.0.2 -d
 
-This will create a container based on the 1.0.2 image version. Panhandler also uses the 'latest' tag as well, which is
-always kept up to date with the latest version. To ensure you are using the most up to date image with the latest tag,
-issue these commands
+   docker run -p 80:80 paloaltonetworks/panhandler -d
+
+This will create a container based on the latest image tag. Versioned panhandler images are also available and can be
+found on Docker Hub.
+
+.. Note::
+
+    You must periodically pull new images from Docker hub to ensure you have the latest software with new features and
+    bug fixes.
+
+
+To ensure you have the most up to date software, perform a docker pull and specify the 'latest' tag.
 
 .. code-block::
+
    docker pull paloaltonetworks/panhandler:latest
    docker run -p 80:80 paloaltonetworks/panhandler:latest -d
 
