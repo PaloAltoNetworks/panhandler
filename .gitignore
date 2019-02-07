@@ -2,6 +2,7 @@
 cnc/db.sqlite3
 venv
 venv3
+.DS_Store
 
 **/snippets/**/
 !**/snippets/app
