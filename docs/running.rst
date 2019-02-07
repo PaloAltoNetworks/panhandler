@@ -4,7 +4,9 @@ Running Panhandler
 
 The easiest way to run panhandler is to pull the docker container:
 
-docker run -p 80:80 paloaltonetworks/panhandler
+.. code-block:: bash
+
+    docker run -p 80:80 paloaltonetworks/panhandler
 
 Then access the UI via http://localhost:80
 
