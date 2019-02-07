@@ -30,6 +30,7 @@ Choose Skillets to View by Category
 From the main panhandler menu, select `Templates Library` to see a list of skillets to load.
 
 .. image:: images/ph-menu.png
+    :width: 250
 
 
 Hit `Go` for the category of skillets required. Key categories include PAN-OS, Panorama, GPCS, and Templates for simple

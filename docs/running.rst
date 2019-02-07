@@ -44,6 +44,7 @@ The docker container runs in the background. You can stop the container by using
 
 
 .. image:: images/ph-docker-stop.png
+    :width: 500
 
 
 .. Note::

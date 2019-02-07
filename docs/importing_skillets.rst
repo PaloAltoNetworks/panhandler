@@ -25,10 +25,11 @@ Update a Skillet Repository
 From the main menu, choose `Repositories`.
 
 .. image:: images/ph-menu.png
+    :width: 250
 
 Click on `Details` for the repository of interest.
 
-.. image:: image/ph-repo-details-full.png
+.. image:: images/ph-repo-details-full.png
 
 The repo window will show a description of the repo along with the last few content changes.
 
