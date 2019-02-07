@@ -1,3 +1,5 @@
+.. _environment_doc:
+
 Panhandler Environments
 =======================
 
@@ -21,6 +23,7 @@ Unlocking Environments
 To load an environment, click on the 'lock' icon on the right of the navigation bar.
 
 .. image:: images/ph-env-locked.png
+        :width: 300
 
 You will be presented with an unlock password dialog. This password will be used to protect any secrets you store
 in your environments in an encrypted file in your home directory. If this encrypted file does not already exist it will
@@ -46,3 +49,4 @@ store secrets like API_KEYS
     by looking at the '.meta-cnc.yaml' file for that form.
 
 .. image:: images/ph-env-menu.png
+        :width: 300

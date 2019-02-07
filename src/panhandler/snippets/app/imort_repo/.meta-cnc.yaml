@@ -10,11 +10,11 @@ labels:
 variables:
 - name: repo_name
   description: Repository Name
-  default: Iron-Skillet
+  default: Default Skillet
   type_hint: text
 - name: url
   description: Git Repository HTTPS URL
-  default: https://github.com/PaloAltoNetworks/iron-skillet.git
+  default: https://github.com/PaloAltoNetworks/Skillets.git
   type_hint: text
 - name: branch
   description: Branch

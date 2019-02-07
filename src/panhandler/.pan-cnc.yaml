@@ -6,8 +6,15 @@ repositories:
     url: https://github.com/PaloAltoNetworks/iron-skillet.git
     branch: panos_v8.1
     destination_directory: iron_skillet_v81
-    repositories:
-  - name: MSSP Templates
+  - name: Iron-Skillet-v80
+    url: https://github.com/PaloAltoNetworks/iron-skillet.git
+    branch: panos_v8.0
+    destination_directory: iron_skillet_v80
+  - name: Mobile Skillets
+    url: https://github.com/PaloAltoNetworks/MobileSkillet.git
+    branch: panos_v8.1
+    destination_directory: mobile_skillet_v81
+  - name: MSSP Templates v8.1
     url:  https://github.com/scotchoaf/mssp-templates.git
     branch: panos_v8.1
     destination_directory: mssp_templates_v81
