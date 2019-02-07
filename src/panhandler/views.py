@@ -270,7 +270,7 @@ class ListSnippetsByGroup(CNCBaseFormView):
         choices_list = list()
         # grab each service and construct a simple tuple with name and label, append to the list
         for service in services:
-            choice = (service['name'], service['label'])
+            choice = (service['name'], service['description'])
             choices_list.append(choice)
 
         # let's sort the list by the label attribute (index 1 in the tuple)
