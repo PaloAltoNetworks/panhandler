@@ -22,7 +22,7 @@
                 <p class="card-text">
                 <ul>
                     {% for member in group_members %}
-                    <li>{{ member.description }}</li>
+                    <li title="{{ member.description }}">{{ member.label }}</li>
                     {% endfor %}
                 </ul>
                 </p>
