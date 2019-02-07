@@ -1,14 +1,55 @@
 Running Panhandler
 ==================
 
+The recommended way to run panhandler is to pull and run the docker container.
 
-The easiest way to run panhandler is to pull the docker container:
+Running the Panhandler Docker Container
+---------------------------------------
 
-docker run -p 80:80 paloaltonetworks/panhandler
+To get the latest version of panhandler as a docker container.
+
+
+Using a standard web port
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. code-block:: bash
+
+    docker run -p 80:80 paloaltonetworks/panhandler
 
 Then access the UI via http://localhost:80
 
 The default username and password is: `paloalto` and `panhandler`
+
+Using an alternate TCP port
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If port 80 is unavailable, you can switch to a different port. This example uses port 9999.
+
+.. code-block:: bash
+
+    docker run -p 9999:80 paloaltonetworks/panhandler
+
+Then access the UI via http://localhost:9999
+
+
+Stopping the docker container
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The docker container runs in the background. You can stop the container by using its container ID.
+
+.. code-block:: bash
+
+    docker ps
+    docker stop { CONTAINER ID }
+
+
+.. image:: images/ph-docker-stop.png
+
+
+.. Note::
+    If you need to remove the container, enter `docker rm { CONTAINER ID }` with CONTAINER ID as the
+    ID used to stop. You must stop the container before deleting.
+
 
 
 Building Panhandler

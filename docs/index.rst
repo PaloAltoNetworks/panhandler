@@ -10,7 +10,10 @@ Panhandler
    :maxdepth: 2
    :caption: Contents:
 
+   overview
    running
+   using
+   importing_skillets
    metadata_configuration
    example_skillet
    environments
