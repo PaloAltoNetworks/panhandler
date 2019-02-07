@@ -21,7 +21,7 @@ Set the Configuration Target
 Before choosing skillets to load, set the configuration target IP and username/password credentials. This stores the
 device credentials to be used for API access.
 
-Jump to :ref:`environments` to set the environment.
+Jump to :ref:`environment_doc` to set the environment.
 
 
 Choose Skillets to View by Category

@@ -9,6 +9,7 @@ Import a New Skillet
 From the main menu, choose `Import Templates`.
 
 .. image:: images/ph-menu.png
+    :width: 250
 
 The import repository fields allow you to specify the repo name, repo url, and the branch to import.
 
