@@ -54,6 +54,12 @@ views:
     menu: Panhandler
     menu_option: Template Library
 
+  - name: collections
+    class: ListSkilletCollectionsView
+    menu: Panhandler
+    menu_option: Skillet Collections
+
+
   - name: snippets_by_type
     class: ListSnippetsByGroup
     parameter: service_type
@@ -74,6 +80,14 @@ views:
   - name: remove_repo
     class: RemoveRepoView
     parameter: repo_name
+
+  - name: collection
+    class: ListSkilletsInCollectionView
+    parameter: collection
+
+  - name: skillet
+    class: ViewSkilletView
+    parameter: skillet
 
   - name: provision
     class: ProvisionSnippetView
