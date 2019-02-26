@@ -3,7 +3,8 @@
 
 {% block content %}
 
-{% for group, group_members in snippets.items %}
+<h1>Skillet Collection {{  collection }}</h1>
+{% for skillet in skillets %}
 
 {% if forloop.counter0|divisibleby:2 %}
 {% if forloop.first %}
@@ -16,20 +17,16 @@
     <div class="col-sm-6">
         <div class="card shadow-lg">
             <div class="card-header">
-                {{ group }}
+                {{ skillet.label }}
             </div>
             <div class="card-body">
                 <p class="card-text">
-                <ul>
-                    {% for member in group_members %}
-                    <li title="{{ member.description }}">{{ member.label }}</li>
-                    {% endfor %}
-                </ul>
+                    {{  skillet.description }}
                 </p>
-
+                <p class="card-text text-muted">Skillet type: {{ skillet.type }}</p>
             </div>
             <div class="card-footer">
-                <a href="/panhandler/snippets_by_type/{{ group }}" class="btn btn-primary">Go</a>
+                <a href="/panhandler/skillet/{{ skillet.name }}" class="btn btn-primary">Go</a>
             </div>
         </div>
     </div>
