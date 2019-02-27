@@ -17,6 +17,7 @@ Panhandler
    metadata_configuration
    example_skillet
    environments
+   updating
 
 
 About
