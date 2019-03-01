@@ -1,8 +1,6 @@
 .idea
 cnc/db.sqlite3
-venv
-venv3
-venv_test
+venv*
 .DS_Store
 
 **/snippets/**/
