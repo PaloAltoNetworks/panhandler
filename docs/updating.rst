@@ -14,7 +14,7 @@ Ensuring you have the latest docker image
 Panhandler is primarily distributed as a docker image on Docker Hub_. To ensure you have the latest version, check
 for new releases here_. To launch a newer version via docker:
 
-.. code-block::
+.. code-block:: bash
 
    docker run -p 80:80 paloaltonetworks/panhandler -d
 
@@ -29,7 +29,7 @@ found on Docker Hub.
 
 To ensure you have the most up to date software, perform a docker pull and specify the 'latest' tag.
 
-.. code-block::
+.. code-block:: bash
 
    docker pull paloaltonetworks/panhandler:latest
    docker run -p 80:80 paloaltonetworks/panhandler:latest -d
