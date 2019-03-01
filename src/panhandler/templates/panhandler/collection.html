@@ -1,36 +1,130 @@
 {% extends base_html|default:'pan_cnc/base.html' %}
 {% load static %}
+{% block head %}
+    <script src="{% static 'js/shuffle.min.js' %}"></script>
 
+{% endblock %}
 {% block content %}
 
-<h1>Skillet Collection {{  collection }}</h1>
-{% for skillet in skillets %}
-
-{% if forloop.counter0|divisibleby:2 %}
-{% if forloop.first %}
-<div class="row mb-4">
-    {% else %}
-</div>
-<div class="row mb-4">
-    {% endif %}
-    {% endif %}
-    <div class="col-sm-6">
-        <div class="card shadow-lg">
-            <div class="card-header">
-                {{ skillet.label }}
-            </div>
-            <div class="card-body">
-                <p class="card-text">
-                    {{  skillet.description }}
-                </p>
-                <p class="card-text text-muted">Skillet type: {{ skillet.type }}</p>
-            </div>
-            <div class="card-footer">
-                <a href="/panhandler/skillet/{{ skillet.name }}" class="btn btn-primary">Go</a>
+    <h3 class="mb-4">Skillet Collection: {{ collection }}</h3>
+    <label for="sort_buttons" class="text-muted d-block">Sort</label>
+    <div class="btn-group" role="group" aria-label="..." id="sort_buttons">
+        <button type="button" class="btn btn-outline-secondary" id="sort_name">Name</button>
+        <button type="button" class="btn btn-outline-secondary" id="sort_type">Type</button>
+    </div>
+    <div class="d-flex justify-content-between">
+        <div>
+            <label for="filter_buttons" class="text-muted d-block">Filter</label>
+            <div class="btn-group" role="group" aria-label="..." id="filter_buttons">
+                <button type="button" class="btn btn-outline-secondary" id="filter_panos">PAN-OS</button>
+                <button type="button" class="btn btn-outline-secondary" id="filter_panorama">Panorama</button>
             </div>
         </div>
+        <div>
+            <label for="search_buttons" class="text-muted d-block">Filter</label>
+            <input type="text" id="search_collection"/>
+        </div>
     </div>
-    {% endfor %}
-</div>
+    <div id="collection_grid" class="pb-6 mb-4 row">
+        {% for skillet in skillets %}
+            <div class="grid__brick mt-3 mb-3 col-6 col-md-4 col-xl-3" data-name="{{ skillet.label }}"
+                 data-groups=["{{ skillet.type }}"] data-label="{{ skillet.label }}">
+                <div class="card shadow-lg">
+                    <div class="card-header">
+                        {{ skillet.label }}
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">
+                            {{ skillet.description }}
+                        </p>
+                        <p class="card-text text-muted">Skillet type: {{ skillet.type }}</p>
+                    </div>
+                    <div class="card-footer text-right">
+                        <a href="/panhandler/skillet/{{ skillet.name }}" class="btn btn-primary">Go</a>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+        <div class="col-1 sizer-element"></div>
+    </div>
 
+    <script type="text/javascript">
+        // var shuffleInstance;
+        $(document).ready(function () {
+            window.shuffleInstance = new Shuffle(document.getElementById('collection_grid'), {
+                itemSelector: '.grid__brick',
+                sizer: '.sizer-element'
+            })
+        });
+
+        $('#sort_name').on('click', function () {
+                $("[id^=sort_").removeClass('btn-secondary');
+                $("[id^=sort_").addClass('btn-outline-secondary');
+                $(this).removeClass('btn-outline-secondary');
+                $(this).addClass('btn-secondary');
+                let sort_options = {
+                    'by': function (element) {
+                        return $(element).data('name')
+                    }
+                };
+                shuffleInstance.sort(sort_options);
+            }
+        );
+
+        $('#sort_type').on('click', function () {
+                $("[id^=sort_").removeClass('btn-secondary');
+                $("[id^=sort_").addClass('btn-outline-secondary');
+                $(this).removeClass('btn-outline-secondary');
+                $(this).addClass('btn-secondary');
+                let sort_options = {
+                    'by': function (element) {
+                        return $(element).data('skillet_type');
+                    }
+                };
+                shuffleInstance.sort(sort_options);
+            }
+        );
+
+        $('#filter_panos').on('click', function () {
+                $("[id^=filter_").removeClass('btn-secondary');
+                $("[id^=filter_").addClass('btn-outline-secondary');
+                if (shuffleInstance.group === 'panos') {
+                    shuffleInstance.filter();
+                    return;
+                }
+                $(this).removeClass('btn-outline-secondary');
+                $(this).addClass('btn-secondary');
+                shuffleInstance.filter('panos');
+            }
+        );
+        $('#filter_panorama').on('click', function () {
+                $("[id^=filter_").removeClass('btn-secondary');
+                $("[id^=filter_").addClass('btn-outline-secondary');
+                if (shuffleInstance.group === 'panorama') {
+                    shuffleInstance.filter();
+                    return;
+                }
+                $(this).removeClass('btn-outline-secondary');
+                $(this).addClass('btn-secondary');
+                shuffleInstance.filter('panorama');
+            }
+        );
+
+        $('#search_collection').on('keyup', function () {
+            let search_text = $(this).val().toLowerCase().trim();
+            shuffleInstance.filter(function (element, shuffleInstance) {
+                // var title_element = element.querySelector('.grid__brick__title');
+                let title_element = $(element).data('label');
+                let title_text = title_element.toLowerCase().trim();
+
+                {#return title_text.indexOf(search_text) !== -1;#}
+                if (title_text.includes(search_text)) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            });
+        });
+    </script>
 {% endblock %}

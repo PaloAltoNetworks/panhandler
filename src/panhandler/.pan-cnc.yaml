@@ -46,8 +46,8 @@ views:
       title: Enter a valid git url and desired branch below
       next_url: view_snippets
       help_text: >
-        This view imports a new git repository. Any CCF metadata files will then be available to the panhandler
-        application
+        This view imports a new git repository. Once imported, any skillets defined in that repository will be
+        available in the Skillet Collections.
 
   - name: snippet_types
     class: ListSnippetTypesView
@@ -58,7 +58,6 @@ views:
     class: ListSkilletCollectionsView
     menu: Panhandler
     menu_option: Skillet Collections
-
 
   - name: snippets_by_type
     class: ListSnippetsByGroup
@@ -72,6 +71,11 @@ views:
   - name: repo_detail
     class: RepoDetailsView
     parameter: repo_name
+    attributes:
+      help_text: >
+        Repository Details allows you to update to the latest version from the upstream git repository. You may
+        also use the 'Remove Repository' to remove this repository and all embedded skillets from all Skillet
+        Collections
 
   - name: update_repo
     class: UpdateRepoView
