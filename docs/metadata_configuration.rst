@@ -3,7 +3,7 @@ Panhandler Metadata Files
 
 The heart of Panhandler is the `.meta-cnc.yaml` file. This allows a set of configuration snippets to be shared and
 consumed as a single unit. For example, to configure a default security profile you may need to configure multiple
-different parts of the Pan-OS configuration. Panhandler allows you to group those different 'pieces' and share them
+different parts of the PAN-OS configuration. Panhandler allows you to group those different 'pieces' and share them
 among different devices as a single unit. Often times these configuration bits (affectionately called 'skillets')
 need slight customization before deployment to a new device. The `.meta-cnc.yaml` file provides a means to templatize
 these configurations and present a list of customization points, or variables, to the end user or consumer.
@@ -17,7 +17,7 @@ In order to add multiple 'bits' of configuration to a device, we need to know th
 * xpath where this xml fragment should be inserted into the candidate configuration
 * the order in which these XML fragments must be inserted
 * a list of all variables that require user input
-* target version requirements. For example: Pan-OS 8.0 or higher
+* target version requirements. For example: PAN-OS 8.0 or higher
 
 This is all accomplished by adding multiple files each containing an XML configuration fragment and a `.meta-cnc.yaml`
 file that describes the load order, variables, target requirements, etc.
@@ -49,8 +49,8 @@ a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. N
 
 
 2. Multiple configuration files. Each should contain a valid template fragment and may use jinja2 variables.
-   These templates may be XML, JSON, YAML, Text, etc. For Pan-OS devices, these are XML fragments from specific stanzas
-   of the Pan-OS device configuration tree.
+   These templates may be XML, JSON, YAML, Text, etc. For PAN-OS devices, these are XML fragments from specific stanzas
+   of the PAN-OS device configuration tree.
 
 
 Snippet details
@@ -61,7 +61,7 @@ Each .meta-cnc.yaml file must contain the following top-level keys:
 * name: name of this configuration set
 * description: Short description
 * extends: name of another skillet that is a dependency of this one
-* target_version: String referring to target version requirements. I.E This skillet applies only to Pan-OS 8.1 or higher
+* target_version: String referring to target version requirements. I.E This skillet applies only to PAN-OS 8.1 or higher
 * variables: Described in detail below
 * snippets: a dict containing the following keys
 
