@@ -1,9 +1,9 @@
-{% extends base_html %}
+{% extends base_html|default:'pan_cnc/base.html' %}
 {% load static %}
 
 {% block content %}
 
-<h2 class="mb-4">Imported Repositories</h2>
+<h3 class="mb-4">Imported Repositories</h3>
 
 {% for repo in repos %}
 

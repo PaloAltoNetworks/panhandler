@@ -1,79 +1,128 @@
-{% extends "pan_cnc/base.html" %}
+{% extends base_html|default:'pan_cnc/base.html' %}
 {% load static %}
 
 {% block content %}
-<div class="card border-primary mb-6 shadow-lg">
-    <div class="card-header">Repository Detail for {{ repo_detail.name }}</div>
-    <div class="card-body">
-        <h5 class="card-title">Details</h5>
-        <p class="card-text">
-            {{ repo_detail.description }}
-            <div class="mt-3 mb-5">
+    <div class="card border-primary mb-6 shadow-lg">
+        <div class="card-header">Repository Detail for {{ repo_detail.name }}
+
+
+            <div class="float-right">
+                {% if view.help_text != '' %}
+                    <a href="#" data-toggle="modal" data-target="#helpTextModal" title="Help">
+                        <i class="fas fa-question-circle text-primary mr-1"></i>
+                    </a>
+                {% elif view.service.descripion != '' %}
+                    <a href="#" data-toggle="modal" data-target="#helpTextModal" title="Help">
+                        <i class="fas fa-question-circle text-primary mr-1"></i>
+                    </a>
+                {% endif %}
+                {% if app_dir and snippet_name %}
+                    <a href="/debug/{{ app_dir }}/{{ snippet_name }}" title="Debug Snippet">
+                        <i class="fas fa-cog text-muted" title="Debug Snippet"></i>
+                    </a>
+                {% endif %}
+            </div>
+
+
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Details</h5>
+            <p class="card-text">
+                {{ repo_detail.description }}
+            <div class="mt-3">
                 <a href="{{ repo_detail.url }}">{{ repo_detail.url }}</a>
             </div>
-        </p>
-        <h5 class="card-title">Latest Updates</h5>
-        <p class="card-text">
-        <table class="table">
-            <caption>Commit History for branch: {{ repo_detail.branch }}</caption>
-            <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">Message</th>
-                <th scope="col">Author</th>
-                <th scope="col">Date</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for c in repo_detail.commits %}
-            <tr>
-                <th scope="row">{{ forloop.counter }}</th>
-                {% if repo_detail.commits_url %}
-                <td>
-                    <a href="{{ repo_detail.commits_url }}{{ c.id }}">
-                    {{ c.message }}
-                    </a>
-                </td>
-                {% else %}
-                <td>{{ c.message }}</td>
-                {% endif %}
-                <td>{{ c.author }}</td>
-                <td>{{ c.time }}</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
+            </p>
+            <p class="card-text mt-4 mb-4">
+                <a href="/panhandler/update_repo/{{ repo_name }}" class="btn btn-primary mr-2">Update To Latest</a>
+                <a href="/panhandler/remove_repo/{{ repo_name }}" class="btn btn-danger mr-2">Remove Repository</a>
+                <a href="/panhandler/repos" class="btn btn-secondary mr-2">Repositories</a>
+            </p>
+            <h5 class="card-title">Latest Updates</h5>
+            <p class="card-text">
+            <table class="table">
+                <caption>Commit History for branch: {{ repo_detail.branch }}</caption>
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Message</th>
+                    <th scope="col">Author</th>
+                    <th scope="col">Date</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for c in repo_detail.commits %}
+                    <tr>
+                        <th scope="row">{{ forloop.counter }}</th>
+                        {% if repo_detail.commits_url %}
+                            <td>
+                                <a href="{{ repo_detail.commits_url }}{{ c.id }}">
+                                    {{ c.message }}
+                                </a>
+                            </td>
+                        {% else %}
+                            <td>{{ c.message }}</td>
+                        {% endif %}
+                        <td>{{ c.author }}</td>
+                        <td>{{ c.time }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
 
-       <h5 class="card-title">Metadata files</h5>
-        <p class="card-text">
-        <table class="table">
-            <caption>All Defined metadata files in repository: {{ repo_detail.name }}</caption>
-            <thead>
-            <tr>
-                <th scope="col">#</th>
-                <th scope="col">Label</th>
-                <th scope="col">Description</th>
-            </tr>
-            </thead>
-            <tbody>
-            {% for s in snippets %}
-            <tr>
-                <th scope="row">{{ forloop.counter }}</th>
-                <td>
-                    <a href="/debug/{{ app_dir }}/{{ s.name }}">
-                    {{ s.label }}
-                    </a>
-                </td>
-                <td>{{ s.description }}</td>
-            </tr>
-            {% endfor %}
-            </tbody>
-        </table>
-        </p>
-        <a href="/panhandler/update_repo/{{ repo_name }}" class="btn btn-primary mr-2">Update To Latest</a>
-        <a href="/panhandler/remove_repo/{{ repo_name }}" class="btn btn-danger mr-2">Remove Repository</a>
-        <a href="/panhandler/repos" class="btn btn-secondary mr-2">Repositories</a>
+            <h5 class="card-title">Metadata files</h5>
+            <p class="card-text">
+            <table class="table">
+                <caption>All Defined metadata files in repository: {{ repo_detail.name }}</caption>
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Label</th>
+                    <th scope="col">Description</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for s in snippets %}
+                    <tr>
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td>
+                            <a href="/debug/{{ app_dir }}/{{ s.name }}">
+                                {{ s.label }}
+                            </a>
+                        </td>
+                        <td>{{ s.description }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </p>
 
+
+        </div>
     </div>
-</div>
-{%  endblock %}
+
+     <!-- Modal -->
+    <div class="modal fade border-top border-primary" id="helpTextModal" tabindex="-1" role="dialog" aria-labelledby="helpTextModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title" id="exampleModalLabel">Help</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    {% if view.help_text != '' %}
+                        {{ view.help_text|linebreaksbr }}
+                    {% elif view.service.description != '' %}
+                        {{ view.service.description }}
+                    {% endif %}
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

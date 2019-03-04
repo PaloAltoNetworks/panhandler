@@ -162,6 +162,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
 
 class RemoveRepoView(CNCBaseAuth, RedirectView):
+    app_dir = 'panhandler'
 
     def get_redirect_url(self, *args, **kwargs):
         repo_name = kwargs['repo_name']
@@ -185,6 +186,7 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
 
 
 class ListSnippetTypesView(CNCView):
+    app_dir = 'panhandler'
     template_name = 'panhandler/snippet_types.html'
 
     def get_context_data(self, **kwargs):
@@ -215,6 +217,7 @@ class ListSnippetTypesView(CNCView):
 
 class ListSnippetsByGroup(CNCBaseFormView):
     next_url = '/panhandler/provision'
+    app_dir = 'panhandler'
 
     def get_snippet(self):
         print('Getting snippet from POST here in ListSnippetByGroup:get_snippet')
@@ -285,3 +288,49 @@ class ListSnippetsByGroup(CNCBaseFormView):
 
         context['form'] = form
         return context
+
+
+class ListSkilletCollectionsView(CNCView):
+    template_name = 'panhandler/collections.html'
+    app_dir = 'panhandler'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        print('Getting all labels')
+        collections = snippet_utils.load_all_label_values(self.app_dir, 'collection')
+        collections.append('Kitchen Sink')
+        context['collections'] = collections
+
+        return context
+
+
+class ListSkilletsInCollectionView(CNCView):
+    template_name = 'panhandler/collection.html'
+    app_dir = 'panhandler'
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        collection = self.kwargs.get('collection', 'Kitchen Sink')
+        print(f'Getting all snippets with collection label {collection}')
+        if collection == 'Kitchen Sink':
+            skillets = snippet_utils.load_all_snippets_without_label_key(self.app_dir, 'collection')
+        else:
+            skillets = snippet_utils.load_snippets_by_label('collection', collection, self.app_dir)
+
+        context['skillets'] = skillets
+        context['collection'] = collection
+
+        return context
+
+
+class ViewSkilletView(ProvisionSnippetView):
+
+    def get_snippet(self):
+        """
+        Override the get_snippet as the snippet_name is passed as a kwargs param and not a POST or in the session
+        :return: name of the skillet found in the kwargs
+        """
+        skillet = self.kwargs.get('skillet', '')
+        self.save_value_to_workflow('snippet_name', skillet)
+        return skillet
