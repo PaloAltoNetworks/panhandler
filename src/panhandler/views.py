@@ -198,7 +198,7 @@ class ListSnippetTypesView(CNCView):
 
         snippets_by_type = dict()
         if len(panos_snippets):
-            snippets_by_type['Pan-OS'] = panos_snippets
+            snippets_by_type['PAN-OS'] = panos_snippets
         if len(panorama_snippets):
             snippets_by_type['Panorama'] = panorama_snippets
         if len(panorama_gpcs_snippets):
@@ -253,7 +253,7 @@ class ListSnippetsByGroup(CNCBaseFormView):
         context = super().get_context_data(**kwargs)
 
         snippet_labels = dict()
-        snippet_labels['Pan-OS'] = 'panos'
+        snippet_labels['PAN-OS'] = 'panos'
         snippet_labels['Panorama'] = 'panorama'
         snippet_labels['Panorama-GPCS'] = 'panorama-gpcs'
         snippet_labels['Templates'] = 'template'

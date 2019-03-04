@@ -1,5 +1,5 @@
 # Panhandler
-Panhandler is a tool to manage and share config sets for Pan-OS devices
+Panhandler is a tool to manage and share config sets for PAN-OS devices
 
 ## Disclaimer
 
