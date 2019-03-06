@@ -20,8 +20,11 @@
             <div class="btn-group" role="group" id="filter_buttons">
                 <button type="button" class="btn btn-outline-secondary" id="filter_panos">PAN-OS</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_panorama">Panorama</button>
-                <button type="button" class="btn btn-outline-secondary" id="filter_terraform">Terraform</button>
+                <button type="button" class="btn btn-outline-secondary" id="filter_rest">REST</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_template">Template</button>
+                <button type="button" class="btn btn-outline-secondary" id="filter_terraform">Terraform</button>
+                <button type="button" class="btn btn-outline-secondary" id="filter_workflow">Workflow</button>
+
             </div>
         </div>
         <div>
@@ -108,8 +111,19 @@
                 perform_filter(this, 'panos');
             }
         );
+
         $('#filter_panorama').on('click', function () {
                 perform_filter(this, 'panorama');
+            }
+        );
+
+        $('#filter_rest').on('click', function () {
+                perform_filter(this, 'rest');
+            }
+        );
+
+        $('#filter_template').on('click', function () {
+                perform_filter(this, 'template');
             }
         );
 
@@ -118,10 +132,11 @@
             }
         );
 
-        $('#filter_template').on('click', function () {
-                perform_filter(this, 'template');
+        $('#filter_workflow').on('click', function () {
+                perform_filter(this, 'workflow');
             }
         );
+
 
         $('#search_collection').on('keyup', function () {
             clear_filter_buttons();
