@@ -1,12 +1,13 @@
 Panhandler Metadata Files
 =========================
 
-The heart of Panhandler is the `.meta-cnc.yaml` file. This allows a set of configuration snippets to be shared and
-consumed as a single unit. For example, to configure a default security profile you may need to configure multiple
-different parts of the PAN-OS configuration. Panhandler allows you to group those different 'pieces' and share them
-among different devices as a single unit. Often times these configuration bits (affectionately called 'skillets')
-need slight customization before deployment to a new device. The `.meta-cnc.yaml` file provides a means to templatize
-these configurations and present a list of customization points, or variables, to the end user or consumer.
+The heart of Panhandler is the `.meta-cnc.yaml` file. This allows a set of configuration snippets, known as a skillet,
+ to be shared and consumed as a single unit. For example, to configure a default security profile you may need to
+ configure multiple different parts of the PAN-OS configuration. Panhandler allows you to group those different 'pieces'
+ and share them among different devices as a single unit. Often times these configuration bits
+ (affectionately called 'skillets') need slight customization before deployment to a new device. The `.meta-cnc.yaml`
+ file provides a means to templatize these configurations and present a list of customization points, or variables,
+ to the end user or consumer.
 
 Basic concepts
 --------------
@@ -35,8 +36,7 @@ a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. N
 
     name: config_set_name
     description: config_set description
-    extends: gsb_baseline
-    target_version: 8.1+
+    extends: name_of_required_major_skillet
     variables:
       - name: INF_NAME
         description: Interface Name
@@ -46,6 +46,7 @@ a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. N
       - xpath: some/xpath/value/here
         name: config_set_knickname
         file: filename of xml snippet to load that should exist in this directory
+
 
 
 2. Multiple configuration files. Each should contain a valid template fragment and may use jinja2 variables.
@@ -60,20 +61,47 @@ Each .meta-cnc.yaml file must contain the following top-level keys:
 
 * name: name of this configuration set
 * description: Short description
-* extends: name of another skillet that is a dependency of this one
-* target_version: String referring to target version requirements. I.E This skillet applies only to PAN-OS 8.1 or higher
+* extends: name of another skillet that is a requirement for this one. PAN-OS and Panorama types will load extends prior to loading this one
 * variables: Described in detail below
 * snippets: a dict containing the following keys
 
-    * name: knickname of the config_set
+    * name: knickname of the skillet
     * file: relative path to the configuration template
-    * xpath (optional): XPath where this fragment belongs in the target OS hierarchy (for XML config_sets)
+    * xpath (optional): XPath where this fragment belongs in the target OS hierarchy (for XML skillets)
 
-Each config_set can define nulitple variables that will be interpolated using the Jinja2 templating language. Each
+
+.. note::
+
+    Each Metadata file type has it's own format for the 'snippets' section. `file` and `xpath` are only used in
+    `panos` and `panorama` types. Other types such as `template` or `rest` may have a different format.
+
+
+Snippet details per Metadata type
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Required fields for each metadata type is listed below:
+
+* panos, panorama, panorama-gpcs
+    * name - name of this snippet
+    * file - path to the XML fragment to load and parse
+    * xpath - XPath where this fragment belongs
+* template
+    * name - name of this snippet
+    * file - path to the jinja2 template to load and parse
+* terraform
+    * None - snippets are not used for terraform
+* rest
+    * name - name of the snippet
+    * path - REST URL path component (`path: /api/?type=keygen&user={{ username }}&password={{ password }}`)
+    * operation - type of REST operation (GET, POST, DELETE, etc)
+    * payload - path to a jinja2 template to load and parse to be send as POSTed payload
+
+
+Each skillet can define nulitple variables that will be interpolated using the Jinja2 templating language. Each
 variable defined in the `variables` list should define the following:
 
 
-1. name: The name of the variable found in the config_sets. For example:
+1. name: The name of the variable found in the skillets. For example:
 
 .. code-block:: jinja
 
@@ -82,7 +110,7 @@ variable defined in the `variables` list should define the following:
 
 2. description: A brief description of the variable and it's purpose in the configuration
 3. label: Human friendly label to display to user
-4. extends: Name of another config_set to load
+4. extends: Name of another skillet to load
 5. default: A valid default value which will be used if not value is provided by the user
 6. type_hint: Used to constrain the types of values accepted. May be implemented by additional third party tools.
    Examples are `text`, `text_field`, `ip_address`, `password`, `dropdown`, and `checkbox`.
@@ -97,7 +125,7 @@ Ensuring all variables are defined
 When working with a large amount of configuration temlates, it's easy to miss a variable definition. Use this one-liner
 to find them all.
 
-cd into a config_set dir and run this to find all vars
+cd into a skillet dir and run this to find all vars
 
 .. code-block:: bash
 
