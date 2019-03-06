@@ -37,7 +37,7 @@ from pan_cnc.views import *
 class ImportRepoView(CNCBaseFormView):
     # define initial dynamic form from this snippet metadata
     snippet = 'import_repo'
-    next_url = '/panhandler/provision'
+    next_url = '/provision'
 
     def get_snippet(self):
         return self.snippet
@@ -216,7 +216,7 @@ class ListSnippetTypesView(CNCView):
 
 
 class ListSnippetsByGroup(CNCBaseFormView):
-    next_url = '/panhandler/provision'
+    next_url = '/provision'
     app_dir = 'panhandler'
 
     def get_snippet(self):
