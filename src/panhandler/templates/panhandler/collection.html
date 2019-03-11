@@ -94,7 +94,8 @@
             window.shuffleInstance = new Shuffle(document.getElementById('collection_grid'), {
                 itemSelector: '.grid__brick',
                 sizer: '.sizer-element'
-            })
+            });
+            perform_sort('#sort_name', 'name');
         });
 
         $('#sort_name').on('click', function () {
