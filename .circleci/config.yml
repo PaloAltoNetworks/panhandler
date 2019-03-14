@@ -11,9 +11,9 @@ jobs:
           name: Build and push Docker image
           command: |
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              echo 'export TAG=1.0.${CIRCLE_BUILD_NUM}' >> $BASH_ENV
+              export TAG=1.0.${CIRCLE_BUILD_NUM}
             elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
-              echo 'export TAG=dev' >> $BASH_ENV
+              export TAG=dev
             else
               echo "Not building other branch"
             fi
