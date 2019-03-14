@@ -17,6 +17,9 @@ jobs:
             else
               echo "Not building other branch"
             fi
+            cd panhandler
+            git submodule init
+            git submodule update
             docker build -t paloaltonetworks/panhandler:$TAG .
             echo ${DOCKER_PWD} | docker login -u ${DOCKER_LOGIN} --password-stdin
             docker push paloaltonetworks/panhandler:$TAG
