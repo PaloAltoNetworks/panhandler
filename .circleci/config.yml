@@ -23,3 +23,8 @@ jobs:
             docker build -t paloaltonetworks/panhandler:$TAG .
             echo ${DOCKER_PWD} | docker login -u ${DOCKER_LOGIN} --password-stdin
             docker push paloaltonetworks/panhandler:$TAG
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              docker tag paloaltonetworks/panhandler:$TAG paloaltonetworks/panhandler:latest
+              docker push paloaltonetworks/panhandler:latest
+            fi
+
