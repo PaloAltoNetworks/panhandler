@@ -1,0 +1,25 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.6.8
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build and push Docker image
+          command: |
+            if [ "${CIRCLE_BRANCH}" == "master" ]; then
+              export TAG=1.0.${CIRCLE_BUILD_NUM}
+            elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
+              export TAG=dev
+            else
+              echo "Not building other branch"
+              exit 0;
+            fi
+            git submodule init
+            git submodule update
+            docker build -t paloaltonetworks/panhandler:$TAG .
+            echo ${DOCKER_PWD} | docker login -u ${DOCKER_LOGIN} --password-stdin
+            docker push paloaltonetworks/panhandler:$TAG
