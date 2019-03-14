@@ -16,6 +16,7 @@ jobs:
               export TAG=dev
             else
               echo "Not building other branch"
+              exit 0;
             fi
             git submodule init
             git submodule update
