@@ -17,7 +17,6 @@ jobs:
             else
               echo "Not building other branch"
             fi
-            cd panhandler
             git submodule init
             git submodule update
             docker build -t paloaltonetworks/panhandler:$TAG .
