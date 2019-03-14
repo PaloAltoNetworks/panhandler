@@ -95,6 +95,8 @@ Required fields for each metadata type is listed below:
     * path - REST URL path component (`path: /api/?type=keygen&user={{ username }}&password={{ password }}`)
     * operation - type of REST operation (GET, POST, DELETE, etc)
     * payload - path to a jinja2 template to load and parse to be send as POSTed payload
+    * content_type - Content-Type header to add. For example: application/json
+    * accepts_type - Accepts-Type header to add. For examle: */*
 
 
 Each skillet can define nulitple variables that will be interpolated using the Jinja2 templating language. Each
