@@ -32,15 +32,23 @@ from django.conf import settings
 
 from pan_cnc.lib import git_utils
 from pan_cnc.views import *
+from panhandler.lib import app_utils
 
 
 class ImportRepoView(CNCBaseFormView):
     # define initial dynamic form from this snippet metadata
     snippet = 'import_repo'
     next_url = '/provision'
+    template_name = 'panhandler/import_repo.html'
 
     def get_snippet(self):
         return self.snippet
+
+    def get_context_data(self, **kwargs):
+        recommended_links = app_utils.get_recommended_links()
+        context = super().get_context_data(**kwargs)
+        context['links'] = recommended_links
+        return context
 
     # once the form has been submitted and we have all the values placed in the workflow, execute this
     def form_valid(self, form):
@@ -94,7 +102,7 @@ class ListReposView(CNCView):
             git_dir = d.joinpath('.git')
             if git_dir.exists() and git_dir.is_dir():
                 print(d)
-                repo_name = os.path.basename(d)
+                repo_name = os.path.basename(d.name)
                 repo_detail = git_utils.get_repo_details(repo_name, d)
                 repos.append(repo_detail)
                 continue

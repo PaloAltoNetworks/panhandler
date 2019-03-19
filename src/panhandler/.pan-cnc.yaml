@@ -11,6 +11,9 @@ repositories:
     branch: master
     destination_directory: Default Skillets
 
+application_data:
+  recommended_repos_link: https://raw.githubusercontent.com/nembery/panhandler-content-links/master/links.yaml
+
 views:
   - name: ''
     class: CNCView
@@ -22,12 +25,12 @@ views:
       title: Panhandler
       description: description is inline
       documentation_link: https://panhandler.readthedocs.io/en/latest/
-      next: repos
+      next: collections
 
   - name: import
     class: ImportRepoView
     menu: Panhandler
-    menu_option: Import Templates
+    menu_option: Import Skillets
     attributes:
       snippet: import_repo
       header: Import Repository
@@ -54,7 +57,7 @@ views:
   - name: repos
     class: ListReposView
     menu: Panhandler
-    menu_option: Repositories
+    menu_option: Skillet Repositories
 
   - name: repo_detail
     class: RepoDetailsView

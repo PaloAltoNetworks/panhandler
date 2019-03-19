@@ -1,0 +1,65 @@
+{% extends 'pan_cnc/dynamic_form.html' %}
+{% block head %}
+    <style>
+        .table td {
+            border-top: 0px;
+        }
+    </style>
+    <script type="text/javascript">
+        function capture_this(name, link, branch) {
+            $('#id_repo_name').val(name);
+            $('#id_url').val(link);
+            $('#id_branch').val(branch);
+
+            $('#dynamic_form').submit();
+        }
+
+        function more_info(link) {
+            let w = window.open(link, '_blank');
+            if (w) {
+                w.focus()
+            } else {
+                window.location = link;
+            }
+        }
+    </script>
+{% endblock %}
+{% block after_form %}
+    <div class="card border-primary mb-5 shadow-lg rounded">
+        <div class="card-header">
+            Recommended Repositories
+        </div>
+
+        <div class="card-body">
+            <table class="table">
+                {#                <thead>#}
+                {#                <tr>#}
+                {#                    <th>Name</th>#}
+                {#                    <th>Description</th>#}
+                {#                    <th>Options</th>#}
+                {#                </tr>#}
+                {#                </thead>#}
+                <tbody>
+                {% for item in links %}
+                    <tr>
+                        <td class="text-nowrap font-weight-bold">{{ item.name }}</td>
+                        <td>{{ item.description }}</td>
+                        <td class="text-nowrap">
+                            {% if item.documentation_link %}
+                                <a class="btn btn-success text-white" href="#"
+                                   onclick="more_info('{{ item.documentation_link}}')">
+                                   Documentation
+                                </a>
+                            {% endif %}
+                            <a class="btn btn-primary" href="#"
+                               onclick="capture_this('{{ item.name }}', '{{ item.link }}', '{{ item.branch }}')">
+                                Import
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}
