@@ -6,7 +6,19 @@
         }
     </style>
     <script type="text/javascript">
+        var submit_lock = false;
+
         function capture_this(name, link, branch) {
+            if (submit_lock === true) {
+                console.log('Already submitted!')
+                return;
+            }
+            console.log('Locking form');
+            submit_lock = true;
+
+            let doc = $(document.documentElement);
+            doc.css('cursor', 'progress');
+
             $('#id_repo_name').val(name);
             $('#id_url').val(link);
             $('#id_branch').val(branch);
@@ -24,7 +36,7 @@
         }
     </script>
 {% endblock %}
-{% block after_form %}
+{% block before_form %}
     <div class="card border-primary mb-5 shadow-lg rounded">
         <div class="card-header">
             Recommended Repositories

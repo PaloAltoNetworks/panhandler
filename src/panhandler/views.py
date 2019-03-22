@@ -60,15 +60,25 @@ class ImportRepoView(CNCBaseFormView):
         repo_name = workflow.get('repo_name')
         # FIXME - Ensure repo_name is unique
 
-        # we are going to keep the snippets in the snippets dir in the panhandler app
-        # get the dir where all apps are installed
-        src_dir = settings.SRC_PATH
-        # get the panhandler app dir
-        panhandler_dir = os.path.join(src_dir, 'panhandler')
-        # get the snippets dir under that
-        snippets_dir = os.path.join(panhandler_dir, 'snippets')
-        # figure out what our new repo / snippet dir will be
-        new_repo_snippets_dir = os.path.join(snippets_dir, repo_name)
+        # # we are going to keep the snippets in the snippets dir in the panhandler app
+        # # get the dir where all apps are installed
+        # src_dir = settings.SRC_PATH
+        # # get the panhandler app dir
+        # panhandler_dir = os.path.join(src_dir, 'panhandler')
+        # # get the snippets dir under that
+        # snippets_dir = os.path.join(panhandler_dir, 'snippets')
+        # # figure out what our new repo / snippet dir will be
+        # new_repo_snippets_dir = os.path.join(snippets_dir, repo_name)
+
+        user_dir = os.path.expanduser('~/.pan_cnc')
+        snippets_dir = os.path.join(user_dir, 'panhandler/repositories')
+        repo_dir = os.path.join(snippets_dir, repo_name)
+
+        if os.path.exists(repo_dir):
+            messages.add_message(self.request, messages.ERROR, 'A Repository with this name already exists')
+            return HttpResponseRedirect('repos')
+        else:
+            os.makedirs(repo_dir)
 
         # where to clone from
         clone_url = url
@@ -77,7 +87,7 @@ class ImportRepoView(CNCBaseFormView):
             if 'clone_url' in details:
                 clone_url = details['clone_url']
 
-        if not git_utils.clone_repo(new_repo_snippets_dir, repo_name, clone_url, branch):
+        if not git_utils.clone_repo(repo_dir, repo_name, clone_url, branch):
             messages.add_message(self.request, messages.ERROR, 'Could not Import Repository')
         else:
             print('Invalidating snippet cache')
@@ -95,7 +105,10 @@ class ListReposView(CNCView):
     def get_context_data(self, **kwargs):
 
         context = super().get_context_data(**kwargs)
-        snippets_dir = Path(os.path.join(settings.SRC_PATH, 'panhandler', 'snippets'))
+        # snippets_dir = Path(os.path.join(settings.SRC_PATH, 'panhandler', 'snippets'))
+
+        snippets_dir = Path(os.path.join(os.path.expanduser('~/.pan_cnc'), 'panhandler', 'repositories'))
+
         repos = list()
         for d in snippets_dir.rglob('./*'):
             # git_dir = os.path.join(d, '.git')
@@ -126,8 +139,12 @@ class RepoDetailsView(CNCView):
         # get the panhandler app dir
         panhandler_dir = os.path.join(src_dir, 'panhandler')
         # get the snippets dir under that
-        snippets_dir = os.path.join(panhandler_dir, 'snippets')
-        repo_dir = os.path.join(snippets_dir, repo_name)
+        # snippets_dir = os.path.join(panhandler_dir, 'snippets')
+        # repo_dir = os.path.join(snippets_dir, repo_name)
+
+        user_dir = os.path.expanduser('~')
+        repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
+
         repo_detail = git_utils.get_repo_details(repo_name, repo_dir)
 
         try:
@@ -152,10 +169,13 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         # get the dir where all apps are installed
         src_dir = settings.SRC_PATH
         # get the panhandler app dir
-        panhandler_dir = os.path.join(src_dir, 'panhandler')
-        # get the snippets dir under that
-        snippets_dir = os.path.join(panhandler_dir, 'snippets')
-        repo_dir = os.path.join(snippets_dir, repo_name)
+        # panhandler_dir = os.path.join(src_dir, 'panhandler')
+        # # get the snippets dir under that
+        # snippets_dir = os.path.join(panhandler_dir, 'snippets')
+        # repo_dir = os.path.join(snippets_dir, repo_name)
+
+        user_dir = os.path.expanduser('~')
+        repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
         msg = git_utils.update_repo(repo_dir)
         if 'Error' in msg:
@@ -176,12 +196,16 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
         repo_name = kwargs['repo_name']
         # we are going to keep the snippets in the snippets dir in the panhandler app
         # get the dir where all apps are installed
-        src_dir = settings.SRC_PATH
-        # get the panhandler app dir
-        panhandler_dir = os.path.join(src_dir, 'panhandler')
-        # get the snippets dir under that
-        snippets_dir = os.path.join(panhandler_dir, 'snippets')
-        repo_dir = os.path.abspath(os.path.join(snippets_dir, repo_name))
+        # src_dir = settings.SRC_PATH
+        # # get the panhandler app dir
+        # panhandler_dir = os.path.join(src_dir, 'panhandler')
+        # # get the snippets dir under that
+        # snippets_dir = os.path.join(panhandler_dir, 'snippets')
+        # repo_dir = os.path.abspath(os.path.join(snippets_dir, repo_name))
+
+        user_dir = os.path.expanduser('~')
+        snippets_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories')
+        repo_dir = os.path.join(snippets_dir, repo_name)
 
         if snippets_dir in repo_dir:
             print(f'Removing repo {repo_name}')
