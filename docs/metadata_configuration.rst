@@ -34,9 +34,14 @@ a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. N
 .. code-block:: yaml
 
     name: config_set_name
+    label: menu label text
     description: config_set description
     extends: gsb_baseline
     target_version: 8.1+
+
+    labels:
+        collection: sample
+
     variables:
       - name: INF_NAME
         description: Interface Name
@@ -52,9 +57,8 @@ a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. N
    These templates may be XML, JSON, YAML, Text, etc. For PAN-OS devices, these are XML fragments from specific stanzas
    of the PAN-OS device configuration tree.
 
-
-Snippet details
----------------
+Metadata details
+----------------
 
 Each .meta-cnc.yaml file must contain the following top-level keys:
 
@@ -69,23 +73,44 @@ Each .meta-cnc.yaml file must contain the following top-level keys:
     * file: relative path to the configuration template
     * xpath (optional): XPath where this fragment belongs in the target OS hierarchy (for XML config_sets)
 
-Each config_set can define nulitple variables that will be interpolated using the Jinja2 templating language. Each
+Variable details
+----------------
+
+Each config_set can define mulitple variables that will be interpolated using the Jinja2 templating language. Each
 variable defined in the `variables` list should define the following:
 
 
-1. name: The name of the variable found in the config_sets. For example:
+1. name: The name of the variable found in the config_sets as:
 
 .. code-block:: jinja
 
-    {{ name }}
+    {{ variable_name }}
 
 
-2. description: A brief description of the variable and it's purpose in the configuration
-3. label: Human friendly label to display to user
-4. extends: Name of another config_set to load
-5. default: A valid default value which will be used if not value is provided by the user
-6. type_hint: Used to constrain the types of values accepted. May be implemented by additional third party tools.
+2. description: A brief description used as the form field label
+3. default: A valid default value which will be used if not value is provided by the user
+4. type_hint: Used to constrain the types of values accepted. May be implemented by additional third party tools.
    Examples are `text`, `text_field`, `ip_address`, `password`, `dropdown`, and `checkbox`.
+
+Dropdown syntax
+~~~~~~~~~~~~~~~
+
+The `dropdown` option is a special case of type_hint with a secondary set of key/value pair metadata. The key is
+the displayed list option and the value what is used for variable substitution.
+
+The yaml format looks like:
+
+.. code-block:: yaml
+
+  - name: variable_name
+    description: variable description
+    default: some value
+    type_hint: dropdown
+    dd_list:
+      - key: key1
+        value: value1
+      - key: key2
+        value: value2
 
 
 Hints
