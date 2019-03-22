@@ -13,7 +13,7 @@ Using a standard web port
 
 .. code-block:: bash
 
-    docker run -p 80:80 paloaltonetworks/panhandler
+    docker run -t -p 80:80 paloaltonetworks/panhandler
 
 Then access the UI via http://localhost:80
 
@@ -26,9 +26,19 @@ If port 80 is unavailable, you can switch to a different port. This example uses
 
 .. code-block:: bash
 
-    docker run -p 9999:80 paloaltonetworks/panhandler
+    docker run -t -p 9999:80 paloaltonetworks/panhandler
 
 Then access the UI via http://localhost:9999
+
+To persist any environments and secrets, you can mount a volume on the `/root/.pan_cnc` folder like this:
+
+.. code-block:: bash
+
+    docker run -t -p 9999:80 -v ~/.pan_cnc:/root/.pan_cnc paloaltonetworks/panhandler
+
+.. Note::
+    The -t option for `terminal` allows you to view panhandler output data in the terminal window.
+    This is useful for determining any skillets errors that write to terminal output.
 
 
 Stopping the docker container
