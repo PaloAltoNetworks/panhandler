@@ -20,11 +20,12 @@
             <div class="btn-group" role="group" id="filter_buttons">
                 <button type="button" class="btn btn-outline-secondary" id="filter_panos">PAN-OS</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_panorama">Panorama</button>
+                <button type="button" class="btn btn-outline-secondary" id="filter_panorama_gpcs">Panorama-GPCS</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_rest">REST</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_template">Template</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_terraform">Terraform</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_workflow">Workflow</button>
-
+                <button type="button" class="btn btn-outline-secondary" id="filter_python">Python</button>
             </div>
         </div>
         <div>
@@ -115,6 +116,16 @@
 
         $('#filter_panorama').on('click', function () {
                 perform_filter(this, 'panorama');
+            }
+        );
+
+        $('#filter_panorama_gpcs').on('click', function () {
+                perform_filter(this, 'panorama-gpcs');
+            }
+        );
+
+        $('#filter_python').on('click', function () {
+                perform_filter(this, 'python');
             }
         );
 
