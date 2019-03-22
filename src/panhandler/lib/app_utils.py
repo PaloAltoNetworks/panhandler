@@ -11,6 +11,11 @@ def get_recommended_links() -> list:
     app_config = cnc_utils.get_app_config('panhandler')
     recommended_links = list()
 
+    # do not make external calls if we are testing
+    if cnc_utils.is_testing():
+        print('Returning blank recommended links due to testing env')
+        return recommended_links
+
     if 'application_data' not in app_config:
         print('Could not find application_data in .pan-cnc.yaml')
         return recommended_links
