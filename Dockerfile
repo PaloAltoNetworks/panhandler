@@ -16,10 +16,10 @@ ADD cnc/requirements.txt /app/cnc/requirements.txt
 COPY src /app/src
 COPY cnc /app/cnc
 
-RUN apk add --update --no-cache git curl openssh gcc musl-dev python3-dev libffi-dev openssl-dev && \
+RUN apk add --update --no-cache git curl openssh gcc g++ make musl-dev python3-dev libffi-dev openssl-dev && \
     pip install --upgrade pip && pip install --no-cache-dir --no-use-pep517 -r requirements.txt && \
     pip install --no-cache-dir --no-use-pep517 -r cnc/requirements.txt && \
-    apk del --no-cache gcc && \
+    apk del --no-cache gcc make g++ && \
     echo "===> Installing Terraform..."  && \
     curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip > terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
     echo "${TERRAFORM_SHA256SUM}  terraform_${TERRAFORM_VERSION}_linux_amd64.zip" > terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
