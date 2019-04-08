@@ -56,7 +56,7 @@
                         <th scope="row">{{ forloop.counter }}</th>
                         {% if repo_detail.commits_url %}
                             <td>
-                                <a href="{{ repo_detail.commits_url }}{{ c.id }}">
+                                <a target="_" href="{{ repo_detail.commits_url }}{{ c.id }}">
                                     {{ c.message }}
                                 </a>
                             </td>
