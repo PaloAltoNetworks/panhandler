@@ -16,7 +16,7 @@ ADD cnc/requirements.txt /app/cnc/requirements.txt
 COPY src /app/src
 COPY cnc /app/cnc
 
-RUN apk add --update --no-cache git curl openssh gcc g++ make musl-dev python3-dev libffi-dev openssl-dev && \
+RUN apk add --update --no-cache git curl openssh gcc g++ make musl-dev python3-dev libffi-dev openssl-dev bash && \
     pip install --upgrade pip && pip install --no-cache-dir --no-use-pep517 -r requirements.txt && \
     pip install --no-cache-dir --no-use-pep517 -r cnc/requirements.txt && \
     apk del --no-cache gcc make g++ && \
