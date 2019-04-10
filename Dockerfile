@@ -2,7 +2,7 @@
 FROM python:3.6.8-alpine3.8
 
 LABEL description="Panhandler"
-LABEL version="1.1"
+LABEL version="2.0"
 LABEL maintainer="sp-solutions@paloaltonetworks.com"
 
 ENV TERRAFORM_VERSION=0.11.11
