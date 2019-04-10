@@ -19,7 +19,7 @@ Palo Alto Networks panos- bootstrapper
 
 panhandler is a tool to find, download, and use CCF enabled repositories
 
-Please see http://.readthedocs.io for more information
+Please see http://panhandler.readthedocs.io for more information
 
 This software is provided without support, warranty, or guarantee.
 Use at your own risk.
