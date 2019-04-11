@@ -114,9 +114,7 @@ class ListReposView(CNCView):
             # git_dir = os.path.join(d, '.git')
             git_dir = d.joinpath('.git')
             if git_dir.exists() and git_dir.is_dir():
-                print(d)
-                repo_name = os.path.basename(d.name)
-                repo_detail = git_utils.get_repo_details(repo_name, d)
+                repo_detail = git_utils.get_repo_details(d.name, d)
                 repos.append(repo_detail)
                 continue
 
@@ -183,6 +181,8 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         else:
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches()
+            cnc_utils.set_long_term_cached_value(f'{repo_name}_detail', dict(), 0)
+
             level = messages.INFO
 
         messages.add_message(self.request, level, msg)
@@ -212,6 +212,7 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
             shutil.rmtree(repo_dir)
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches()
+            cnc_utils.set_long_term_cached_value(f'{repo_name}_detail', dict(), 0)
 
         messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
         return f'/panhandler/repos'
