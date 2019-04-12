@@ -101,6 +101,7 @@ class ImportRepoView(CNCBaseFormView):
 
 class ListReposView(CNCView):
     template_name = 'panhandler/repos.html'
+    app_dir = 'panhandler'
 
     def get_context_data(self, **kwargs):
 
@@ -114,7 +115,7 @@ class ListReposView(CNCView):
             # git_dir = os.path.join(d, '.git')
             git_dir = d.joinpath('.git')
             if git_dir.exists() and git_dir.is_dir():
-                repo_detail = git_utils.get_repo_details(d.name, d)
+                repo_detail = git_utils.get_repo_details(d.name, d, self.app_dir)
                 repos.append(repo_detail)
                 continue
 
@@ -143,10 +144,10 @@ class RepoDetailsView(CNCView):
         user_dir = os.path.expanduser('~')
         repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
-        repo_detail = git_utils.get_repo_details(repo_name, repo_dir)
+        repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
 
         try:
-            snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(repo_dir)
+            snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
         except CCFParserError:
             messages.add_message(self.request, messages.ERROR, 'Could not read all snippets from repo. Parser error')
             snippets_from_repo = list()
@@ -181,7 +182,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         else:
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches()
-            cnc_utils.set_long_term_cached_value(f'{repo_name}_detail', dict(), 0)
+            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', dict(), 0)
 
             level = messages.INFO
 
@@ -212,7 +213,7 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
             shutil.rmtree(repo_dir)
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches()
-            cnc_utils.set_long_term_cached_value(f'{repo_name}_detail', dict(), 0)
+            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', dict(), 0)
 
         messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
         return f'/panhandler/repos'
