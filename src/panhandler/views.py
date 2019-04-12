@@ -92,7 +92,7 @@ class ImportRepoView(CNCBaseFormView):
             messages.add_message(self.request, messages.ERROR, 'Could not Import Repository')
         else:
             print('Invalidating snippet cache')
-            snippet_utils.invalidate_snippet_caches()
+            snippet_utils.invalidate_snippet_caches(self.app_dir)
 
             messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 
@@ -182,7 +182,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             level = messages.ERROR
         else:
             print('Invalidating snippet cache')
-            snippet_utils.invalidate_snippet_caches()
+            snippet_utils.invalidate_snippet_caches(self.app_dir)
             cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', dict(), 0)
 
             level = messages.INFO
@@ -213,7 +213,7 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
             print(f'Removing repo {repo_name}')
             shutil.rmtree(repo_dir)
             print('Invalidating snippet cache')
-            snippet_utils.invalidate_snippet_caches()
+            snippet_utils.invalidate_snippet_caches(self.app_dir)
             cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', dict(), 0)
 
         messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
