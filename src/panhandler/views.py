@@ -40,6 +40,7 @@ class ImportRepoView(CNCBaseFormView):
     snippet = 'import_repo'
     next_url = '/provision'
     template_name = 'panhandler/import_repo.html'
+    app_dir = 'panhandler'
 
     def get_snippet(self):
         return self.snippet
@@ -83,7 +84,7 @@ class ImportRepoView(CNCBaseFormView):
         # where to clone from
         clone_url = url
         if 'github' in url.lower():
-            details = git_utils.get_repo_upstream_details(repo_name, url)
+            details = git_utils.get_repo_upstream_details(repo_name, url, self.app_dir)
             if 'clone_url' in details:
                 clone_url = details['clone_url']
 
