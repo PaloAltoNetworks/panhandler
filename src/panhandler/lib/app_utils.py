@@ -52,7 +52,8 @@ def get_recommended_links() -> list:
         data_object = oyaml.safe_load(resp.text)
         if _validate_recommended_data(data_object):
             # save for later
-            cnc_utils.set_long_term_cached_value(app_name, 'recommended_links', data_object['links'], 7200)
+            cnc_utils.set_long_term_cached_value(app_name, 'recommended_links', data_object['links'], 7200,
+                                                 'recommended_links')
             return data_object['links']
         else:
             # FIXME - return a default list here

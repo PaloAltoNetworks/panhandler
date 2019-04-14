@@ -93,7 +93,7 @@ class ImportRepoView(CNCBaseFormView):
         else:
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
-
+            cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
             messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 
         # return render(self.request, 'pan_cnc/results.html', context)
@@ -111,16 +111,25 @@ class ListReposView(CNCView):
 
         snippets_dir = Path(os.path.join(os.path.expanduser('~/.pan_cnc'), 'panhandler', 'repositories'))
 
-        repos = list()
-        for d in snippets_dir.rglob('./*'):
-            # git_dir = os.path.join(d, '.git')
-            git_dir = d.joinpath('.git')
-            if git_dir.exists() and git_dir.is_dir():
-                repo_detail = git_utils.get_repo_details(d.name, d, self.app_dir)
-                repos.append(repo_detail)
-                continue
+        repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
+        if repos is not None:
+            context['repos'] = repos
+        else:
+            repos = list()
+            for d in snippets_dir.rglob('./*'):
+                # git_dir = os.path.join(d, '.git')
+                git_dir = d.joinpath('.git')
+                if git_dir.exists() and git_dir.is_dir():
+                    repo_detail = git_utils.get_repo_details(d.name, d, self.app_dir)
+                    repos.append(repo_detail)
+                    continue
 
-        context['repos'] = repos
+            # cache the repos list for 1 week. this will be cleared when we import a new repository or otherwise
+            # change the repo list somehow
+            cnc_utils.set_long_term_cached_value(self.app_dir, 'imported_repositories', repos, 604800,
+                                                 'imported_git_repos')
+            context['repos'] = repos
+
         return context
 
 
@@ -165,26 +174,17 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         repo_name = kwargs['repo_name']
-        # we are going to keep the snippets in the snippets dir in the panhandler app
-        # get the dir where all apps are installed
-        src_dir = settings.SRC_PATH
-        # get the panhandler app dir
-        # panhandler_dir = os.path.join(src_dir, 'panhandler')
-        # # get the snippets dir under that
-        # snippets_dir = os.path.join(panhandler_dir, 'snippets')
-        # repo_dir = os.path.join(snippets_dir, repo_name)
-
         user_dir = os.path.expanduser('~')
         repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
         msg = git_utils.update_repo(repo_dir)
         if 'Error' in msg:
             level = messages.ERROR
-        else:
+        elif 'Updated' in msg:
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
-            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', dict(), 0)
-
+            level = messages.INFO
+        else:
             level = messages.INFO
 
         messages.add_message(self.request, level, msg)
@@ -214,7 +214,8 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
             shutil.rmtree(repo_dir)
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
-            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', dict(), 0)
+            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
+            cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
 
         messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
         return f'/panhandler/repos'
