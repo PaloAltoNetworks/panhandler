@@ -183,6 +183,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         elif 'Updated' in msg:
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
+            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'git_detail')
             level = messages.INFO
         else:
             level = messages.INFO
