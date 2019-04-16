@@ -116,7 +116,7 @@ class ListReposView(CNCView):
             context['repos'] = repos
         else:
             repos = list()
-            for d in snippets_dir.rglob('./*'):
+            for d in snippets_dir.iterdir():
                 # git_dir = os.path.join(d, '.git')
                 git_dir = d.joinpath('.git')
                 if git_dir.exists() and git_dir.is_dir():
