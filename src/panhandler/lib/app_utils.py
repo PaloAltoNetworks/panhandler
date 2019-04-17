@@ -8,6 +8,7 @@ from pan_cnc.lib import cnc_utils
 
 
 def get_recommended_links() -> list:
+    app_name = 'panhandler'
     app_config = cnc_utils.get_app_config('panhandler')
     recommended_links = list()
 
@@ -36,7 +37,7 @@ def get_recommended_links() -> list:
 
     try:
         # try to pull from cache is possible
-        recommends_from_cache = cnc_utils.get_cached_value('recommended_links')
+        recommends_from_cache = cnc_utils.get_long_term_cached_value(app_name, 'recommended_links')
         if recommends_from_cache is not None:
             print('Returning recommended_links from the cache')
             return recommends_from_cache
@@ -51,7 +52,8 @@ def get_recommended_links() -> list:
         data_object = oyaml.safe_load(resp.text)
         if _validate_recommended_data(data_object):
             # save for later
-            cnc_utils.set_cached_value('recommended_links', data_object['links'])
+            cnc_utils.set_long_term_cached_value(app_name, 'recommended_links', data_object['links'], 7200,
+                                                 'recommended_links')
             return data_object['links']
         else:
             # FIXME - return a default list here
@@ -87,7 +89,7 @@ def _validate_recommended_data(data: OrderedDict) -> bool:
         return False
 
     for link in data['links']:
-        if type(link) is not OrderedDict:
+        if type(link) is not OrderedDict and type(link) is not dict:
             print('link entry is not a dict')
             return False
 
