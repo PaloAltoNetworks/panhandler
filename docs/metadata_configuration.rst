@@ -2,12 +2,12 @@ Panhandler Metadata Files
 =========================
 
 The heart of Panhandler is the `.meta-cnc.yaml` file. This allows a set of configuration snippets, known as a skillet,
- to be shared and consumed as a single unit. For example, to configure a default security profile you may need to
- configure multiple different parts of the PAN-OS configuration. Panhandler allows you to group those different 'pieces'
- and share them among different devices as a single unit. Often times these configuration bits
- (affectionately called 'skillets') need slight customization before deployment to a new device. The `.meta-cnc.yaml`
- file provides a means to templatize these configurations and present a list of customization points, or variables,
- to the end user or consumer.
+to be shared and consumed as a single unit. For example, to configure a default security profile you may need to
+configure multiple different parts of the PAN-OS configuration. Panhandler allows you to group those different 'pieces'
+and share them among different devices as a single unit. Often times these configuration bits
+(affectionately called 'skillets') need slight customization before deployment to a new device. The `.meta-cnc.yaml`
+file provides a means to templatize these configurations and present a list of customization points, or variables,
+to the end user or consumer.
 
 Basic concepts
 --------------
@@ -91,12 +91,16 @@ Required fields for each metadata type is listed below:
 * terraform
     * None - snippets are not used for terraform
 * rest
-    * name - name of the snippet
-    * path - REST URL path component (`path: /api/?type=keygen&user={{ username }}&password={{ password }}`)
+    * name - unique name for this rest operation
+    * path - REST URL path component `path: http://host/api/?type=keygen&user={{ username }}&password={{ password }}`
     * operation - type of REST operation (GET, POST, DELETE, etc)
     * payload - path to a jinja2 template to load and parse to be send as POSTed payload
-    * content_type - Content-Type header to add. For example: application/json
-    * accepts_type - Accepts-Type header to add. For examle: */*
+        .. note:: For x-www-form-urlencded this must be a json dictionary
+    * headers - a dict of key value pairs to add to the http headers
+        .. note:: for example: `Content-Type: application/json`
+*python3
+    * name - name of the script to execute
+    * file - relative path to the python script to execute
 
 
 Each skillet can define nulitple variables that will be interpolated using the Jinja2 templating language. Each
@@ -111,10 +115,8 @@ variable defined in the `variables` list should define the following:
 
 
 2. description: A brief description of the variable and it's purpose in the configuration
-3. label: Human friendly label to display to user
-4. extends: Name of another skillet to load
-5. default: A valid default value which will be used if not value is provided by the user
-6. type_hint: Used to constrain the types of values accepted. May be implemented by additional third party tools.
+3. default: A valid default value which will be used if no value is provided by the user
+4. type_hint: Used to constrain the types of values accepted. May be implemented by additional third party tools.
    Examples are `text`, `text_field`, `ip_address`, `password`, `dropdown`, and `checkbox`.
 
 
