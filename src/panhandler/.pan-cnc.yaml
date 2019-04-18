@@ -6,22 +6,13 @@ repositories:
     url: https://github.com/PaloAltoNetworks/iron-skillet.git
     branch: panos_v8.1
     destination_directory: Iron-Skillet v81
-#  - name: Iron-Skillet-v80
-#    url: https://github.com/PaloAltoNetworks/iron-skillet.git
-#    branch: panos_v8.0
-#    destination_directory: Iron-Skillet v80
-#  - name: Mobile Skillets
-#    url: https://github.com/PaloAltoNetworks/MobileSkillet.git
-#    branch: panos_v8.1
-#    destination_directory: Mobile Skillet v81
-#  - name: MSSP Templates v8.1
-#    url:  https://github.com/scotchoaf/mssp-templates.git
-#    branch: panos_v8.1
-#    destination_directory: MSSP Skillets v81
   - name: Default Skillets
     url: https://github.com/PaloAltoNetworks/Skillets.git
     branch: master
     destination_directory: Default Skillets
+
+application_data:
+  recommended_repos_link: https://raw.githubusercontent.com/nembery/panhandler-content-links/master/links.yaml
 
 views:
   - name: ''
@@ -34,25 +25,30 @@ views:
       title: Panhandler
       description: description is inline
       documentation_link: https://panhandler.readthedocs.io/en/latest/
-      next: repos
+      next: collections
 
   - name: import
     class: ImportRepoView
     menu: Panhandler
-    menu_option: Import Templates
+    menu_option: Import Skillets
     attributes:
       snippet: import_repo
       header: Import Repository
       title: Enter a valid git url and desired branch below
       next_url: view_snippets
       help_text: >
-        This view imports a new git repository. Any CCF metadata files will then be available to the panhandler
-        application
+        This view imports a new git repository. Once imported, any skillets defined in that repository will be
+        available in the Skillet Collections.
 
-  - name: snippet_types
-    class: ListSnippetTypesView
+#  - name: snippet_types
+#    class: ListSnippetTypesView
+#    menu: Panhandler
+#    menu_option: Template Library
+
+  - name: collections
+    class: ListSkilletCollectionsView
     menu: Panhandler
-    menu_option: Template Library
+    menu_option: Skillet Collections
 
   - name: snippets_by_type
     class: ListSnippetsByGroup
@@ -61,11 +57,16 @@ views:
   - name: repos
     class: ListReposView
     menu: Panhandler
-    menu_option: Repositories
+    menu_option: Skillet Repositories
 
   - name: repo_detail
     class: RepoDetailsView
     parameter: repo_name
+    attributes:
+      help_text: >
+        Repository Details allows you to update to the latest version from the upstream git repository. You may
+        also use the 'Remove Repository' to remove this repository and all embedded skillets from all Skillet
+        Collections
 
   - name: update_repo
     class: UpdateRepoView
@@ -75,7 +76,15 @@ views:
     class: RemoveRepoView
     parameter: repo_name
 
-  - name: provision
-    class: ProvisionSnippetView
+  - name: collection
+    class: ListSkilletsInCollectionView
+    parameter: collection
+
+  - name: skillet
+    class: ViewSkilletView
+    parameter: skillet
+
+#  - name: provision
+#    class: ProvisionSnippetView
 
 

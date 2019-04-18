@@ -14,6 +14,8 @@ jobs:
               export TAG=1.0.${CIRCLE_BUILD_NUM}
             elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
               export TAG=dev
+            elif [ "${CIRCLE_BRANCH}" == "beta" ]; then
+              export TAG=beta
             else
               echo "Not building other branch"
               exit 0;
@@ -27,3 +29,4 @@ jobs:
               docker tag paloaltonetworks/panhandler:$TAG paloaltonetworks/panhandler:latest
               docker push paloaltonetworks/panhandler:latest
             fi
+

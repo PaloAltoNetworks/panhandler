@@ -19,7 +19,7 @@ Palo Alto Networks panos- bootstrapper
 
 panhandler is a tool to find, download, and use CCF enabled repositories
 
-Please see http://.readthedocs.io for more information
+Please see http://panhandler.readthedocs.io for more information
 
 This software is provided without support, warranty, or guarantee.
 Use at your own risk.
@@ -32,15 +32,24 @@ from django.conf import settings
 
 from pan_cnc.lib import git_utils
 from pan_cnc.views import *
+from panhandler.lib import app_utils
 
 
 class ImportRepoView(CNCBaseFormView):
     # define initial dynamic form from this snippet metadata
     snippet = 'import_repo'
-    next_url = '/panhandler/provision'
+    next_url = '/provision'
+    template_name = 'panhandler/import_repo.html'
+    app_dir = 'panhandler'
 
     def get_snippet(self):
         return self.snippet
+
+    def get_context_data(self, **kwargs):
+        recommended_links = app_utils.get_recommended_links()
+        context = super().get_context_data(**kwargs)
+        context['links'] = recommended_links
+        return context
 
     # once the form has been submitted and we have all the values placed in the workflow, execute this
     def form_valid(self, form):
@@ -52,29 +61,39 @@ class ImportRepoView(CNCBaseFormView):
         repo_name = workflow.get('repo_name')
         # FIXME - Ensure repo_name is unique
 
-        # we are going to keep the snippets in the snippets dir in the panhandler app
-        # get the dir where all apps are installed
-        src_dir = settings.SRC_PATH
-        # get the panhandler app dir
-        panhandler_dir = os.path.join(src_dir, 'panhandler')
-        # get the snippets dir under that
-        snippets_dir = os.path.join(panhandler_dir, 'snippets')
-        # figure out what our new repo / snippet dir will be
-        new_repo_snippets_dir = os.path.join(snippets_dir, repo_name)
+        # # we are going to keep the snippets in the snippets dir in the panhandler app
+        # # get the dir where all apps are installed
+        # src_dir = settings.SRC_PATH
+        # # get the panhandler app dir
+        # panhandler_dir = os.path.join(src_dir, 'panhandler')
+        # # get the snippets dir under that
+        # snippets_dir = os.path.join(panhandler_dir, 'snippets')
+        # # figure out what our new repo / snippet dir will be
+        # new_repo_snippets_dir = os.path.join(snippets_dir, repo_name)
+
+        user_dir = os.path.expanduser('~/.pan_cnc')
+        snippets_dir = os.path.join(user_dir, 'panhandler/repositories')
+        repo_dir = os.path.join(snippets_dir, repo_name)
+
+        if os.path.exists(repo_dir):
+            messages.add_message(self.request, messages.ERROR, 'A Repository with this name already exists')
+            return HttpResponseRedirect('repos')
+        else:
+            os.makedirs(repo_dir)
 
         # where to clone from
         clone_url = url
         if 'github' in url.lower():
-            details = git_utils.get_repo_upstream_details(repo_name, url)
+            details = git_utils.get_repo_upstream_details(repo_name, url, self.app_dir)
             if 'clone_url' in details:
                 clone_url = details['clone_url']
 
-        if not git_utils.clone_repo(new_repo_snippets_dir, repo_name, clone_url, branch):
+        if not git_utils.clone_repo(repo_dir, repo_name, clone_url, branch):
             messages.add_message(self.request, messages.ERROR, 'Could not Import Repository')
         else:
             print('Invalidating snippet cache')
-            snippet_utils.invalidate_snippet_caches()
-
+            snippet_utils.invalidate_snippet_caches(self.app_dir)
+            cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
             messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 
         # return render(self.request, 'pan_cnc/results.html', context)
@@ -83,23 +102,34 @@ class ImportRepoView(CNCBaseFormView):
 
 class ListReposView(CNCView):
     template_name = 'panhandler/repos.html'
+    app_dir = 'panhandler'
 
     def get_context_data(self, **kwargs):
 
         context = super().get_context_data(**kwargs)
-        snippets_dir = Path(os.path.join(settings.SRC_PATH, 'panhandler', 'snippets'))
-        repos = list()
-        for d in snippets_dir.rglob('./*'):
-            # git_dir = os.path.join(d, '.git')
-            git_dir = d.joinpath('.git')
-            if git_dir.exists() and git_dir.is_dir():
-                print(d)
-                repo_name = os.path.basename(d)
-                repo_detail = git_utils.get_repo_details(repo_name, d)
-                repos.append(repo_detail)
-                continue
+        # snippets_dir = Path(os.path.join(settings.SRC_PATH, 'panhandler', 'snippets'))
 
-        context['repos'] = repos
+        snippets_dir = Path(os.path.join(os.path.expanduser('~/.pan_cnc'), 'panhandler', 'repositories'))
+
+        repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
+        if repos is not None:
+            context['repos'] = repos
+        else:
+            repos = list()
+            for d in snippets_dir.iterdir():
+                # git_dir = os.path.join(d, '.git')
+                git_dir = d.joinpath('.git')
+                if git_dir.exists() and git_dir.is_dir():
+                    repo_detail = git_utils.get_repo_details(d.name, d, self.app_dir)
+                    repos.append(repo_detail)
+                    continue
+
+            # cache the repos list for 1 week. this will be cleared when we import a new repository or otherwise
+            # change the repo list somehow
+            cnc_utils.set_long_term_cached_value(self.app_dir, 'imported_repositories', repos, 604800,
+                                                 'imported_git_repos')
+            context['repos'] = repos
+
         return context
 
 
@@ -118,12 +148,16 @@ class RepoDetailsView(CNCView):
         # get the panhandler app dir
         panhandler_dir = os.path.join(src_dir, 'panhandler')
         # get the snippets dir under that
-        snippets_dir = os.path.join(panhandler_dir, 'snippets')
-        repo_dir = os.path.join(snippets_dir, repo_name)
-        repo_detail = git_utils.get_repo_details(repo_name, repo_dir)
+        # snippets_dir = os.path.join(panhandler_dir, 'snippets')
+        # repo_dir = os.path.join(snippets_dir, repo_name)
+
+        user_dir = os.path.expanduser('~')
+        repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
+
+        repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
 
         try:
-            snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(repo_dir)
+            snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
         except CCFParserError:
             messages.add_message(self.request, messages.ERROR, 'Could not read all snippets from repo. Parser error')
             snippets_from_repo = list()
@@ -140,21 +174,18 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         repo_name = kwargs['repo_name']
-        # we are going to keep the snippets in the snippets dir in the panhandler app
-        # get the dir where all apps are installed
-        src_dir = settings.SRC_PATH
-        # get the panhandler app dir
-        panhandler_dir = os.path.join(src_dir, 'panhandler')
-        # get the snippets dir under that
-        snippets_dir = os.path.join(panhandler_dir, 'snippets')
-        repo_dir = os.path.join(snippets_dir, repo_name)
+        user_dir = os.path.expanduser('~')
+        repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
         msg = git_utils.update_repo(repo_dir)
         if 'Error' in msg:
             level = messages.ERROR
-        else:
+        elif 'Updated' in msg:
             print('Invalidating snippet cache')
-            snippet_utils.invalidate_snippet_caches()
+            snippet_utils.invalidate_snippet_caches(self.app_dir)
+            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'git_detail')
+            level = messages.INFO
+        else:
             level = messages.INFO
 
         messages.add_message(self.request, level, msg)
@@ -162,29 +193,37 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
 
 class RemoveRepoView(CNCBaseAuth, RedirectView):
+    app_dir = 'panhandler'
 
     def get_redirect_url(self, *args, **kwargs):
         repo_name = kwargs['repo_name']
         # we are going to keep the snippets in the snippets dir in the panhandler app
         # get the dir where all apps are installed
-        src_dir = settings.SRC_PATH
-        # get the panhandler app dir
-        panhandler_dir = os.path.join(src_dir, 'panhandler')
-        # get the snippets dir under that
-        snippets_dir = os.path.join(panhandler_dir, 'snippets')
-        repo_dir = os.path.abspath(os.path.join(snippets_dir, repo_name))
+        # src_dir = settings.SRC_PATH
+        # # get the panhandler app dir
+        # panhandler_dir = os.path.join(src_dir, 'panhandler')
+        # # get the snippets dir under that
+        # snippets_dir = os.path.join(panhandler_dir, 'snippets')
+        # repo_dir = os.path.abspath(os.path.join(snippets_dir, repo_name))
+
+        user_dir = os.path.expanduser('~')
+        snippets_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories')
+        repo_dir = os.path.join(snippets_dir, repo_name)
 
         if snippets_dir in repo_dir:
             print(f'Removing repo {repo_name}')
             shutil.rmtree(repo_dir)
             print('Invalidating snippet cache')
-            snippet_utils.invalidate_snippet_caches()
+            snippet_utils.invalidate_snippet_caches(self.app_dir)
+            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
+            cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
 
         messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
         return f'/panhandler/repos'
 
 
 class ListSnippetTypesView(CNCView):
+    app_dir = 'panhandler'
     template_name = 'panhandler/snippet_types.html'
 
     def get_context_data(self, **kwargs):
@@ -214,7 +253,8 @@ class ListSnippetTypesView(CNCView):
 
 
 class ListSnippetsByGroup(CNCBaseFormView):
-    next_url = '/panhandler/provision'
+    next_url = '/provision'
+    app_dir = 'panhandler'
 
     def get_snippet(self):
         print('Getting snippet from POST here in ListSnippetByGroup:get_snippet')
@@ -285,3 +325,49 @@ class ListSnippetsByGroup(CNCBaseFormView):
 
         context['form'] = form
         return context
+
+
+class ListSkilletCollectionsView(CNCView):
+    template_name = 'panhandler/collections.html'
+    app_dir = 'panhandler'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        print('Getting all labels')
+        collections = snippet_utils.load_all_label_values(self.app_dir, 'collection')
+        collections.append('Kitchen Sink')
+        context['collections'] = collections
+
+        return context
+
+
+class ListSkilletsInCollectionView(CNCView):
+    template_name = 'panhandler/collection.html'
+    app_dir = 'panhandler'
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        collection = self.kwargs.get('collection', 'Kitchen Sink')
+        print(f'Getting all snippets with collection label {collection}')
+        if collection == 'Kitchen Sink':
+            skillets = snippet_utils.load_all_snippets_without_label_key(self.app_dir, 'collection')
+        else:
+            skillets = snippet_utils.load_snippets_by_label('collection', collection, self.app_dir)
+
+        context['skillets'] = skillets
+        context['collection'] = collection
+
+        return context
+
+
+class ViewSkilletView(ProvisionSnippetView):
+
+    def get_snippet(self):
+        """
+        Override the get_snippet as the snippet_name is passed as a kwargs param and not a POST or in the session
+        :return: name of the skillet found in the kwargs
+        """
+        skillet = self.kwargs.get('skillet', '')
+        self.save_value_to_workflow('snippet_name', skillet)
+        return skillet

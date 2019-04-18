@@ -1,2 +1,4 @@
-**/.git
 .DS_Store
+cnc/db.sqlite3
+src/panhandler/snippets
+!src/panhandler/snippets/app

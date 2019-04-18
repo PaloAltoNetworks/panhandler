@@ -1,9 +1,8 @@
 .idea
 cnc/db.sqlite3
-venv
-venv3
 venv*
 .DS_Store
+**/.cnc_plan
 
 **/snippets/**/
 !**/snippets/app
@@ -36,6 +35,11 @@ wheels/
 .installed.cfg
 *.egg
 MANIFEST
+
+# do not ignore panhandler libs
+
+!src/panhandler/lib/*
+!src/panhandler/lib
 
 # PyInstaller
 #  Usually these files are written by a python script from a template
