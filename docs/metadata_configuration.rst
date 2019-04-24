@@ -98,7 +98,7 @@ Required fields for each metadata type is listed below:
         .. note:: For x-www-form-urlencded this must be a json dictionary
     * headers - a dict of key value pairs to add to the http headers
         .. note:: for example: `Content-Type: application/json`
-*python3
+* python3
     * name - name of the script to execute
     * file - relative path to the python script to execute
 
