@@ -18,8 +18,8 @@ Panhandler
    example_skillet
    environments
    updating
-   examples/rest_skillet
    debugging
+   examples/rest_skillet
 
 
 About
