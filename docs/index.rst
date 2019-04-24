@@ -19,6 +19,7 @@ Panhandler
    environments
    updating
    examples/rest_skillet
+   debugging
 
 
 About

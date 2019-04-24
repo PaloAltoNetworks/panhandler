@@ -77,6 +77,48 @@ Each .meta-cnc.yaml file must contain the following top-level keys:
     `panos` and `panorama` types. Other types such as `template` or `rest` may have a different format.
 
 
+Variables
+^^^^^^^^^
+
+Each skillet can define nulitple variables that will be interpolated using the Jinja2 templating language. Each
+variable defined in the `variables` list should define the following:
+
+
+1. name: The name of the variable found in the skillets. For example:
+
+.. code-block:: jinja
+
+    {{ variable_name }}
+
+
+2. description: A brief description of the variable and it's purpose in the configuration
+3. default: This value will be pre-populated in the UI
+4. type_hint: Used to constrain the types of values accepted. May be implemented by additional third party tools.
+   Examples are `text`, `text_field`, `ip_address`, `password`, `dropdown`, and `checkbox`.
+
+
+Dropdown syntax
+"""""""""""""""
+
+The `dropdown` option is a special case of type_hint with a secondary set of key/value pair metadata. The key is
+the displayed list option and the value what is used for variable substitution.
+
+The yaml format looks like:
+
+.. code-block:: yaml
+
+  - name: variable_name
+    description: variable description
+    default: some value
+    type_hint: dropdown
+    dd_list:
+      - key: key1
+        value: value1
+      - key: key2
+        value: value2
+
+
+
 Snippet details per Metadata type
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -99,46 +141,11 @@ Required fields for each metadata type is listed below:
         .. note:: For x-www-form-urlencded this must be a json dictionary
     * headers - a dict of key value pairs to add to the http headers
         .. note:: for example: `Content-Type: application/json`
-*python3
+* python3
     * name - name of the script to execute
     * file - relative path to the python script to execute
 
 
-Each skillet can define nulitple variables that will be interpolated using the Jinja2 templating language. Each
-variable defined in the `variables` list should define the following:
-
-
-1. name: The name of the variable found in the skillets. For example:
-
-.. code-block:: jinja
-
-    {{ variable_name }}
-
-
-2. description: A brief description of the variable and it's purpose in the configuration
-3. default: A valid default value which will be used if no value is provided by the user
-4. type_hint: Used to constrain the types of values accepted. May be implemented by additional third party tools.
-   Examples are `text`, `text_field`, `ip_address`, `password`, `dropdown`, and `checkbox`.
-
-Dropdown syntax
-~~~~~~~~~~~~~~~
-
-The `dropdown` option is a special case of type_hint with a secondary set of key/value pair metadata. The key is
-the displayed list option and the value what is used for variable substitution.
-
-The yaml format looks like:
-
-.. code-block:: yaml
-
-  - name: variable_name
-    description: variable description
-    default: some value
-    type_hint: dropdown
-    dd_list:
-      - key: key1
-        value: value1
-      - key: key2
-        value: value2
 
 
 Hints
