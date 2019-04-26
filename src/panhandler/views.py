@@ -162,11 +162,25 @@ class RepoDetailsView(CNCView):
             messages.add_message(self.request, messages.ERROR, 'Could not read all snippets from repo. Parser error')
             snippets_from_repo = list()
 
+        # get a list of all collections found in this repo
+        collections = list()
+        for skillet in snippets_from_repo:
+            if 'labels' in skillet and 'collection' in skillet['labels']:
+                collection = skillet['labels']['collection']
+                if type(collection) is str:
+                    if collection not in collections:
+                        collections.append(collection)
+                elif type(collection) is list:
+                    for collection_member in collection:
+                        if collection not in collections:
+                            collections.append(collection_member)
+
         # create our docker command to pass to git
         context = super().get_context_data(**kwargs)
         context['repo_detail'] = repo_detail
         context['repo_name'] = repo_name
         context['snippets'] = snippets_from_repo
+        context['collections'] = collections
         return context
 
 
