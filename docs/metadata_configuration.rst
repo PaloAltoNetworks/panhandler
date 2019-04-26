@@ -118,6 +118,9 @@ variable defined in the `variables` list should define the following:
 3. default: A valid default value which will be used if no value is provided by the user
 4. type_hint: Used to constrain the types of values accepted. May be implemented by additional third party tools.
    Examples are `text`, `text_field`, `ip_address`, `password`, `dropdown`, and `checkbox`.
+5. force_default: The UI will be pre-populated with a value from the loaded environment or with a previously
+entered value unless this value is set to True. The default is False. Setting to True will ensure the default
+value will always be rendered in the panhandler UI.
 
 
 Hints
