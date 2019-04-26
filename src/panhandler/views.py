@@ -180,10 +180,11 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         msg = git_utils.update_repo(repo_dir)
         if 'Error' in msg:
             level = messages.ERROR
+            cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
         elif 'Updated' in msg:
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
-            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'git_detail')
+            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'git_repo_details')
             level = messages.INFO
         else:
             level = messages.INFO
@@ -212,7 +213,11 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
 
         if snippets_dir in repo_dir:
             print(f'Removing repo {repo_name}')
-            shutil.rmtree(repo_dir)
+            if os.path.exists(repo_dir):
+                shutil.rmtree(repo_dir)
+            else:
+                print('This dir is already gone!')
+
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
             cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
