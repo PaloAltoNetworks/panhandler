@@ -172,7 +172,7 @@ class RepoDetailsView(CNCView):
                         collections.append(collection)
                 elif type(collection) is list:
                     for collection_member in collection:
-                        if collection not in collections:
+                        if collection_member not in collections:
                             collections.append(collection_member)
 
         # create our docker command to pass to git
