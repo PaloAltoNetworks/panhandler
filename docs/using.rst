@@ -80,6 +80,18 @@ load a configuration to another device.
     the status of this commit operation either via a Skillet or on the PAN-OS device directly.
 
 
+Understanding what will be pushed
+---------------------------------
+
+You have two options to examine what configurations will be pushed by a skillet. The first, is to simply
+uncheck the 'Perform Commit' checkbox. Then you can log into the device and issue a `show config diff` command
+from the CLI.
+
+You can also select the 'Debug' button from the Edit Target screen. This will display a list of all fully
+rendered XML snippets and the xpaths where they will be inserted into the configuration heirarchy.
+
+.. image:: images/ph-debugging.png
+
 
 
 
