@@ -54,7 +54,7 @@ The final form will be the target information for API config loading. Confirm th
 For PAN-OS types, you can choose to check or uncheck the 'Perform Commit' option to push the configuration then
 do a 'commit' or only push the configuration witout a commit.
 
-YOu can also check or unckeck the 'Perform Backup' option to create a named configuration backup on the device prior
+You can also check or unckeck the 'Perform Backup' option to create a named configuration backup on the device prior
 to pushing the new configuration. This provides a roll back mechanism should you desire. The named backups will be
 named with the following format: `panhandler-20190101000000.xml` (panhandler followed by the current timestamp)
 
@@ -73,6 +73,12 @@ named with the following format: `panhandler-20190101000000.xml` (panhandler fol
 
 Once the load has completed, you can select another template to load to the same device or choose another Environment to
 load a configuration to another device.
+
+.. Note::
+    Commit operations are queued in the background on the device. If you chose to commit the configuration on the
+    edit target screen, then a `Job ID` will be displayed in the success message. You can then use this Job ID to view
+    the status of this commit operation either via a Skillet or on the PAN-OS device directly.
+
 
 
 
