@@ -78,6 +78,7 @@
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Label</th>
+                    <th scope="col">View</th>
                     <th scope="col">Description</th>
                 </tr>
                 </thead>
@@ -86,8 +87,13 @@
                     <tr>
                         <th scope="row">{{ forloop.counter }}</th>
                         <td>
-                            <a href="/debug/{{ app_dir }}/{{ s.name }}">
+                            <a href="/panhandler/skillet/{{ s.name }}">
                                 {{ s.label }}
+                            </a>
+                        </td>
+                        <td>
+                            <a href="/debug/{{ app_dir }}/{{ s.name }}">
+                                <i class="fas fa-cog text-muted"></i>
                             </a>
                         </td>
                         <td>{{ s.description }}</td>
@@ -97,12 +103,37 @@
             </table>
             </p>
 
-
+       <h5 class="card-title">Collections</h5>
+            <p class="card-text">
+            <table class="table">
+                <caption>All collections found in repository: {{ repo_detail.name }}</caption>
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Collection</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for c in collections %}
+                    <tr>
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td>
+                            <a href="/panhandler/collection/{{ c }}">
+                                <i class="fas fa-info-circle"></i>
+                                {{ c }}
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+            </p>
         </div>
     </div>
 
-     <!-- Modal -->
-    <div class="modal fade border-top border-primary" id="helpTextModal" tabindex="-1" role="dialog" aria-labelledby="helpTextModalLabel"
+    <!-- Modal -->
+    <div class="modal fade border-top border-primary" id="helpTextModal" tabindex="-1" role="dialog"
+         aria-labelledby="helpTextModalLabel"
          aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">

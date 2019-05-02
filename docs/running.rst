@@ -13,7 +13,7 @@ Using a standard web port
 
 .. code-block:: bash
 
-    docker run -t -p 80:80 paloaltonetworks/panhandler
+    docker run -t -p 80:80 -v ~/.pan_cnc:/root/.pan_cnc paloaltonetworks/panhandler
 
 Then access the UI via http://localhost:80
 
@@ -26,7 +26,7 @@ If port 80 is unavailable, you can switch to a different port. This example uses
 
 .. code-block:: bash
 
-    docker run -t -p 9999:80 paloaltonetworks/panhandler
+    docker run -t -p 9999:80 -v ~/.pan_cnc:/root/.pan_cnc paloaltonetworks/panhandler
 
 Then access the UI via http://localhost:9999
 

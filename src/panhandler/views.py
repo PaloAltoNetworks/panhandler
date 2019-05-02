@@ -162,11 +162,25 @@ class RepoDetailsView(CNCView):
             messages.add_message(self.request, messages.ERROR, 'Could not read all snippets from repo. Parser error')
             snippets_from_repo = list()
 
+        # get a list of all collections found in this repo
+        collections = list()
+        for skillet in snippets_from_repo:
+            if 'labels' in skillet and 'collection' in skillet['labels']:
+                collection = skillet['labels']['collection']
+                if type(collection) is str:
+                    if collection not in collections:
+                        collections.append(collection)
+                elif type(collection) is list:
+                    for collection_member in collection:
+                        if collection_member not in collections:
+                            collections.append(collection_member)
+
         # create our docker command to pass to git
         context = super().get_context_data(**kwargs)
         context['repo_detail'] = repo_detail
         context['repo_name'] = repo_name
         context['snippets'] = snippets_from_repo
+        context['collections'] = collections
         return context
 
 
@@ -180,10 +194,11 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         msg = git_utils.update_repo(repo_dir)
         if 'Error' in msg:
             level = messages.ERROR
+            cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
         elif 'Updated' in msg:
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
-            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'git_detail')
+            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'git_repo_details')
             level = messages.INFO
         else:
             level = messages.INFO
@@ -212,7 +227,11 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
 
         if snippets_dir in repo_dir:
             print(f'Removing repo {repo_name}')
-            shutil.rmtree(repo_dir)
+            if os.path.exists(repo_dir):
+                shutil.rmtree(repo_dir)
+            else:
+                print('This dir is already gone!')
+
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
             cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
