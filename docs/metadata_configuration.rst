@@ -103,9 +103,11 @@ Required fields for each metadata type is listed below:
     * file - relative path to the python script to execute
 
 
-Each skillet can define nulitple variables that will be interpolated using the Jinja2 templating language. Each
-variable defined in the `variables` list should define the following:
+Defining Variables for User input
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Each skillet can define multiple variables that will be interpolated using the Jinja2 templating language. Each
+variable defined in the `variables` list should define the following:
 
 1. name: The name of the variable found in the skillets. For example:
 
@@ -114,13 +116,128 @@ variable defined in the `variables` list should define the following:
     {{ name }}
 
 
-2. description: A brief description of the variable and it's purpose in the configuration
-3. default: A valid default value which will be used if no value is provided by the user
+2. description: A brief description of the variable and it's purpose in the configuration. This will be rendered as
+   the field label in the UI.
+3. default: A valid default value which will be used if no value is provided by the user.
 4. type_hint: Used to constrain the types of values accepted. May be implemented by additional third party tools.
    Examples are `text`, `text_field`, `ip_address`, `password`, `dropdown`, and `checkbox`.
 5. force_default: The UI will be pre-populated with a value from the loaded environment or with a previously
-entered value unless this value is set to True. The default is False. Setting to True will ensure the default
-value will always be rendered in the panhandler UI.
+   entered value unless this value is set to True. The default is False. Setting to True will ensure the default
+   value will always be rendered in the panhandler UI.
+
+Variable Examples:
+^^^^^^^^^^^^^^^^^^
+
+* text
+
+  Default input type for user input.
+
+.. code-block:: yaml
+
+  - name: FW_NAME
+    description: Firewall hostname
+    default: panos-01
+    type_hint: text
+
+* ip_address
+
+  This type will ensure the entered value matches an IPv4 or IPv6 pattern.
+
+.. code-block:: yaml
+
+  - name: ip_address
+    description: IP Address
+    default: 0.0.0.0
+    type_hint: ip_address
+
+* email
+
+  This type will ensure the entered value matches an email pattern.
+
+.. code-block:: yaml
+
+  - name: email
+    description: Email
+    default: support@noway.com
+    type_hint: email
+
+* number
+
+  This type will ensure the entered value is an integer. You may optionally supply the `min` and `max`
+  attributes to ensure the entered value do not exceed or fall below those values.
+
+.. code-block:: yaml
+
+  - name: vlan_id
+    description: VLAN ID
+    default: 1001
+    type_hint: number
+    attributes:
+      min: 1000
+      max: 2000
+
+* dropdown
+
+.. code-block:: yaml
+
+  - name: yes_no
+    description: Yes No
+    default: 'No I dont'
+    type_hint: dropdown
+    dd_list:
+      - key: 'Yes I do'
+        value: 'yes'
+      - key: 'No I dont'
+        value: 'no'
+
+.. note::
+
+    The `default` parameter should match the `value` and not the `key`. The `key` is what will be shown to the user
+    and the `value` is what will be used as the value of the variable identified by `name`.
+
+.. warning::
+    Some values such as `yes`, `no`, `true`, `false`, `on`, `off`, etc are treated differently in YAML. To ensure these values are
+    not converted to a `boolean` type, ensure to put single quotes `'` around both the `key` and the `value` as in
+    the example above. Refer to the YAML specification for more details: https://yaml.org/type/bool.html
+
+* text_area
+
+.. code-block:: yaml
+
+  - name: text_area
+    description: Multi-Line Input
+    default: |
+      This is some very long input with lots of
+      newlines and white    space
+      and stuff
+    type_hint: text_area
+
+* disabled
+
+.. code-block:: yaml
+
+  - name: DISABLED
+    description: No Bueno
+    default: panos-01
+    type_hint: disabled
+
+* radio
+
+.. code-block:: yaml
+
+  - name: radio_box_example
+    description: radios
+    default: maybe
+    type_hint: radio
+    rad_list:
+      - key: 'Yes'
+        value: 'yes'
+      - key: 'No'
+        value: 'no'
+      - key: 'Maybe'
+        value: 'maybe'
+
+
 
 
 Hints
