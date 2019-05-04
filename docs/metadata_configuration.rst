@@ -150,6 +150,18 @@ Variable Examples:
     default: 0.0.0.0
     type_hint: ip_address
 
+* hostname_or_ip
+
+  This type will ensure the entered value matches an IPv4, IPv6, or a valid hostname pattern.
+
+.. code-block:: yaml
+
+  - name: host
+    description: Target Host
+    default: 0.pool.ntp.org
+    type_hint: hostname_or_ip
+
+
 * email
 
   This type will ensure the entered value matches an email pattern.
@@ -178,6 +190,9 @@ Variable Examples:
 
 * dropdown
 
+  This type will render a `select` input control. This ensures the user can only select one of the options
+  given in the `dd_list`.
+
 .. code-block:: yaml
 
   - name: yes_no
@@ -202,6 +217,8 @@ Variable Examples:
 
 * text_area
 
+  This type renders a `TextArea` input control. This allows the user to enter multiple lines of input.
+
 .. code-block:: yaml
 
   - name: text_area
@@ -214,6 +231,9 @@ Variable Examples:
 
 * disabled
 
+  This type will show the default value in an input control, but the user cannot change it. This is useful to
+  show values but not allow then to be changed.
+
 .. code-block:: yaml
 
   - name: DISABLED
@@ -222,6 +242,8 @@ Variable Examples:
     type_hint: disabled
 
 * radio
+
+  This type allows the user to select one option out of the `rad_list`.
 
 .. code-block:: yaml
 
