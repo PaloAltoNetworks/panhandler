@@ -180,7 +180,6 @@ paramiko==2.4.2
 passlib==1.7.1
 pbr==5.2.0
 pexpect==4.6.0
-pipenv==2018.11.26
 pluggy==0.9.0
 ply==3.11
 portalocker==1.4.0
