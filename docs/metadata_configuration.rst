@@ -150,7 +150,7 @@ Variable Examples:
     default: 0.0.0.0
     type_hint: ip_address
 
-* hostname_or_ip
+* fqdn_or_ip
 
   This type will ensure the entered value matches an IPv4, IPv6, or a valid hostname pattern.
 
@@ -159,7 +159,7 @@ Variable Examples:
   - name: host
     description: Target Host
     default: 0.pool.ntp.org
-    type_hint: hostname_or_ip
+    type_hint: fqdn_or_ip
 
 
 * email
