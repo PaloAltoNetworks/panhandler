@@ -141,7 +141,7 @@ Variable Examples:
 
 * ip_address
 
-  This type will ensure the entered value matches an IPv4 or IPv6 pattern.
+  This type will ensure the entered value matches an IPv4 or IPv6 pattern without a subnet mask.
 
 .. code-block:: yaml
 
@@ -152,7 +152,8 @@ Variable Examples:
 
 * fqdn_or_ip
 
-  This type will ensure the entered value matches an IPv4, IPv6, or a valid hostname pattern.
+  This type will ensure the entered value matches an IPv4, IPv6, or a valid hostname pattern. This is the most
+  flexible
 
 .. code-block:: yaml
 
@@ -161,6 +162,16 @@ Variable Examples:
     default: 0.pool.ntp.org
     type_hint: fqdn_or_ip
 
+* cidr
+
+  This type will ensure the entered value matches an IPv4 or IPv6 CIDR.
+
+.. code-block:: yaml
+
+  - name: ip_address
+    description: IP Address
+    default: 192.168.122.2/24
+    type_hint: cidr
 
 * email
 
