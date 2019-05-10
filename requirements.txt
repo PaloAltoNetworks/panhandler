@@ -173,6 +173,7 @@ mock==2.0.0
 more-itertools==7.0.0
 msrest==0.6.6
 msrestazure==0.6.0
+netaddr==0.7.19
 oauthlib==3.0.1
 oyaml==0.9
 pan-python==0.14.0

@@ -153,7 +153,7 @@ Variable Examples:
 * fqdn_or_ip
 
   This type will ensure the entered value matches an IPv4, IPv6, or a valid hostname pattern. This is the most
-  flexible
+  flexible option for hostname, FQDNs, ip addresses or CIDRs.
 
 .. code-block:: yaml
 
