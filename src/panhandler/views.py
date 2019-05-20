@@ -238,6 +238,32 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         return f'/panhandler/repo_detail/{repo_name}'
 
 
+class UpdateAllReposView(CNCBaseAuth, RedirectView):
+
+    def get_redirect_url(self, *args, **kwargs):
+        user_dir = os.path.expanduser('~')
+        base_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories')
+        base_path = Path(base_dir)
+        err_condition = False
+        for d in base_path.iterdir():
+            git_dir = d.joinpath('.git')
+            if git_dir.exists() and git_dir.is_dir():
+                msg = git_utils.update_repo(d)
+                if 'Error' in msg:
+                    level = messages.ERROR
+                    messages.add_message(self.request, messages.ERROR, f'Could not update repository {d.name}')
+                    err_condition = True
+                elif 'Updated' in msg:
+                    cnc_utils.set_long_term_cached_value(self.app_dir, f'{d.name}_detail', None, 0, 'git_repo_details')
+
+        if not err_condition:
+            messages.add_message(self.request, messages.SUCCESS, 'Updated all repositories successfully')
+
+        cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
+        snippet_utils.invalidate_snippet_caches(self.app_dir)
+        return '/panhandler/repos'
+
+
 class RemoveRepoView(CNCBaseAuth, RedirectView):
     app_dir = 'panhandler'
 

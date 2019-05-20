@@ -72,6 +72,9 @@ views:
     class: UpdateRepoView
     parameter: repo_name
 
+  - name: update_all_repos
+    class: UpdateAllReposView
+
   - name: remove_repo
     class: RemoveRepoView
     parameter: repo_name
