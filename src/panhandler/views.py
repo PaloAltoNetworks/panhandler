@@ -94,7 +94,23 @@ class ImportRepoView(CNCBaseFormView):
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
             cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
-            messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
+
+            debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
+            if debug_errors:
+                messages.add_message(self.request, messages.ERROR,
+                                     f'Found Skillets with errors! Please open an issue on '
+                                     'this repository to help resolve this issue')
+                for d in debug_errors:
+                    if 'err_list' in d and 'path' in d and 'severity' in d:
+                        for e in d['err_list']:
+                            if d['severity'] == 'warn':
+                                level = messages.WARNING
+                            else:
+                                level = messages.ERROR
+
+                            messages.add_message(self.request, level, f'Skillet: {d["path"]}\n\nError: {e}')
+            else:
+                messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 
         # return render(self.request, 'pan_cnc/results.html', context)
         return HttpResponseRedirect('repos')
@@ -204,6 +220,21 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             level = messages.INFO
 
         messages.add_message(self.request, level, msg)
+
+        debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
+        if debug_errors:
+            messages.add_message(self.request, messages.ERROR, f'Found Skillets with errors! Please open an issue on '
+                                 'this repository to help resolve this issue')
+            for d in debug_errors:
+                if 'err_list' in d and 'path' in d:
+                    for e in d['err_list']:
+                        if d['severity'] == 'warn':
+                            level = messages.WARNING
+                        else:
+                            level = messages.ERROR
+
+                        messages.add_message(self.request, level, f'Skillet: {d["path"]}\n\nError: {e}')
+
         return f'/panhandler/repo_detail/{repo_name}'
 
 
