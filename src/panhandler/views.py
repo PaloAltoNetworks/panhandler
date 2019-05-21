@@ -15,7 +15,7 @@
 # Author: Nathan Embery nembery@paloaltonetworks.com
 
 """
-Palo Alto Networks panos- bootstrapper
+Palo Alto Networks Panhandler
 
 panhandler is a tool to find, download, and use CCF enabled repositories
 
