@@ -29,10 +29,11 @@
         A newer version of panhandler is available!
         <a href="https://panhandler.readthedocs.io/en/master/updating.html">How to update Panhandler</a>
     {% elif update_required == 'false' %}
-        This is the most recent version of Panhabndler
+        This is the most recent version of Panhandler.
     {% else %}
-        Unable to determine build status! Check your internet connection
+        Unable to determine build status! Check your internet connection.
     {% endif %}
+    <a href="/panhandler/check_update">Check for Update</a>
 </p>
 
 {%  endblock %}

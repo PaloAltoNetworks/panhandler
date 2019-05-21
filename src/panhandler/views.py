@@ -46,9 +46,10 @@ class WelcomeView(CNCView):
         if up_to_date is None:
             update_required = "error"
         elif up_to_date:
-            update_required = "true"
-        else:
             update_required = "false"
+        else:
+            print('Panhandler needs an update!')
+            update_required = "true"
 
         context['update_required'] = update_required
         return context
@@ -466,3 +467,10 @@ class ViewSkilletView(ProvisionSnippetView):
         skillet = self.kwargs.get('skillet', '')
         self.save_value_to_workflow('snippet_name', skillet)
         return skillet
+
+
+class CheckAppUpdateView(CNCBaseAuth, RedirectView):
+
+        def get_redirect_url(self, *args, **kwargs):
+            cnc_utils.evict_cache_items_of_type('panhandler', 'app_update')
+            return '/'

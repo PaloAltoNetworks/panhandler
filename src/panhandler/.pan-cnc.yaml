@@ -92,4 +92,5 @@ views:
 #  - name: provision
 #    class: ProvisionSnippetView
 
-
+  - name: check_update
+    class: CheckAppUpdateView

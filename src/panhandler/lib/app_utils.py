@@ -135,7 +135,7 @@ def is_up_to_date() -> (bool, None):
                 last_updated = datetime.strptime(last_updated_string, '%Y-%m-%dT%H:%M:%S.%fZ')
                 if last_updated > current_build_time:
                     delta = last_updated - current_build_time
-                    if delta.seconds > 60:
+                    if delta.total_seconds() > 60:
                         return False
 
         return True
@@ -153,6 +153,7 @@ def _get_current_build_time() -> (datetime, None):
     build_date_string = cnc_utils.get_long_term_cached_value('panhandler', 'current_build_time')
 
     if not build_date_string:
+        print('Getting updated build_date_String')
         panhandler_config = cnc_utils.get_app_config('panhandler')
         if 'app_dir' not in panhandler_config:
             return None
@@ -165,13 +166,14 @@ def _get_current_build_time() -> (datetime, None):
         try:
             with open(build_file, 'r') as bf:
                 build_date_string = str(bf.readline()).strip()
-                cnc_utils.set_long_term_cached_value('panhandler', 'current_build_time', build_date_string, 3600,
-                                                     'meta')
+                cnc_utils.set_long_term_cached_value('panhandler', 'current_build_time', build_date_string, 14400,
+                                                     'app_update')
         except OSError as ose:
             print('Could not read build date data file')
             print(ose)
             return None
 
+    print(build_date_string)
     return datetime.strptime(build_date_string, '%Y-%m-%dT%H:%M:%S')
 
 
@@ -179,6 +181,7 @@ def _get_current_tag() -> (str, None):
     tag_string = cnc_utils.get_long_term_cached_value('panhandler', 'current_tag')
 
     if not tag_string:
+        print('Getting updated tag')
         panhandler_config = cnc_utils.get_app_config('panhandler')
         if 'app_dir' not in panhandler_config:
             return None
@@ -191,7 +194,7 @@ def _get_current_tag() -> (str, None):
         try:
             with open(tag_file, 'r') as bf:
                 tag_string = bf.read()
-                cnc_utils.set_long_term_cached_value('panhandler', 'current_tag', tag_string, 3600, 'meta')
+                cnc_utils.set_long_term_cached_value('panhandler', 'current_tag', tag_string, 14400, 'app_update')
 
         except OSError as ose:
             print('Could not read tag date data file')
@@ -210,6 +213,7 @@ def _get_panhandler_image_data():
             print('Returning docker_image_details from the cache')
             return details_from_cache
 
+        print('Getting docker details from upstream')
         resp = requests.get(docker_hub_link, verify=False, timeout=5)
         if resp.status_code != 200:
             print('Could not fetch docker_image_details')
@@ -218,7 +222,7 @@ def _get_panhandler_image_data():
             return {}
         else:
             details = resp.json()
-            cnc_utils.set_long_term_cached_value('panhandler', 'docker_image_details', details, 3600, 'meta')
+            cnc_utils.set_long_term_cached_value('panhandler', 'docker_image_details', details, 14400, 'app_update')
             return details
     except ConnectionError as ce:
         print('Could not contact docker hub API')
