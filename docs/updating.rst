@@ -16,6 +16,7 @@ for new releases here_. To launch a newer version via docker:
 
 .. code-block:: bash
 
+   docker pull paloaltonetworks/panhandler:latest
    docker run -p 80:80 paloaltonetworks/panhandler -d
 
 This will create a container based on the latest image tag. Versioned panhandler images are also available and can be
@@ -27,11 +28,12 @@ found on Docker Hub.
     bug fixes.
 
 
-To ensure you have the most up to date software, perform a docker pull and specify the 'latest' tag.
+To ensure you have the most up to date software, perform a docker pull and specify your desired release tag.
 
 .. code-block:: bash
 
-   docker pull paloaltonetworks/panhandler:latest
-   docker run -p 80:80 paloaltonetworks/panhandler:latest -d
+   export TAG=dev
+   docker pull paloaltonetworks/panhandler:$TAG
+   docker run -p 80:80 paloaltonetworks/panhandler:$TAG -d
 
 
