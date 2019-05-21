@@ -164,7 +164,7 @@ def _get_current_build_time() -> (datetime, None):
 
         try:
             with open(build_file, 'r') as bf:
-                build_date_string = bf.read()
+                build_date_string = str(bf.readline()).strip()
                 cnc_utils.set_long_term_cached_value('panhandler', 'current_build_time', build_date_string, 3600,
                                                      'meta')
         except OSError as ose:
@@ -198,7 +198,7 @@ def _get_current_tag() -> (str, None):
             print(ose)
             return None
 
-    return str(tag_string.split('\n')[0])
+    return str(tag_string.strip())
 
 
 def _get_panhandler_image_data():
