@@ -16,7 +16,7 @@ application_data:
 
 views:
   - name: ''
-    class: CNCView
+    class: WelcomeView
     menu: Panhandler
     menu_option: Welcome
     attributes:

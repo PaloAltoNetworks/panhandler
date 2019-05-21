@@ -10,14 +10,18 @@ jobs:
       - run:
           name: Build and push Docker image
           command: |
-            export DATE=$(date  '+%Y%M%d-%H%m%S')
+            export DATE=$(date '+%Y-%m-%dT%H:%M:%S')
             echo $DATE > src/panhandler/templates/panhandler/version.html
+            echo $DATE > src/panhandler/build_date
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
-              export TAG=1.0.${CIRCLE_BUILD_NUM}
+              export TAG=2.1.${CIRCLE_BUILD_NUM}
+              echo "latest" > src/panhandler/tag
             elif [ "${CIRCLE_BRANCH}" == "develop" ]; then
               export TAG=dev
+              echo "dev" > src/panhandler/tag
             elif [ "${CIRCLE_BRANCH}" == "beta" ]; then
               export TAG=beta
+              echo "beta" > src/panhandler/tag
             else
               echo "Not building other branch"
               exit 0;

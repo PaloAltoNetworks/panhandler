@@ -35,6 +35,25 @@ from pan_cnc.views import *
 from panhandler.lib import app_utils
 
 
+class WelcomeView(CNCView):
+    template_name = "panhandler/welcome.html"
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+
+        up_to_date = app_utils.is_up_to_date()
+        if up_to_date is None:
+            update_required = "error"
+        elif up_to_date:
+            update_required = "true"
+        else:
+            update_required = "false"
+
+        context['update_required'] = update_required
+        return context
+
+
 class ImportRepoView(CNCBaseFormView):
     # define initial dynamic form from this snippet metadata
     snippet = 'import_repo'

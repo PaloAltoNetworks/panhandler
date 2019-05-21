@@ -1,8 +1,10 @@
+import os
 from collections import OrderedDict
+from datetime import datetime
 
 import oyaml
 import requests
-from requests import ConnectionError
+from requests import ConnectionError, Timeout
 
 from pan_cnc.lib import cnc_utils
 
@@ -42,7 +44,7 @@ def get_recommended_links() -> list:
             print('Returning recommended_links from the cache')
             return recommends_from_cache
 
-        resp = requests.get(recommend_url, verify=False)
+        resp = requests.get(recommend_url, verify=False, timeout=5)
         if resp.status_code != 200:
             print('Could not fetch recommended_repos_link')
             print(resp.text)
@@ -60,11 +62,16 @@ def get_recommended_links() -> list:
             return recommended_links
     except ValueError as ve:
         print('Could not load response')
+        print(ve)
         return recommended_links
 
     except ConnectionError as ce:
         print('Could not fetch recommended links url')
         print(ce)
+        return recommended_links
+    except Timeout as te:
+        print('Timed out waiting for recommended links to load')
+        print(te)
         return recommended_links
 
 
@@ -96,21 +103,128 @@ def _validate_recommended_data(data: OrderedDict) -> bool:
         if 'name' not in link or 'link' not in link or 'description' not in link:
             print('link entry does not have all required keys')
             return False
-        
+
     return True
 
-#
-# def get_imported_git_repos():
-#     snippets_dir = Path(os.path.join(settings.SRC_PATH, 'panhandler', 'snippets'))
-#     repos = list()
-#     for d in snippets_dir.rglob('./*'):
-#         # git_dir = os.path.join(d, '.git')
-#         git_dir = d.joinpath('.git')
-#         if git_dir.exists() and git_dir.is_dir():
-#             print(d)
-#             repo_name = os.path.basename(d.name)
-#             repo_detail = git_utils.get_repo_details(repo_name, d)
-#             repos.append(repo_detail)
-#             continue
-#
-#     return repos
+
+def is_up_to_date() -> (bool, None):
+    """
+    Attempts to gather current image tag and build date and compare with latest updated information in docker hub
+    :return: True if we are up to date, False if there is a newer image, and None on error
+    """
+
+    current_build_time = _get_current_build_time()
+    if not current_build_time:
+        print('Could not determine if we are up to date!')
+        return None
+
+    current_tag = _get_current_tag()
+    if not current_tag:
+        print('Could not determine current tag!')
+        return None
+
+    image_data = _get_panhandler_image_data()
+    if not image_data:
+        print('Could not get image tag detail from docker hub!')
+        return None
+
+    try:
+        for result in image_data['results']:
+            if result['name'] == current_tag:
+                last_updated_string = result['last_updated']
+                last_updated = datetime.strptime(last_updated_string, '%Y-%m-%dT%H:%M:%S.%fZ')
+                if last_updated > current_build_time:
+                    delta = last_updated - current_build_time
+                    if delta.seconds > 60:
+                        return False
+
+        return True
+    except ValueError as ve:
+        print('Could not parse last updated value')
+        print(ve)
+        return None
+    except KeyError as ke:
+        print('unexpected data from docker hub API')
+        print(ke)
+        return None
+
+
+def _get_current_build_time() -> (datetime, None):
+    build_date_string = cnc_utils.get_long_term_cached_value('panhandler', 'current_build_time')
+
+    if not build_date_string:
+        panhandler_config = cnc_utils.get_app_config('panhandler')
+        if 'app_dir' not in panhandler_config:
+            return None
+
+        build_file = os.path.join(panhandler_config['app_dir'], 'build_date')
+
+        if not os.path.exists(build_file) or not os.path.isfile(build_file):
+            return None
+
+        try:
+            with open(build_file, 'r') as bf:
+                build_date_string = bf.read()
+                cnc_utils.set_long_term_cached_value('panhandler', 'current_build_time', build_date_string, 3600,
+                                                     'meta')
+        except OSError as ose:
+            print('Could not read build date data file')
+            print(ose)
+            return None
+
+    return datetime.strptime(build_date_string, '%Y-%m-%dT%H:%M:%S')
+
+
+def _get_current_tag() -> (str, None):
+    tag_string = cnc_utils.get_long_term_cached_value('panhandler', 'current_tag')
+
+    if not tag_string:
+        panhandler_config = cnc_utils.get_app_config('panhandler')
+        if 'app_dir' not in panhandler_config:
+            return None
+
+        tag_file = os.path.join(panhandler_config['app_dir'], 'tag')
+
+        if not os.path.exists(tag_file) or not os.path.isfile(tag_file):
+            return None
+
+        try:
+            with open(tag_file, 'r') as bf:
+                tag_string = bf.read()
+                cnc_utils.set_long_term_cached_value('panhandler', 'current_tag', tag_string, 3600, 'meta')
+
+        except OSError as ose:
+            print('Could not read tag date data file')
+            print(ose)
+            return None
+
+    return str(tag_string.split('\n')[0])
+
+
+def _get_panhandler_image_data():
+    docker_hub_link = 'https://hub.docker.com/v2/repositories/paloaltonetworks/panhandler/tags/'
+    try:
+        # try to pull from cache is possible
+        details_from_cache = cnc_utils.get_long_term_cached_value('panhandler', 'docker_image_details')
+        if details_from_cache is not None:
+            print('Returning docker_image_details from the cache')
+            return details_from_cache
+
+        resp = requests.get(docker_hub_link, verify=False, timeout=5)
+        if resp.status_code != 200:
+            print('Could not fetch docker_image_details')
+            print(resp.text)
+            print(resp.status_code)
+            return {}
+        else:
+            details = resp.json()
+            cnc_utils.set_long_term_cached_value('panhandler', 'docker_image_details', details, 3600, 'meta')
+            return details
+    except ConnectionError as ce:
+        print('Could not contact docker hub API')
+        print(ce)
+        return {}
+    except Timeout as te:
+        print('Timed out waiting for docker image details')
+        print(te)
+        return {}
