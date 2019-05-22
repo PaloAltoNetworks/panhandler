@@ -31,6 +31,7 @@ from pathlib import Path
 from django.conf import settings
 
 from pan_cnc.lib import git_utils
+from pan_cnc.lib.exceptions import ImportRepositoryException
 from pan_cnc.views import *
 from panhandler.lib import app_utils
 
@@ -96,8 +97,11 @@ class ImportRepoView(CNCBaseFormView):
         repo_dir = os.path.join(snippets_dir, repo_name)
 
         if os.path.exists(repo_dir):
-            messages.add_message(self.request, messages.ERROR, 'A Repository with this name already exists')
-            return HttpResponseRedirect('repos')
+            if os.path.isdir(repo_dir) and len(os.listdir(repo_dir)) == 0:
+                print('Reusing existing repository directory')
+            else:
+                messages.add_message(self.request, messages.ERROR, 'A Repository with this name already exists')
+                return HttpResponseRedirect('repos')
         else:
             os.makedirs(repo_dir)
 
@@ -108,8 +112,11 @@ class ImportRepoView(CNCBaseFormView):
             if 'clone_url' in details:
                 clone_url = details['clone_url']
 
-        if not git_utils.clone_repo(repo_dir, repo_name, clone_url, branch):
-            messages.add_message(self.request, messages.ERROR, 'Could not Import Repository')
+        try:
+            message = git_utils.clone_repository(repo_dir, repo_name, clone_url, branch)
+            print(message)
+        except ImportRepositoryException as ire:
+            messages.add_message(self.request, messages.ERROR, f'Could not Import Repository: {ire}')
         else:
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
@@ -118,7 +125,7 @@ class ImportRepoView(CNCBaseFormView):
             debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
             if debug_errors:
                 messages.add_message(self.request, messages.ERROR,
-                                     f'Found Skillets with errors! Please open an issue on '
+                                     'Found Skillets with errors! Please open an issue on '
                                      'this repository to help resolve this issue')
                 for d in debug_errors:
                     if 'err_list' in d and 'path' in d and 'severity' in d:
@@ -243,8 +250,8 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
         debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
         if debug_errors:
-            messages.add_message(self.request, messages.ERROR, f'Found Skillets with errors! Please open an issue on '
-                                 'this repository to help resolve this issue')
+            messages.add_message(self.request, messages.ERROR, 'Found Skillets with errors! Please open an issue on '
+                                                               'this repository to help resolve this issue')
             for d in debug_errors:
                 if 'err_list' in d and 'path' in d:
                     for e in d['err_list']:
@@ -270,10 +277,12 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
             if git_dir.exists() and git_dir.is_dir():
                 msg = git_utils.update_repo(d)
                 if 'Error' in msg:
-                    level = messages.ERROR
+                    print(f'Error updating Repository: {d.name}')
+                    print(msg)
                     messages.add_message(self.request, messages.ERROR, f'Could not update repository {d.name}')
                     err_condition = True
                 elif 'Updated' in msg:
+                    print(f'Updated Repository: {d.name}')
                     cnc_utils.set_long_term_cached_value(self.app_dir, f'{d.name}_detail', None, 0, 'git_repo_details')
 
         if not err_condition:
@@ -471,6 +480,6 @@ class ViewSkilletView(ProvisionSnippetView):
 
 class CheckAppUpdateView(CNCBaseAuth, RedirectView):
 
-        def get_redirect_url(self, *args, **kwargs):
-            cnc_utils.evict_cache_items_of_type('panhandler', 'app_update')
-            return '/'
+    def get_redirect_url(self, *args, **kwargs):
+        cnc_utils.evict_cache_items_of_type('panhandler', 'app_update')
+        return '/'
