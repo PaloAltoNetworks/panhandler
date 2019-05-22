@@ -130,7 +130,9 @@ Variable Examples:
 
 * text
 
-  Default input type for user input.
+  Default input type for user input. Optional `allow_special_characters` if false will ensure only
+  letters, digits, underscore, hyphens, and spaces are allowed in the input. Set to True to allow all special
+  characters. Default is to allow special characters.
 
 .. code-block:: yaml
 
@@ -138,6 +140,7 @@ Variable Examples:
     description: Firewall hostname
     default: panos-01
     type_hint: text
+    allow_special_characters: false
 
 * ip_address
 
@@ -161,6 +164,17 @@ Variable Examples:
     description: Target Host
     default: 0.pool.ntp.org
     type_hint: fqdn_or_ip
+
+* url
+
+  This type will ensure the entered value matches a valid URL scheme.
+
+.. code-block:: yaml
+
+  - name: clone_url
+    description: Git Repo Clone URL
+    default: https://github.com/PaloAltoNetworks/Skillets.git
+    type_hint: url
 
 * cidr
 
