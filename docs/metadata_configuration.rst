@@ -88,6 +88,7 @@ Required fields for each metadata type is listed below:
 * template
     * name - name of this snippet
     * file - path to the jinja2 template to load and parse
+    * template_title - Optional title to include in rendered output
 * terraform
     * None - snippets are not used for terraform
 * rest
