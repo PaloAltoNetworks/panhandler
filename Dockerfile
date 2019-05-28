@@ -13,7 +13,8 @@ ENV CNC_PASSWORD=panhandler
 WORKDIR /app
 ADD requirements.txt /app/requirements.txt
 
-RUN apk add --update --no-cache git curl openssh gcc g++ make musl-dev python3-dev libffi-dev openssl-dev linux-headers bash && \
+RUN apk add --update --no-cache git curl openssh gcc g++ make cmake musl-dev python3-dev libffi-dev openssl-dev \
+    linux-headers bash && \
     pip install --upgrade pip && pip install --no-cache-dir --no-use-pep517 -r requirements.txt && \
     echo "===> Installing Terraform..."  && \
     curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip > terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
