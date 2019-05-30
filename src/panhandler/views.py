@@ -25,6 +25,7 @@ This software is provided without support, warranty, or guarantee.
 Use at your own risk.
 """
 import os
+import re
 import shutil
 from pathlib import Path
 
@@ -80,17 +81,11 @@ class ImportRepoView(CNCBaseFormView):
         url = workflow.get('url')
         branch = workflow.get('branch')
         repo_name = workflow.get('repo_name')
-        # FIXME - Ensure repo_name is unique
 
-        # # we are going to keep the snippets in the snippets dir in the panhandler app
-        # # get the dir where all apps are installed
-        # src_dir = settings.SRC_PATH
-        # # get the panhandler app dir
-        # panhandler_dir = os.path.join(src_dir, 'panhandler')
-        # # get the snippets dir under that
-        # snippets_dir = os.path.join(panhandler_dir, 'snippets')
-        # # figure out what our new repo / snippet dir will be
-        # new_repo_snippets_dir = os.path.join(snippets_dir, repo_name)
+        if not re.match(r'^[a-zA-Z0-9-_ \.]*$', repo_name):
+            print('Repository name is invalid!')
+            messages.add_message(self.request, messages.ERROR, 'Invalid Repository Name')
+            return HttpResponseRedirect('repos')
 
         user_dir = os.path.expanduser('~/.pan_cnc')
         snippets_dir = os.path.join(user_dir, 'panhandler/repositories')
@@ -233,6 +228,10 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         repo_name = kwargs['repo_name']
         user_dir = os.path.expanduser('~')
         repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
+
+        if not os.path.exists(repo_dir):
+            messages.add_message(self.request, messages.ERROR, 'Repository directory does not exist!')
+            return f'/panhandler/repo_detail/{repo_name}'
 
         msg = git_utils.update_repo(repo_dir)
         if 'Error' in msg:
