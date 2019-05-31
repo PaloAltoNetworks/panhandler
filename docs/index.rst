@@ -18,6 +18,7 @@ Panhandler
    example_skillet
    environments
    updating
+   debugging
    examples/rest_skillet
 
 

@@ -35,6 +35,7 @@ a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. N
 .. code-block:: yaml
 
     name: config_set_name
+    label: menu label text
     description: config_set description
     extends: name_of_required_major_skillet
     variables:
@@ -54,8 +55,8 @@ a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. N
    of the PAN-OS device configuration tree.
 
 
-Snippet details
----------------
+Metadata details
+----------------
 
 Each .meta-cnc.yaml file must contain the following top-level keys:
 
@@ -284,8 +285,6 @@ Variable Examples:
         value: 'no'
       - key: 'Maybe'
         value: 'maybe'
-
-
 
 
 Hints
