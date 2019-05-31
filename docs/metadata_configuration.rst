@@ -127,6 +127,14 @@ variable defined in the `variables` list should define the following:
    entered value unless this value is set to True. The default is False. Setting to True will ensure the default
    value will always be rendered in the panhandler UI.
 
+.. note::
+
+    The variable name must not contain special characters such as '-' or '*' or spaces. Variable names can be any
+    length and can consist of uppercase and lowercase letters ( A-Z , a-z ), digits ( 0-9 ), and the underscore
+    character ( _ ). An additional restriction is that, although a variable name can contain digits, the first
+    character of a variable name cannot be a digit.
+
+
 Variable Examples:
 ^^^^^^^^^^^^^^^^^^
 
