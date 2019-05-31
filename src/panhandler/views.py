@@ -98,7 +98,17 @@ class ImportRepoView(CNCBaseFormView):
                 messages.add_message(self.request, messages.ERROR, 'A Repository with this name already exists')
                 return HttpResponseRedirect('repos')
         else:
-            os.makedirs(repo_dir)
+            try:
+                os.makedirs(repo_dir, mode=0o700)
+
+            except PermissionError as pe:
+                messages.add_message(self.request, messages.ERROR,
+                                     'Could not create repository directory, Permission Denied')
+                return HttpResponseRedirect('repos')
+            except OSError as ose:
+                messages.add_message(self.request, messages.ERROR,
+                                     'Could not create repository directory')
+                return HttpResponseRedirect('repos')
 
         # where to clone from
         clone_url = url
@@ -149,6 +159,21 @@ class ListReposView(CNCView):
 
         snippets_dir = Path(os.path.join(os.path.expanduser('~/.pan_cnc'), 'panhandler', 'repositories'))
 
+        try:
+            if not snippets_dir.exists():
+                messages.add_message(self.request, messages.ERROR,
+                                 'Could not load repositories from directory as it does not exists')
+                context['repos'] = list()
+                return context
+        except PermissionError as pe:
+            print(pe)
+            context['repos'] = list()
+            return context
+        except OSError as oe:
+            print(oe)
+            context['repos'] = list()
+            return context
+
         repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
         if repos is not None:
             context['repos'] = repos
@@ -192,7 +217,11 @@ class RepoDetailsView(CNCView):
         user_dir = os.path.expanduser('~')
         repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
-        repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+        if os.path.exists(repo_dir):
+            repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+        else:
+            repo_detail = dict()
+            repo_detail['name'] = 'Repository directory not found'
 
         try:
             snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
@@ -270,6 +299,23 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
         user_dir = os.path.expanduser('~')
         base_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories')
         base_path = Path(base_dir)
+
+        try:
+            base_path.stat()
+        except PermissionError:
+            messages.add_message(self.request, messages.ERROR,
+                                 'Could not update, Permission Denied')
+            return '/panhandler/repos'
+        except OSError:
+            messages.add_message(self.request, messages.ERROR,
+                                 'Could not update, Access Error for repository directory')
+            return '/panhandler/repos'
+
+        if not base_path.exists():
+            messages.add_message(self.request, messages.ERROR,
+                                 'Could not update, repositories directory does not exist')
+            return '/panhandler/repos'
+
         err_condition = False
         for d in base_path.iterdir():
             git_dir = d.joinpath('.git')
