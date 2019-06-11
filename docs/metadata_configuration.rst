@@ -126,6 +126,7 @@ variable defined in the `variables` list should define the following:
 5. force_default: The UI will be pre-populated with a value from the loaded environment or with a previously
    entered value unless this value is set to True. The default is False. Setting to True will ensure the default
    value will always be rendered in the panhandler UI.
+6. required: Determines if a value is required for this field. The default is False.
 
 .. note::
 
