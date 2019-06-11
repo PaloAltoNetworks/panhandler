@@ -317,6 +317,7 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
             return '/panhandler/repos'
 
         err_condition = False
+        updates = list()
         for d in base_path.iterdir():
             git_dir = d.joinpath('.git')
             if git_dir.exists() and git_dir.is_dir():
@@ -328,10 +329,12 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
                     err_condition = True
                 elif 'Updated' in msg:
                     print(f'Updated Repository: {d.name}')
+                    updates.append(d.name)
                     cnc_utils.set_long_term_cached_value(self.app_dir, f'{d.name}_detail', None, 0, 'git_repo_details')
 
         if not err_condition:
-            messages.add_message(self.request, messages.SUCCESS, 'Updated all repositories successfully')
+            repos = ", ".join(updates)
+            messages.add_message(self.request, messages.SUCCESS, f'Successfully Updated repositories: {repos}')
 
         cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
         snippet_utils.invalidate_snippet_caches(self.app_dir)
