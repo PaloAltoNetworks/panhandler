@@ -488,8 +488,32 @@ class ListSkilletCollectionsView(CNCView):
         context = super().get_context_data(**kwargs)
         print('Getting all labels')
         collections = snippet_utils.load_all_label_values(self.app_dir, 'collection')
+
+        collections_info = dict()
+        # build dict of collections related to other collections (if any)
+
+        for c in collections:
+            if c not in collections_info:
+                collections_info[c] = dict()
+                collections_info[c]['count'] = 0
+
+            skillets = snippet_utils.load_snippets_by_label('collection', c, self.app_dir)
+            collections_info[c]['count'] = len(skillets)
+            related = list()
+            # related.append(c)
+
+            for skillet in skillets:
+                if 'labels' in skillet and 'collection' in skillet['labels']:
+                    if type(skillet['labels']['collection']) is list:
+                        for related_collection in skillet['labels']['collection']:
+                            if related_collection != c and related_collection not in related:
+                                related.append(related_collection)
+
+            collections_info[c]['related'] = json.dumps(related)
+
         collections.append('Kitchen Sink')
         context['collections'] = collections
+        context['collections_info'] = collections_info
 
         return context
 
