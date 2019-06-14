@@ -103,6 +103,12 @@ Required fields for each metadata type is listed below:
 * python3
     * name - name of the script to execute
     * file - relative path to the python script to execute
+    * input_type - Optional type of input required for this script. Valid options are 'cli' or 'env'.
+      This will determine how user input variables will be passed into
+      into the script. The default is 'cli' and will pass variables as long form arguments to the script in the form
+      of `--username=user_input` where `username` is the name of the variable defined in the `variables` section and
+      `user_input` is the value entered for that variable from the user. The other option, 'env' use cause all
+      defined variables to be set in the environment of the python process.
 
 
 Defining Variables for User input
@@ -152,6 +158,19 @@ Variable Examples:
     default: panos-01
     type_hint: text
     allow_special_characters: false
+
+
+* password
+
+  This type will mask user input by rendering a password type input box.
+
+.. code-block:: yaml
+
+  - name: user_password
+    description: Firewall Password
+    default:
+    type_hint: password
+
 
 * ip_address
 
@@ -233,7 +252,7 @@ Variable Examples:
 
   - name: yes_no
     description: Yes No
-    default: 'No I dont'
+    default: 'no'
     type_hint: dropdown
     dd_list:
       - key: 'Yes I do'
