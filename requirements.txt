@@ -173,7 +173,7 @@ colorama==0.4.1
 constantly==15.1.0
 cryptography==2.4.2
 decorator==4.4.0
-Django==2.2
+Django>=2.2.2
 django-widget-tweaks==1.4.3
 docker==3.7.2
 docker-pycreds==0.4.0
@@ -237,7 +237,7 @@ smmap2==2.0.5
 sqlparse==0.3.0
 sshtunnel==0.1.4
 tabulate==0.8.3
-Twisted==19.2.0
+Twisted>=19.2.1
 txaio==18.8.1
 uamqp==1.1.0
 urllib3==1.24.2

@@ -10,16 +10,7 @@
         Panhandler is a tool for sharing PAN-OS configurations and configuration sets. These configs are stored and
         shared via Git repositories. In addition to PAN-OS, Panhandler can also consume other types of repositories,
         such as Terraform templates, or generic network device configuration templates.
-        <h4> Latest Updates: </h4>
-        <ul>
-        <li>
-        2019-01-25: MSSP templates updates brings updated configuration for internet gateway for Gold, Silver, and
-        bronze configuration sets.
-        </li>
-        <li>
-        2019-01-01: Iron Skillet Day One best practice configs added!
-        </li>
-        </ul>
+    </p>
     <p class="lead">
         {% if documentation_link %}
         <a class="btn btn-primary btn-lg mr-2" href="{{ documentation_link }}" role="button">Learn more</a>
@@ -28,5 +19,21 @@
         <a class="btn btn-secondary btn-lg" href="/{{ app_dir }}/{{ next }}" role="button">Get Started</a>
         {% endif %}
     </p>
+
 </div>
+<p class="small grey text-center mt-5 pt-5">
+    Version: {% include 'panhandler/version.html' %}
+</p>
+<p class="small grey text-center">
+    {%  if update_required == 'true' %}
+        A newer version of panhandler is available!
+        <a href="https://panhandler.readthedocs.io/en/master/updating.html">How to update Panhandler</a>
+    {% elif update_required == 'false' %}
+        This is the most recent version of Panhandler.
+    {% else %}
+        Unable to determine build status! Check your internet connection.
+    {% endif %}
+    <a href="/panhandler/check_update">Check for Update</a>
+</p>
+
 {%  endblock %}

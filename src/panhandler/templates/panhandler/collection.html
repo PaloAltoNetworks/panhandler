@@ -33,19 +33,25 @@
             <input type="text" id="search_collection"/>
         </div>
     </div>
-    <div id="collection_grid" class="pb-6 mb-4 row">
+    <div id="collection_grid" class="pb-6 mb-4 col-sm-12">
         {% for skillet in skillets %}
-            <div class="grid__brick mt-3 mb-3 col-6 col-md-4 col-xl-3" data-name="{{ skillet.label }}"
+            <div class="grid__brick mt-3 mb-3 col-sm-4" data-name="{{ skillet.label }}"
                  data-groups=["{{ skillet.type }}"] data-skillet_type="{{ skillet.type }}">
-                <div class="card shadow-lg">
+                <div class="card shadow" style="height: 400px">
                     <div class="card-header">
                         {{ skillet.label }}
                     </div>
-                    <div class="card-body">
+                    <div class="card-body" style="height: 85%; overflow-y: auto">
                         <p class="card-text">
                             {{ skillet.description }}
                         </p>
                         <p class="card-text text-muted">Skillet type: {{ skillet.type }}</p>
+                        <p class="card-text text-muted align-text-bottom">Collections:
+                            {% for c in skillet.labels.collection %}
+                                <a href="/panhandler/collection/{{ c }}">{{ c }}</a>,
+                            {% endfor %}
+                            <a href="/panhandler/collections">All</a>
+                        </p>
                     </div>
                     <div class="card-footer text-right">
                         <a href="/panhandler/skillet/{{ skillet.name }}" class="btn btn-primary">Go</a>
@@ -53,7 +59,7 @@
                 </div>
             </div>
         {% endfor %}
-        <div class="col-1 sizer-element"></div>
+        {#        <div class="col-1 sizer-element"></div>#}
     </div>
 
     <script type="text/javascript">
@@ -125,7 +131,7 @@
         );
 
         $('#filter_python').on('click', function () {
-                perform_filter(this, 'python');
+                perform_filter(this, 'python3');
             }
         );
 

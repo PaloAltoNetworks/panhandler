@@ -6,12 +6,30 @@ Panhandler is preloaded with a wide set of skillets yet you may still have to ma
 Import a New Skillet
 --------------------
 
-From the main menu, choose `Import Templates`.
+From the main menu, choose `Import Skillets`.
 
 .. image:: images/ph-menu.png
     :width: 250
 
-The import repository fields allow you to specify the repo name, repo url, and the branch to import.
+
+The import repository fields allow you to specify the repo name, repo url, and the branch to import. You may
+import repositories from any git server, including GitHub, gitlab, gogs, etc.
+
+To import a repository from Github, click on the 'Clone or Download' button and copy the full HTTPS link
+shown.
+
+.. image:: images/ph-github-clone-url.png
+
+
+Also, note which branch you want to import. The list of available branches can be found in Github by clicking
+the 'Branch: master' button on the main page of the repository.
+
+.. image:: images/ph-github-branches.png
+
+
+Enter this information in the 'Import Skillets' form to import the repository and gain access to the
+Skillets contained within.
+
 
 .. image:: images/ph-import-repo.png
 

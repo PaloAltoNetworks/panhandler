@@ -77,48 +77,6 @@ Each .meta-cnc.yaml file must contain the following top-level keys:
     `panos` and `panorama` types. Other types such as `template` or `rest` may have a different format.
 
 
-Variables
-^^^^^^^^^
-
-Each skillet can define nulitple variables that will be interpolated using the Jinja2 templating language. Each
-variable defined in the `variables` list should define the following:
-
-
-1. name: The name of the variable found in the skillets. For example:
-
-.. code-block:: jinja
-
-    {{ variable_name }}
-
-
-2. description: A brief description of the variable and it's purpose in the configuration
-3. default: This value will be pre-populated in the UI
-4. type_hint: Used to constrain the types of values accepted. May be implemented by additional third party tools.
-   Examples are `text`, `text_field`, `ip_address`, `password`, `dropdown`, and `checkbox`.
-
-
-Dropdown syntax
-"""""""""""""""
-
-The `dropdown` option is a special case of type_hint with a secondary set of key/value pair metadata. The key is
-the displayed list option and the value what is used for variable substitution.
-
-The yaml format looks like:
-
-.. code-block:: yaml
-
-  - name: variable_name
-    description: variable description
-    default: some value
-    type_hint: dropdown
-    dd_list:
-      - key: key1
-        value: value1
-      - key: key2
-        value: value2
-
-
-
 Snippet details per Metadata type
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -131,6 +89,7 @@ Required fields for each metadata type is listed below:
 * template
     * name - name of this snippet
     * file - path to the jinja2 template to load and parse
+    * template_title - Optional title to include in rendered output
 * terraform
     * None - snippets are not used for terraform
 * rest
@@ -144,8 +103,231 @@ Required fields for each metadata type is listed below:
 * python3
     * name - name of the script to execute
     * file - relative path to the python script to execute
+    * input_type - Optional type of input required for this script. Valid options are 'cli' or 'env'.
+      This will determine how user input variables will be passed into
+      into the script. The default is 'cli' and will pass variables as long form arguments to the script in the form
+      of `--username=user_input` where `username` is the name of the variable defined in the `variables` section and
+      `user_input` is the value entered for that variable from the user. The other option, 'env' use cause all
+      defined variables to be set in the environment of the python process.
 
 
+Defining Variables for User input
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Each skillet can define multiple variables that will be interpolated using the Jinja2 templating language. Each
+variable defined in the `variables` list should define the following:
+
+1. name: The name of the variable found in the skillets. For example:
+
+.. code-block:: jinja
+
+    {{ name }}
+
+
+2. description: A brief description of the variable and it's purpose in the configuration. This will be rendered as
+   the field label in the UI.
+3. default: A valid default value which will be used if no value is provided by the user.
+4. type_hint: Used to constrain the types of values accepted. May be implemented by additional third party tools.
+   Examples are `text`, `text_field`, `ip_address`, `password`, `dropdown`, and `checkbox`.
+5. force_default: The UI will be pre-populated with a value from the loaded environment or with a previously
+   entered value unless this value is set to True. The default is False. Setting to True will ensure the default
+   value will always be rendered in the panhandler UI.
+6. required: Determines if a value is required for this field. The default is False.
+
+.. note::
+
+    The variable name must not contain special characters such as '-' or '*' or spaces. Variable names can be any
+    length and can consist of uppercase and lowercase letters ( A-Z , a-z ), digits ( 0-9 ), and the underscore
+    character ( _ ). An additional restriction is that, although a variable name can contain digits, the first
+    character of a variable name cannot be a digit.
+
+
+Variable Examples:
+^^^^^^^^^^^^^^^^^^
+
+* text
+
+  Default input type for user input. Optional `allow_special_characters` if false will ensure only
+  letters, digits, underscore, hyphens, and spaces are allowed in the input. Set to True to allow all special
+  characters. Default is to allow special characters.
+
+.. code-block:: yaml
+
+  - name: FW_NAME
+    description: Firewall hostname
+    default: panos-01
+    type_hint: text
+    allow_special_characters: false
+
+
+* password
+
+  This type will mask user input by rendering a password type input box.
+
+.. code-block:: yaml
+
+  - name: user_password
+    description: Firewall Password
+    default:
+    type_hint: password
+
+
+* ip_address
+
+  This type will ensure the entered value matches an IPv4 or IPv6 pattern without a subnet mask.
+
+.. code-block:: yaml
+
+  - name: ip_address
+    description: IP Address
+    default: 0.0.0.0
+    type_hint: ip_address
+
+* fqdn_or_ip
+
+  This type will ensure the entered value matches an IPv4, IPv6, or a valid hostname pattern. This is the most
+  flexible option for hostname, FQDNs, ip addresses or CIDRs.
+
+.. code-block:: yaml
+
+  - name: host
+    description: Target Host
+    default: 0.pool.ntp.org
+    type_hint: fqdn_or_ip
+
+* url
+
+  This type will ensure the entered value matches a valid URL scheme.
+
+.. code-block:: yaml
+
+  - name: clone_url
+    description: Git Repo Clone URL
+    default: https://github.com/PaloAltoNetworks/Skillets.git
+    type_hint: url
+
+* cidr
+
+  This type will ensure the entered value matches an IPv4 or IPv6 CIDR.
+
+.. code-block:: yaml
+
+  - name: ip_address
+    description: IP Address
+    default: 192.168.122.2/24
+    type_hint: cidr
+
+* email
+
+  This type will ensure the entered value matches an email pattern.
+
+.. code-block:: yaml
+
+  - name: email
+    description: Email
+    default: support@noway.com
+    type_hint: email
+
+* number
+
+  This type will ensure the entered value is an integer. You may optionally supply the `min` and `max`
+  attributes to ensure the entered value do not exceed or fall below those values.
+
+.. code-block:: yaml
+
+  - name: vlan_id
+    description: VLAN ID
+    default: 1001
+    type_hint: number
+    attributes:
+      min: 1000
+      max: 2000
+
+* dropdown
+
+  This type will render a `select` input control. This ensures the user can only select one of the options
+  given in the `dd_list`.
+
+.. code-block:: yaml
+
+  - name: yes_no
+    description: Yes No
+    default: 'no'
+    type_hint: dropdown
+    dd_list:
+      - key: 'Yes I do'
+        value: 'yes'
+      - key: 'No I dont'
+        value: 'no'
+
+.. note::
+
+    The `default` parameter should match the `value` and not the `key`. The `key` is what will be shown to the user
+    and the `value` is what will be used as the value of the variable identified by `name`.
+
+.. warning::
+    Some values such as `yes`, `no`, `true`, `false`, `on`, `off`, etc are treated differently in YAML. To ensure these values are
+    not converted to a `boolean` type, ensure to put single quotes `'` around both the `key` and the `value` as in
+    the example above. Refer to the YAML specification for more details: https://yaml.org/type/bool.html
+
+* text_area
+
+  This type renders a `TextArea` input control. This allows the user to enter multiple lines of input.
+
+.. code-block:: yaml
+
+  - name: text_area
+    description: Multi-Line Input
+    default: |
+      This is some very long input with lots of
+      newlines and white    space
+      and stuff
+    type_hint: text_area
+
+* json
+
+  This type renders a `TextArea` input control and ensures the input is properly formatted JSON data
+
+.. code-block:: yaml
+
+  - name: json_string
+    description: JSON Input
+    default: |
+        {
+            "key_test": "value_test",
+            "key2_test": "value2_test",
+        }
+    type_hint: json
+
+* disabled
+
+  This type will show the default value in an input control, but the user cannot change it. This is useful to
+  show values but not allow then to be changed.
+
+.. code-block:: yaml
+
+  - name: DISABLED
+    description: No Bueno
+    default: panos-01
+    type_hint: disabled
+
+* radio
+
+  This type allows the user to select one option out of the `rad_list`.
+
+.. code-block:: yaml
+
+  - name: radio_box_example
+    description: radios
+    default: maybe
+    type_hint: radio
+    rad_list:
+      - key: 'Yes'
+        value: 'yes'
+      - key: 'No'
+        value: 'no'
+      - key: 'Maybe'
+        value: 'maybe'
 
 
 Hints

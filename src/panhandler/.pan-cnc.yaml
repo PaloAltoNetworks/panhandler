@@ -16,7 +16,7 @@ application_data:
 
 views:
   - name: ''
-    class: CNCView
+    class: WelcomeView
     menu: Panhandler
     menu_option: Welcome
     attributes:
@@ -38,7 +38,9 @@ views:
       next_url: view_snippets
       help_text: >
         This view imports a new git repository. Once imported, any skillets defined in that repository will be
-        available in the Skillet Collections.
+        available in the Skillet Collections. Click below for more detailed documentation.
+      help_link_title: Import Skillets Documentation
+      help_link: https://panhandler.readthedocs.io/en/master/importing_skillets.html
 
 #  - name: snippet_types
 #    class: ListSnippetTypesView
@@ -72,6 +74,9 @@ views:
     class: UpdateRepoView
     parameter: repo_name
 
+  - name: update_all_repos
+    class: UpdateAllReposView
+
   - name: remove_repo
     class: RemoveRepoView
     parameter: repo_name
@@ -87,4 +92,5 @@ views:
 #  - name: provision
 #    class: ProvisionSnippetView
 
-
+  - name: check_update
+    class: CheckAppUpdateView

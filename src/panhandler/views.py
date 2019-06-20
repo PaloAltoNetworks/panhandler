@@ -15,7 +15,7 @@
 # Author: Nathan Embery nembery@paloaltonetworks.com
 
 """
-Palo Alto Networks panos- bootstrapper
+Palo Alto Networks Panhandler
 
 panhandler is a tool to find, download, and use CCF enabled repositories
 
@@ -25,14 +25,36 @@ This software is provided without support, warranty, or guarantee.
 Use at your own risk.
 """
 import os
+import re
 import shutil
 from pathlib import Path
 
 from django.conf import settings
 
 from pan_cnc.lib import git_utils
+from pan_cnc.lib.exceptions import ImportRepositoryException
 from pan_cnc.views import *
 from panhandler.lib import app_utils
+
+
+class WelcomeView(CNCView):
+    template_name = "panhandler/welcome.html"
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+
+        up_to_date = app_utils.is_up_to_date()
+        if up_to_date is None:
+            update_required = "error"
+        elif up_to_date:
+            update_required = "false"
+        else:
+            print('Panhandler needs an update!')
+            update_required = "true"
+
+        context['update_required'] = update_required
+        return context
 
 
 class ImportRepoView(CNCBaseFormView):
@@ -59,27 +81,34 @@ class ImportRepoView(CNCBaseFormView):
         url = workflow.get('url')
         branch = workflow.get('branch')
         repo_name = workflow.get('repo_name')
-        # FIXME - Ensure repo_name is unique
 
-        # # we are going to keep the snippets in the snippets dir in the panhandler app
-        # # get the dir where all apps are installed
-        # src_dir = settings.SRC_PATH
-        # # get the panhandler app dir
-        # panhandler_dir = os.path.join(src_dir, 'panhandler')
-        # # get the snippets dir under that
-        # snippets_dir = os.path.join(panhandler_dir, 'snippets')
-        # # figure out what our new repo / snippet dir will be
-        # new_repo_snippets_dir = os.path.join(snippets_dir, repo_name)
+        if not re.match(r'^[a-zA-Z0-9-_ \.]*$', repo_name):
+            print('Repository name is invalid!')
+            messages.add_message(self.request, messages.ERROR, 'Invalid Repository Name')
+            return HttpResponseRedirect('repos')
 
         user_dir = os.path.expanduser('~/.pan_cnc')
         snippets_dir = os.path.join(user_dir, 'panhandler/repositories')
         repo_dir = os.path.join(snippets_dir, repo_name)
 
         if os.path.exists(repo_dir):
-            messages.add_message(self.request, messages.ERROR, 'A Repository with this name already exists')
-            return HttpResponseRedirect('repos')
+            if os.path.isdir(repo_dir) and len(os.listdir(repo_dir)) == 0:
+                print('Reusing existing repository directory')
+            else:
+                messages.add_message(self.request, messages.ERROR, 'A Repository with this name already exists')
+                return HttpResponseRedirect('repos')
         else:
-            os.makedirs(repo_dir)
+            try:
+                os.makedirs(repo_dir, mode=0o700)
+
+            except PermissionError as pe:
+                messages.add_message(self.request, messages.ERROR,
+                                     'Could not create repository directory, Permission Denied')
+                return HttpResponseRedirect('repos')
+            except OSError as ose:
+                messages.add_message(self.request, messages.ERROR,
+                                     'Could not create repository directory')
+                return HttpResponseRedirect('repos')
 
         # where to clone from
         clone_url = url
@@ -88,13 +117,32 @@ class ImportRepoView(CNCBaseFormView):
             if 'clone_url' in details:
                 clone_url = details['clone_url']
 
-        if not git_utils.clone_repo(repo_dir, repo_name, clone_url, branch):
-            messages.add_message(self.request, messages.ERROR, 'Could not Import Repository')
+        try:
+            message = git_utils.clone_repository(repo_dir, repo_name, clone_url, branch)
+            print(message)
+        except ImportRepositoryException as ire:
+            messages.add_message(self.request, messages.ERROR, f'Could not Import Repository: {ire}')
         else:
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
             cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
-            messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
+
+            debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
+            if debug_errors:
+                messages.add_message(self.request, messages.ERROR,
+                                     'Found Skillets with errors! Please open an issue on '
+                                     'this repository to help resolve this issue')
+                for d in debug_errors:
+                    if 'err_list' in d and 'path' in d and 'severity' in d:
+                        for e in d['err_list']:
+                            if d['severity'] == 'warn':
+                                level = messages.WARNING
+                            else:
+                                level = messages.ERROR
+
+                            messages.add_message(self.request, level, f'Skillet: {d["path"]}\n\nError: {e}')
+            else:
+                messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 
         # return render(self.request, 'pan_cnc/results.html', context)
         return HttpResponseRedirect('repos')
@@ -110,6 +158,21 @@ class ListReposView(CNCView):
         # snippets_dir = Path(os.path.join(settings.SRC_PATH, 'panhandler', 'snippets'))
 
         snippets_dir = Path(os.path.join(os.path.expanduser('~/.pan_cnc'), 'panhandler', 'repositories'))
+
+        try:
+            if not snippets_dir.exists():
+                messages.add_message(self.request, messages.ERROR,
+                                 'Could not load repositories from directory as it does not exists')
+                context['repos'] = list()
+                return context
+        except PermissionError as pe:
+            print(pe)
+            context['repos'] = list()
+            return context
+        except OSError as oe:
+            print(oe)
+            context['repos'] = list()
+            return context
 
         repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
         if repos is not None:
@@ -154,7 +217,11 @@ class RepoDetailsView(CNCView):
         user_dir = os.path.expanduser('~')
         repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
-        repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+        if os.path.exists(repo_dir):
+            repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+        else:
+            repo_detail = dict()
+            repo_detail['name'] = 'Repository directory not found'
 
         try:
             snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
@@ -191,6 +258,10 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         user_dir = os.path.expanduser('~')
         repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
+        if not os.path.exists(repo_dir):
+            messages.add_message(self.request, messages.ERROR, 'Repository directory does not exist!')
+            return f'/panhandler/repo_detail/{repo_name}'
+
         msg = git_utils.update_repo(repo_dir)
         if 'Error' in msg:
             level = messages.ERROR
@@ -204,7 +275,70 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             level = messages.INFO
 
         messages.add_message(self.request, level, msg)
+
+        debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
+        if debug_errors:
+            messages.add_message(self.request, messages.ERROR, 'Found Skillets with errors! Please open an issue on '
+                                                               'this repository to help resolve this issue')
+            for d in debug_errors:
+                if 'err_list' in d and 'path' in d:
+                    for e in d['err_list']:
+                        if d['severity'] == 'warn':
+                            level = messages.WARNING
+                        else:
+                            level = messages.ERROR
+
+                        messages.add_message(self.request, level, f'Skillet: {d["path"]}\n\nError: {e}')
+
         return f'/panhandler/repo_detail/{repo_name}'
+
+
+class UpdateAllReposView(CNCBaseAuth, RedirectView):
+
+    def get_redirect_url(self, *args, **kwargs):
+        user_dir = os.path.expanduser('~')
+        base_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories')
+        base_path = Path(base_dir)
+
+        try:
+            base_path.stat()
+        except PermissionError:
+            messages.add_message(self.request, messages.ERROR,
+                                 'Could not update, Permission Denied')
+            return '/panhandler/repos'
+        except OSError:
+            messages.add_message(self.request, messages.ERROR,
+                                 'Could not update, Access Error for repository directory')
+            return '/panhandler/repos'
+
+        if not base_path.exists():
+            messages.add_message(self.request, messages.ERROR,
+                                 'Could not update, repositories directory does not exist')
+            return '/panhandler/repos'
+
+        err_condition = False
+        updates = list()
+        for d in base_path.iterdir():
+            git_dir = d.joinpath('.git')
+            if git_dir.exists() and git_dir.is_dir():
+                msg = git_utils.update_repo(d)
+                if 'Error' in msg:
+                    print(f'Error updating Repository: {d.name}')
+                    print(msg)
+                    messages.add_message(self.request, messages.ERROR, f'Could not update repository {d.name}')
+                    err_condition = True
+                elif 'Updated' in msg:
+                    print(f'Updated Repository: {d.name}')
+                    updates.append(d.name)
+                    cnc_utils.set_long_term_cached_value(self.app_dir, f'{d.name}_detail', None, 0, 'git_repo_details')
+
+        if not err_condition:
+            repos = ", ".join(updates)
+            messages.add_message(self.request, messages.SUCCESS, f'Successfully Updated repositories: {repos}')
+
+        cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
+        snippet_utils.invalidate_snippet_caches(self.app_dir)
+        return '/panhandler/repos'
 
 
 class RemoveRepoView(CNCBaseAuth, RedirectView):
@@ -228,7 +362,7 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
         if snippets_dir in repo_dir:
             print(f'Removing repo {repo_name}')
             if os.path.exists(repo_dir):
-                shutil.rmtree(repo_dir)
+                shutil.rmtree(repo_dir, ignore_errors=True)
             else:
                 print('This dir is already gone!')
 
@@ -354,8 +488,32 @@ class ListSkilletCollectionsView(CNCView):
         context = super().get_context_data(**kwargs)
         print('Getting all labels')
         collections = snippet_utils.load_all_label_values(self.app_dir, 'collection')
+
+        collections_info = dict()
+        # build dict of collections related to other collections (if any)
+
+        for c in collections:
+            if c not in collections_info:
+                collections_info[c] = dict()
+                collections_info[c]['count'] = 0
+
+            skillets = snippet_utils.load_snippets_by_label('collection', c, self.app_dir)
+            collections_info[c]['count'] = len(skillets)
+            related = list()
+            # related.append(c)
+
+            for skillet in skillets:
+                if 'labels' in skillet and 'collection' in skillet['labels']:
+                    if type(skillet['labels']['collection']) is list:
+                        for related_collection in skillet['labels']['collection']:
+                            if related_collection != c and related_collection not in related:
+                                related.append(related_collection)
+
+            collections_info[c]['related'] = json.dumps(related)
+
         collections.append('Kitchen Sink')
         context['collections'] = collections
+        context['collections_info'] = collections_info
 
         return context
 
@@ -390,3 +548,10 @@ class ViewSkilletView(ProvisionSnippetView):
         skillet = self.kwargs.get('skillet', '')
         self.save_value_to_workflow('snippet_name', skillet)
         return skillet
+
+
+class CheckAppUpdateView(CNCBaseAuth, RedirectView):
+
+    def get_redirect_url(self, *args, **kwargs):
+        cnc_utils.evict_cache_items_of_type('panhandler', 'app_update')
+        return '/'
