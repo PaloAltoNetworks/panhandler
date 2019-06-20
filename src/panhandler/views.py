@@ -362,7 +362,7 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
         if snippets_dir in repo_dir:
             print(f'Removing repo {repo_name}')
             if os.path.exists(repo_dir):
-                shutil.rmtree(repo_dir)
+                shutil.rmtree(repo_dir, ignore_errors=True)
             else:
                 print('This dir is already gone!')
 
