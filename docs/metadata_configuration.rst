@@ -284,6 +284,21 @@ Variable Examples:
       and stuff
     type_hint: text_area
 
+* json
+
+  This type renders a `TextArea` input control and ensures the input is properly formatted JSON data
+
+.. code-block:: yaml
+
+  - name: json_string
+    description: JSON Input
+    default: |
+        {
+            "key_test": "value_test",
+            "key2_test": "value2_test",
+        }
+    type_hint: json
+
 * disabled
 
   This type will show the default value in an input control, but the user cannot change it. This is useful to
