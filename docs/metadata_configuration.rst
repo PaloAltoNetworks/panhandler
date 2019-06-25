@@ -329,6 +329,19 @@ Variable Examples:
       - key: 'Maybe'
         value: 'maybe'
 
+* list
+
+  This type will allow the user to input multiple entries. The values of the multiple
+  entries will be converted to an appropriate type for the Skillet type being used. For
+  python, the entries will be converted to a comma separated list. For Terraform, the
+  values will be converted to a terraform appropriate string representation.
+
+.. code-block:: yaml
+
+  - name: list_input
+    description: IP Subnets
+    default: 10.10.10.1/24
+    type_hint: list
 
 Hints
 -----
