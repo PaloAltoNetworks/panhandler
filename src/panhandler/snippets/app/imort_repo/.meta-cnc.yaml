@@ -8,20 +8,20 @@ labels:
   service_type: docker
 
 variables:
-- name: repo_name
-  description: Repository Name
-  default: Example_Skillets
-  type_hint: text
-  allow_special_characters: false
-- name: url
-  description: Git Repository HTTPS URL
-  default: https://github.com/PaloAltoNetworks/Skillets.git
-  type_hint: url
-- name: branch
-  description: Branch
-  default: master
-  type_hint: text
-  allow_special_characters: false
+  - name: repo_name
+    description: Repository Name
+    default: Example_Skillets
+    type_hint: text
+    allow_special_characters: false
+  - name: url
+    description: Git Repository HTTPS URL
+    default: https://github.com/PaloAltoNetworks/Skillets.git
+    type_hint: url
+  - name: branch
+    description: Branch
+    default: master
+    type_hint: text
+    allow_special_characters: false
 
 snippets:
 
