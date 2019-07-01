@@ -37,7 +37,10 @@ To ensure you have the most up to date software, perform a docker pull and speci
    docker run -p 80:80 -t -v $HOME:/root paloaltonetworks/panhandler:$TAG
 
 
-If you already have panhandler running, you may need to use the following commands to first stop the existing
+Ensuring your Panhandler container is using the latest image
+------------------------------------------------------------
+
+If you already have Panhandler running, you may need to use the following commands to first stop the existing
 container. Note the image tag in the PANHANDLER_IMAGE variable below. You may want to change this to 'latest'
 or some other specific release tag like '2.2'
 
