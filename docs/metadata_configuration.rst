@@ -149,7 +149,8 @@ Variable Examples:
 
   Default input type for user input. Optional `allow_special_characters` if false will ensure only
   letters, digits, underscore, hyphens, and spaces are allowed in the input. Set to True to allow all special
-  characters. Default is to allow special characters.
+  characters. Default is to allow special characters. Optional `attributes` allows forcing a minimum and/or
+  maximum length of the entered value.
 
 .. code-block:: yaml
 
@@ -158,6 +159,9 @@ Variable Examples:
     default: panos-01
     type_hint: text
     allow_special_characters: false
+    attributes:
+      min: 6
+      max: 256
 
 
 * password
