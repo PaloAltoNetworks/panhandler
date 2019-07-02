@@ -1,4 +1,4 @@
-Welcome to panhandler!
+Welcome to Panhandler!
 ======================
 
 Panhandler is a lightweight utility used to aggregate and view or load configuration templates. The primary focus is
