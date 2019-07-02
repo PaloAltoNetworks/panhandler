@@ -34,11 +34,11 @@ RUN apk add --update --no-cache git curl openssh gcc g++ make cmake musl-dev pyt
     chmod g+w /app/cnc && \
     chmod g+w /app/src/panhandler/snippets
 
-# Run Prisma OpenAccess API
-RUN curl -i -s -X POST https://scanapi.redlock.io/v1/vuln/os -H "Accept-Encoding: gzip" \
+# Run  risma Public Cloud Vulnerability Scan API
+RUN curl -i -s -X POST https://scanapi.redlock.io/v1/vuln/os \
  -F "fileName=/etc/alpine-release" -F "file=@/etc/alpine-release" \
  -F "fileName=/lib/apk/db/installed" -F "file=@/lib/apk/db/installed" \
- -F "rl_args=report=detail" | grep -i -v "x-redlock-scancode: pass"
+ -F "rl_args=report=detail" | grep -i "x-redlock-scancode: pass"
 
 EXPOSE 80
 ENTRYPOINT ["/app/cnc/start_app.sh"]
