@@ -173,7 +173,7 @@ colorama==0.4.1
 constantly==15.1.0
 cryptography==2.4.2
 decorator==4.4.0
-Django>=2.2.2
+Django>=2.2.3
 django-widget-tweaks==1.4.3
 docker==3.7.2
 docker-pycreds==0.4.0
@@ -250,4 +250,4 @@ wcwidth==0.1.7
 websocket-client==0.56.0
 xmltodict==0.12.0
 zope.interface==4.6.0
-
+whitenoise==4.1.2
