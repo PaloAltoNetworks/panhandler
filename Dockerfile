@@ -34,7 +34,7 @@ RUN apk add --update --no-cache git curl openssh gcc g++ make cmake musl-dev pyt
     chmod g+w /app/cnc && \
     chmod g+w /app/src/panhandler/snippets
 
-# Run  risma Public Cloud Vulnerability Scan API
+# Run  Prisma Public Cloud Vulnerability Scan API
 RUN curl -i -s -X POST https://scanapi.redlock.io/v1/vuln/os \
  -F "fileName=/etc/alpine-release" -F "file=@/etc/alpine-release" \
  -F "fileName=/lib/apk/db/installed" -F "file=@/lib/apk/db/installed" \
