@@ -77,8 +77,7 @@ if [[ ${IMAGE_TAG} == latest ]];
     export PANHANDLER_ID=$(docker ps -a |
                             grep -v 'panhandler:dev' |
                             grep -v 'panhandler:beta' |
-                            grep -v 'panhandler:v1' |
-                            grep -v 'panhandler:v2' |
+                            grep -v 'panhandler:v' |
                             grep ${PANHANDLER_IMAGE} |
                             awk '{ print $1 }'
                            )
