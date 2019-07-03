@@ -111,7 +111,7 @@ class ImportRepoView(CNCBaseFormView):
                 return HttpResponseRedirect('repos')
 
         # where to clone from
-        clone_url = url
+        clone_url = url.strip()
         if 'github' in url.lower():
             details = git_utils.get_repo_upstream_details(repo_name, url, self.app_dir)
             if 'clone_url' in details:
