@@ -63,6 +63,8 @@ echo " "
 echo "Welcome to Panhandler"
 echo " "
 
+export PANHANDLER_ID=$(docker ps -a | grep ${PANHANDLER_IMAGE} | awk '{ print $1 }')
+
 export PANHANDLER_IMAGE=paloaltonetworks/panhandler:${IMAGE_TAG}
 echo "Checking for updates ... (This may take some time while the image downloads)"
 echo " "
@@ -91,7 +93,6 @@ if [[ ${RESET_REPOSITORIES} == true ]];
     mkdir ~/.pan_cnc/panhandler
 fi
 
-export PANHANDLER_ID=$(docker ps -a | grep ${PANHANDLER_IMAGE} | awk '{ print $1 }')
 
 if [[ -z "${PANHANDLER_ID}" ]];
  then
