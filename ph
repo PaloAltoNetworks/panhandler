@@ -63,9 +63,9 @@ echo " "
 echo "Welcome to Panhandler"
 echo " "
 
+export PANHANDLER_IMAGE=paloaltonetworks/panhandler:${IMAGE_TAG}
 export PANHANDLER_ID=$(docker ps -a | grep ${PANHANDLER_IMAGE} | awk '{ print $1 }')
 
-export PANHANDLER_IMAGE=paloaltonetworks/panhandler:${IMAGE_TAG}
 echo "Checking for updates ... (This may take some time while the image downloads)"
 echo " "
 
