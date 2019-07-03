@@ -75,8 +75,10 @@ if [[ ${IMAGE_TAG} == latest ]];
  then
     export PANHANDLER_IMAGE=paloaltonetworks/panhandler
     export PANHANDLER_ID=$(docker ps -a |
-                            grep -v ':dev' |
-                            grep -v ':beta' |
+                            grep -v 'panhandler:dev' |
+                            grep -v 'panhandler:beta' |
+                            grep -v 'panhandler:v1' |
+                            grep -v 'panhandler:v2' |
                             grep ${PANHANDLER_IMAGE} |
                             awk '{ print $1 }'
                            )
@@ -88,7 +90,7 @@ if [[ ${IMAGE_TAG} == latest ]];
                            )
 fi
 
-
+echo "Found container id of ${PANHANDLER_ID}"
 
 echo "  Checking for updates ... (This may take some time while the image downloads)"
 echo " "
