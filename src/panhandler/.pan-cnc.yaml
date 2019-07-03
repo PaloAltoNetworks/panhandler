@@ -12,7 +12,7 @@ repositories:
     destination_directory: Default Skillets
 
 application_data:
-  recommended_repos_link: https://raw.githubusercontent.com/nembery/panhandler-content-links/master/links.yaml
+  recommended_repos_link: http://bit.ly/2XmZ7Il
 
 views:
   - name: ''
