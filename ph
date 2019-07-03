@@ -15,6 +15,7 @@ export IMAGE_TAG=latest
 export DEFAULT_PORT=8080
 export RESET_REPOSITORIES=false
 export NEEDS_UPDATE=false
+export FORCE_DEFAULT_PORT=false
 
 while getopts ":t:r:p:h" opt; do
   case ${opt} in
@@ -23,6 +24,7 @@ while getopts ":t:r:p:h" opt; do
     ;;
     p)
         DEFAULT_PORT="$OPTARG"
+        FORCE_DEFAULT_PORT=true
     ;;
     r)
         RESET_REPOSITORIES="$OPTARG"
@@ -58,22 +60,37 @@ case ${IMAGE_TAG} in
         ;;
 esac
 
+if [[ ! $(which docker) ]];
+  then
+    echo "Could not find the docker command, please ensure you have docker installed on this machine"
+    exit 1
+fi
+
 echo "==================================================================================================="
 echo " "
-echo "Welcome to Panhandler"
+echo "  Welcome to Panhandler"
 echo " "
 
 if [[ ${IMAGE_TAG} == latest ]];
  then
     export PANHANDLER_IMAGE=paloaltonetworks/panhandler
-    export PANHANDLER_ID=$(docker ps -a | grep -v ':dev' | grep -v ':beta' | grep ${PANHANDLER_IMAGE} | awk '{ print $1 }')
+    export PANHANDLER_ID=$(docker ps -a |
+                            grep -v ':dev' |
+                            grep -v ':beta' |
+                            grep ${PANHANDLER_IMAGE} |
+                            awk '{ print $1 }'
+                           )
  else
     export PANHANDLER_IMAGE=paloaltonetworks/panhandler:${IMAGE_TAG}
-    export PANHANDLER_ID=$(docker ps -a | grep ${PANHANDLER_IMAGE} | awk '{ print $1 }')
+    export PANHANDLER_ID=$(docker ps -a |
+                            grep ${PANHANDLER_IMAGE} |
+                            awk '{ print $1 }'
+                           )
 fi
 
 
-echo "Checking for updates ... (This may take some time while the image downloads)"
+
+echo "  Checking for updates ... (This may take some time while the image downloads)"
 echo " "
 
 docker pull ${PANHANDLER_IMAGE} | grep 'Image is up to date'
@@ -81,17 +98,17 @@ docker pull ${PANHANDLER_IMAGE} | grep 'Image is up to date'
 if [[ $? -eq 0 ]];
  then
     echo " "
-    echo "${PANHANDLER_IMAGE} is already up to date!"
+    echo "  ${PANHANDLER_IMAGE} is already up to date!"
     echo " "
 else
-    echo "Panhandler is out of date, and will need to be restarted"
+    echo "  Panhandler is out of date, and will need to be restarted"
     echo " "
     NEEDS_UPDATE=true
 fi
 
 if [[ ${RESET_REPOSITORIES} == true ]];
  then
-    echo "Moving Panhandler data directory to backup"
+    echo "  Moving Panhandler data directory to backup"
     echo " "
     echo " "
     echo " "
@@ -103,43 +120,56 @@ fi
 
 if [[ -z "${PANHANDLER_ID}" ]];
  then
-    echo "Panhandler:${IMAGE_TAG} has not been started"
+    echo "  Panhandler:${IMAGE_TAG} has not been started"
     echo " "
 else
-    # Panhandler container has been created already, let's check if we should stop and remove it
-    if [[ ${NEEDS_UPDATE} == true ]];
-     then
-        echo "Stopping Panhandler container"
-        echo " "
-        docker stop ${PANHANDLER_ID}
-
-        echo "Removing old Panhandler container"
-        echo " "
-        docker rm -f ${PANHANDLER_ID}
-    else
-        # no need to update, and it's aready been defined, let's check if it's actually running
-        docker ps | grep -q ${PANHANDLER_IMAGE}
-        if [[ $? -eq 0 ]];
-          then
-            echo "Panhandler is already up to date and is currently running"
+    # Panhandler container has been created already and we have a valid container id
+    # Let's verify if it's running
+    export CONTAINER_RUNNING=$( docker inspect ${PANHANDLER_ID} -f '{{ .State.Running }}')
+    if [[ ${CONTAINER_RUNNING} == true ]];
+      then
+        # now, let's check if we should stop and remove it
+        if [[ ${NEEDS_UPDATE} == true ]];
+         then
+            #
+            # Set the port to the value the user is already using
+            #
+            if [[ ${FORCE_DEFAULT_PORT} == false ]];
+             then
+                echo "Getting existing port mapping for re-use"
+                DEFAULT_PORT=$(docker port ${PANHANDLER_ID} | grep '80/tcp'| cut -d':' -f2)
+                echo "Using ${DEFAULT_PORT} as local port mapping"
+            fi
+            echo "  Stopping Panhandler container"
             echo " "
-            echo "Currently Running containers:"
+            docker stop ${PANHANDLER_ID}
+
+            echo "  Removing old Panhandler container"
+            echo " "
+            docker rm -f ${PANHANDLER_ID}
+
+        else
+            echo "  Panhandler is already up to date and is currently running"
+            echo " "
+            echo "  Currently Running containers:"
             echo " "
             docker ps
             echo " "
             echo "==================================================================================================="
             exit 0
-        else
-            echo "Restarting Panhandler..."
-            docker start ${PANHANDLER_ID}
-            echo " "
-            echo "==================================================================================================="
-            exit 0
         fi
+    else
+        echo "  Restarting Panhandler..."
+        echo " "
+        docker start ${PANHANDLER_ID} 2>&1 >>/dev/null
+        docker ps
+        echo " "
+        echo "==================================================================================================="
+        exit 0
     fi
 fi
 
-echo "Creating and running new Panhandler container"
+echo "  Creating and running new Panhandler container"
 echo " "
 if [[ ${IMAGE_TAG} == latest ]];
  then
@@ -151,7 +181,7 @@ fi
 echo " "
 echo " "
 echo " "
-echo "You may now use Panhandler by opening a web browser and browsing to http://localhost:${DEFAULT_PORT}"
+echo "  You may now use Panhandler by opening a web browser and browsing to http://localhost:${DEFAULT_PORT}"
 echo " "
 echo " "
 echo " "
