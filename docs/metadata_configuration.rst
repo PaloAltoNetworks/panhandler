@@ -37,12 +37,17 @@ a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. N
     name: config_set_name
     label: menu label text
     description: config_set description
-    extends: name_of_required_major_skillet
+
+    labels:
+      collection:
+        - Example Skillets
+
     variables:
       - name: INF_NAME
         description: Interface Name
         default: Ethernet1/1
         type_hint: text
+
     snippets:
       - xpath: some/xpath/value/here
         name: config_set_knickname
@@ -60,8 +65,10 @@ Metadata details
 
 Each .meta-cnc.yaml file must contain the following top-level keys:
 
-* name: name of this configuration set
-* description: Short description
+* name: unique name of this Skillet
+* label: Human readable label that will be displayed in the Panhandler UI
+* description: Short description to give specific information about what this Skillet does
+* labels: YAML dict of optional Skillet configuration information. For example - collection labels
 * extends: name of another skillet that is a requirement for this one. PAN-OS and Panorama types will load extends prior to loading this one
 * variables: Described in detail below
 * snippets: a dict containing the following keys
@@ -75,6 +82,24 @@ Each .meta-cnc.yaml file must contain the following top-level keys:
 
     Each Metadata file type has it's own format for the 'snippets' section. `file` and `xpath` are only used in
     `panos` and `panorama` types. Other types such as `template` or `rest` may have a different format.
+
+
+Skillet Collections
+^^^^^^^^^^^^^^^^^^^
+
+Each Skillet should belong to at least one 'Collection'. Collections are used to group like skillets. SKillets
+with no `collection` label will be placed in the 'Unknown' Collection.
+
+To configure one or more collections for your Skillet, add a `collection` attribute to the 'labels' dictionary.
+
+.. code-block:: yaml
+
+    labels:
+      collection:
+        - Example Skillets
+        - Another Collection
+        - Yet another Collection
+
 
 
 Snippet details per Metadata type
