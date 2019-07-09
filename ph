@@ -81,6 +81,9 @@ if [[ ${IMAGE_TAG} == latest ]];
                             grep ${PANHANDLER_IMAGE} |
                             awk '{ print $1 }'
                            )
+
+    # now that we (maybe?) have the container ID, ensure we use the latest tag from here on out
+    export PANHANDLER_IMAGE=paloaltonetworks/panhandler:latest
  else
     export PANHANDLER_IMAGE=paloaltonetworks/panhandler:${IMAGE_TAG}
     export PANHANDLER_ID=$(docker ps -a |
