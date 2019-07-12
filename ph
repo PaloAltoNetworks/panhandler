@@ -126,6 +126,12 @@ if [[ -z "${PANHANDLER_ID}" ]];
  then
     echo "  Panhandler:${IMAGE_TAG} has not been started"
     echo " "
+#    FIXME to add additional checks and to come up with an available port
+#    docker ps -a | grep -q "${DEFAULT_PORT}->80"
+#    if [[ $? -eq 0 ]];
+#     then
+#     echo " Default port of 8080 is taken "
+#    fi
 else
     # Panhandler container has been created already and we have a valid container id
     # Let's verify if it's running
@@ -177,10 +183,10 @@ echo "  Creating and running new Panhandler container"
 echo " "
 if [[ ${IMAGE_TAG} == latest ]];
  then
-    docker run -p ${DEFAULT_PORT}:80 -t -v $HOME:/root -d ${PANHANDLER_IMAGE}
+    docker run -p ${DEFAULT_PORT}:80 -t -v $HOME:/root -d -n panhandler ${PANHANDLER_IMAGE}
 else
     # this is only necessary while 2.3 is in development
-    docker run -p ${DEFAULT_PORT}:80 -t -v $HOME:/home/cnc_user -d ${PANHANDLER_IMAGE}
+    docker run -p ${DEFAULT_PORT}:80 -t -v $HOME:/home/cnc_user -d -n panhandler ${PANHANDLER_IMAGE}
 fi
 echo " "
 echo " "
