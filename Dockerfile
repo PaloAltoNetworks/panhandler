@@ -10,6 +10,7 @@ ENV TERRAFORM_SHA256SUM=5925cd4d81e7d8f42a0054df2aafd66e2ab7408dbed2bd748f0022cf
 ENV CNC_USERNAME=paloalto
 ENV CNC_PASSWORD=panhandler
 ENV CNC_HOME=/home/cnc_user
+ENV CNC_APP=Panhandler
 
 WORKDIR /app
 ADD requirements.txt /app/requirements.txt
@@ -21,7 +22,8 @@ RUN apk add --update --no-cache git curl openssh gcc g++ make cmake musl-dev pyt
     linux-headers bash && \
     pip install --upgrade pip && pip install --no-cache-dir --no-use-pep517 -r requirements.txt && \
     echo "===> Installing Terraform..."  && \
-    curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip > terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
+    curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
+    > terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
     echo "${TERRAFORM_SHA256SUM}  terraform_${TERRAFORM_VERSION}_linux_amd64.zip" > terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
     sha256sum -cs terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
     unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /bin && \
