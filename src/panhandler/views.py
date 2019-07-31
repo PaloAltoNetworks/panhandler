@@ -24,8 +24,6 @@ Please see http://panhandler.readthedocs.io for more information
 This software is provided without support, warranty, or guarantee.
 Use at your own risk.
 """
-import os
-import re
 import shutil
 from pathlib import Path
 
@@ -162,7 +160,7 @@ class ListReposView(CNCView):
         try:
             if not snippets_dir.exists():
                 messages.add_message(self.request, messages.ERROR,
-                                 'Could not load repositories from directory as it does not exists')
+                                     'Could not load repositories from directory as it does not exists')
                 context['repos'] = list()
                 return context
         except PermissionError as pe:
@@ -176,6 +174,7 @@ class ListReposView(CNCView):
 
         repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
         if repos is not None:
+            print(f'Returning cached repos')
             context['repos'] = repos
         else:
             repos = list()
@@ -364,7 +363,7 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
             if os.path.exists(repo_dir):
                 shutil.rmtree(repo_dir, ignore_errors=True)
             else:
-                print('This dir is already gone!')
+                print(f'dir {repo_dir} is already gone!')
 
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
