@@ -1,34 +1,111 @@
 {% extends base_html|default:'pan_cnc/base.html' %}
 {% load static %}
-
+{% block head %}
+    <script src="{% static 'js/shuffle.min.js' %}"></script>
+{% endblock %}
 {% block content %}
 
     <h3 class="mb-4">Imported Repositories</h3>
 
-    {% for repo in repos %}
-
-        {% if forloop.counter0|divisibleby:2 %}
-            {% if forloop.first %}
-                <div class="row mb-4">
-                    {% else %}
-                </div>
-                <div class="row mb-4">
-            {% endif %}
-        {% endif %}
-        <div class="col-sm-6">
-            <div class="card shadow-lg">
-                <div class="card-body">
-                    <h5 class="card-title">{{ repo.name }}</h5>
-                    <p class="card-text">Branch: {{ repo.branch }}</p>
+    <div class="d-flex justify-content-between">
+        <div>
+            <label for="sort_buttons" class="text-muted d-block">Sort</label>
+            <div class="btn-group" role="group" aria-label="..." id="sort_buttons">
+                <button type="button" class="btn btn-outline-secondary" id="sort_name">Name</button>
+                <button type="button" class="btn btn-outline-secondary" id="sort_updated">Last Updated</button>
+            </div>
+        </div>
+        <div>
+            <label for="search_repos" class="text-muted d-block">Search</label>
+            <input type="text" id="search_repos"/>
+        </div>
+    </div>
+    <div id="repos_grid" class="pb-6 mb-4 col-sm-12">
+        {% for repo in repos %}
+            <div class="grid__brick mt-3 mb-3 col-sm-4" data-name="{{ repo.name }}"
+                 data-groups=["{{ repo.last_updated }}"] data-last_updated_time="{{ repo.last_updated_time }}">
+                <div class="card shadow" style="height: 400px">
+                    <div class="card-header">
+                        {{ repo.name }}
+                    </div>
+                    <div class="card-body" style="height: 85%; overflow-y: auto">
+                        <p class="card-text">Branch: {{ repo.branch }}</p>
                     {% if repo.description != repo.branch %}
                     <p class="card-text">{{ repo.description }}</p>
                     {% endif %}
-                    <a href="/panhandler/repo_detail/{{ repo.name }}" class="btn btn-primary">Detail</a>
+                    <p class="card-text">Last Updated: {{ repo.last_updated }}</p>
+                    </div>
+                    <div class="card-footer text-right">
+                        <a href="/panhandler/repo_detail/{{ repo.name }}" class="btn btn-primary">Detail</a>
+                    </div>
                 </div>
             </div>
-        </div>
-    {% endfor %}
-</div>
-    <a class="btn btn-outline-primary" href="/panhandler/import">Import Skillet Repository</a>
+        {% endfor %}
+        {#        <div class="col-1 sizer-element"></div>#}
+    </div>
+
+    <script type="text/javascript">
+
+        function clear_filter_buttons() {
+            let selector = $("[id^=filter_]");
+            selector.removeClass('bg-primary text-white');
+        }
+
+        function clear_sort_buttons() {
+            let selector = $("[id^=sort_]");
+            selector.removeClass('bg-primary text-white');
+        }
+
+        function perform_sort(ele, sort_term, reverse=false) {
+            clear_sort_buttons();
+            $(ele).addClass('bg-primary text-white');
+            let sort_options = {
+                'by': function (element) {
+                    return $(element).data(sort_term)
+                },
+                'reverse': reverse
+            };
+            shuffleInstance.sort(sort_options);
+        }
+
+        // var shuffleInstance;
+        $(document).ready(function () {
+            window.shuffleInstance = new Shuffle(document.getElementById('repos_grid'), {
+                itemSelector: '.grid__brick',
+                sizer: '.sizer-element'
+            });
+            perform_sort('#sort_name', 'name');
+        });
+
+        $('#sort_name').on('click', function () {
+                perform_sort(this, 'name');
+            }
+        );
+
+        $('#sort_updated').on('click', function () {
+                perform_sort(this, 'last_updated_time', true);
+            }
+        );
+
+        $('#search_repos').on('keyup', function () {
+            clear_sort_buttons();
+            let search_text = $(this).val().toLowerCase().trim();
+            shuffleInstance.filter(function (element, shuffleInstance) {
+                // var title_element = element.querySelector('.grid__brick__title');
+                let title_element = $(element).data('name');
+                let title_text = title_element.toLowerCase().trim();
+
+                {#return title_text.indexOf(search_text) !== -1;#}
+                if (title_text.includes(search_text)) {
+                    return true;
+                } else {
+                    return false;
+                }
+
+            });
+        });
+    </script>
+        <a class="btn btn-outline-primary" href="/panhandler/import">Import Skillet Repository</a>
     <a class="btn btn-outline-primary" href="/panhandler/update_all_repos">Update All Repositories</a>
+
 {% endblock %}
