@@ -20,6 +20,7 @@ Panhandler
    updating
    debugging
    examples/rest_skillet
+   switching_dev_latest
 
 
 About
