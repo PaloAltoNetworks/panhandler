@@ -19,7 +19,10 @@
             <div class="card shadow-lg">
                 <div class="card-body">
                     <h5 class="card-title">{{ repo.name }}</h5>
+                    <p class="card-text">Branch: {{ repo.branch }}</p>
+                    {% if repo.description != repo.branch %}
                     <p class="card-text">{{ repo.description }}</p>
+                    {% endif %}
                     <a href="/panhandler/repo_detail/{{ repo.name }}" class="btn btn-primary">Detail</a>
                 </div>
             </div>

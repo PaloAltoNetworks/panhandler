@@ -27,8 +27,11 @@
         </div>
         <div class="card-body">
             <h5 class="card-title">Details</h5>
+            <p class="card-text">Branch: {{ repo_detail.branch }}</p>
             <p class="card-text">
+                {% if repo_detail.description != repo_detail.branch %}
                 {{ repo_detail.description }}
+                {% endif %}
             <div class="mt-3">
                 <a href="{{ repo_detail.link }}">{{ repo_detail.url }}</a>
             </div>
