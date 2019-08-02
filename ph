@@ -17,7 +17,11 @@ export RESET_REPOSITORIES=false
 export NEEDS_UPDATE=false
 export FORCE_DEFAULT_PORT=false
 
-while getopts ":t:r:p:h" opt; do
+# default panhandler auth
+export CNC_USERNAME=paloalto
+export CNC_PASSWORD=panhandler
+
+while getopts ":t:r:p:w:u:h" opt; do
   case ${opt} in
     t)
         IMAGE_TAG="$OPTARG"
@@ -28,6 +32,12 @@ while getopts ":t:r:p:h" opt; do
     ;;
     r)
         RESET_REPOSITORIES="$OPTARG"
+    ;;
+    w)
+        CNC_PASSWORD="$OPTARG"
+    ;;
+    u)
+        CNC_USERNAME="$OPTARG"
     ;;
     h)
         echo "Valid options are: "
@@ -189,11 +199,11 @@ echo " "
 if [[ ${IMAGE_TAG} == latest ]];
  then
     # shellcheck disable=SC2086
-    docker run -p ${DEFAULT_PORT}:80 -t -v "$HOME":/root -d -n panhandler ${PANHANDLER_IMAGE}
+    docker run -p ${DEFAULT_PORT}:80 -t -v "$HOME":/root -d -e CNC_USERNAME -e CNC_PASSWORD --name panhandler ${PANHANDLER_IMAGE}
 else
     # this is only necessary while 2.3 is in development
     # shellcheck disable=SC2086
-    docker run -p ${DEFAULT_PORT}:8080 -t -v "$HOME":/home/cnc_user -d -n panhandler ${PANHANDLER_IMAGE}
+    docker run -p ${DEFAULT_PORT}:8080 -t -v "$HOME":/home/cnc_user -d -e CNC_USERNAME -e CNC_PASSWORD --name panhandler ${PANHANDLER_IMAGE}
 fi
 echo " "
 echo " "
