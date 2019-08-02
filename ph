@@ -101,6 +101,7 @@ echo " "
 
 docker pull "${PANHANDLER_IMAGE}" | grep 'Image is up to date'
 
+# shellcheck disable=SC2181
 if [[ $? -eq 0 ]];
  then
     echo " "
