@@ -18,9 +18,9 @@ ADD requirements.txt /app/requirements.txt
 COPY cnc /app/cnc
 COPY src /app/src
 
-RUN apk add --update --no-cache git curl openssh gcc g++ make cmake musl-dev python3-dev libffi-dev openssl-dev \
-    linux-headers bash && \
-    pip install --upgrade pip && pip install --no-cache-dir --no-use-pep517 -r requirements.txt && \
+RUN apk add --update --no-cache git curl build-base musl-dev python3-dev libffi-dev openssl-dev \
+    linux-headers && \
+    pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt && \
     echo "===> Installing Terraform..."  && \
     curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
     > terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
@@ -29,6 +29,8 @@ RUN apk add --update --no-cache git curl openssh gcc g++ make cmake musl-dev pyt
     unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /bin && \
     rm -f terraform_${TERRAFORM_VERSION}_linux_amd64.zip  && \
     rm -f terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
+    apk del build-base linux-headers openssl-dev python3-dev libffi-dev musl-dev && \
+    rm -rf /var/cache/apk/* && \
     if [ -f /app/cnc/db.sqlite3 ]; then rm /app/cnc/db.sqlite3; fi && \
     addgroup -S cnc_group && adduser -S cnc_user -G cnc_group && \
     chgrp cnc_group /app/cnc && \
@@ -42,5 +44,6 @@ RUN curl -i -s -X POST https://scanapi.redlock.io/v1/vuln/os \
  -F "fileName=/lib/apk/db/installed" -F "file=@/lib/apk/db/installed" \
  -F "rl_args=report=detail" | grep -i "x-redlock-scancode: pass"
 
-EXPOSE 80
+USER cnc_user
+EXPOSE 8080
 ENTRYPOINT ["/app/cnc/start_app.sh"]
