@@ -60,7 +60,7 @@ case ${IMAGE_TAG} in
         ;;
 esac
 
-if [[ ! $(which docker) ]];
+if [[ ! $(command -v docker) ]];
   then
     echo "Could not find the docker command, please ensure you have docker installed on this machine"
     exit 1
@@ -73,23 +73,25 @@ echo " "
 
 if [[ ${IMAGE_TAG} == latest ]];
  then
-    export PANHANDLER_IMAGE=paloaltonetworks/panhandler
-    export PANHANDLER_ID=$(docker ps -a |
+    PANHANDLER_ID=$(docker ps -a |
                             grep -v 'panhandler:dev' |
                             grep -v 'panhandler:beta' |
                             grep -v 'panhandler:v' |
-                            grep ${PANHANDLER_IMAGE} |
+                            grep 'paloaltonetworks/panhandler' |
                             awk '{ print $1 }'
                            )
-
+    export PANHANDLER_ID
     # now that we (maybe?) have the container ID, ensure we use the latest tag from here on out
-    export PANHANDLER_IMAGE=paloaltonetworks/panhandler:latest
+    PANHANDLER_IMAGE=paloaltonetworks/panhandler:latest
+    export PANHANDLER_IMAGE
  else
-    export PANHANDLER_IMAGE=paloaltonetworks/panhandler:${IMAGE_TAG}
-    export PANHANDLER_ID=$(docker ps -a |
-                            grep ${PANHANDLER_IMAGE} |
+    PANHANDLER_IMAGE=paloaltonetworks/panhandler:${IMAGE_TAG}
+    PANHANDLER_ID=$(docker ps -a |
+                            grep "${PANHANDLER_IMAGE}" |
                             awk '{ print $1 }'
                            )
+    export PANHANDLER_ID
+    export PANHANDLER_IMAGE
 fi
 
 echo "Found container id of ${PANHANDLER_ID}"
@@ -97,7 +99,7 @@ echo "Found container id of ${PANHANDLER_ID}"
 echo "  Checking for updates ... (This may take some time while the image downloads)"
 echo " "
 
-docker pull ${PANHANDLER_IMAGE} | grep 'Image is up to date'
+docker pull "${PANHANDLER_IMAGE}" | grep 'Image is up to date'
 
 if [[ $? -eq 0 ]];
  then
@@ -117,6 +119,7 @@ if [[ ${RESET_REPOSITORIES} == true ]];
     echo " "
     echo " "
     DATESTRING=$(date "+%Y-%m-%d-%H:%M:%S")
+    # shellcheck disable=SC2086
     mv ~/.pan_cnc/panhandler ~/.pan_cnc/panhandler.backup.${DATESTRING}
     mkdir ~/.pan_cnc/panhandler
 fi
@@ -135,7 +138,8 @@ if [[ -z "${PANHANDLER_ID}" ]];
 else
     # Panhandler container has been created already and we have a valid container id
     # Let's verify if it's running
-    export CONTAINER_RUNNING=$( docker inspect ${PANHANDLER_ID} -f '{{ .State.Running }}')
+    CONTAINER_RUNNING=$( docker inspect "${PANHANDLER_ID}" -f '{{ .State.Running }}')
+    export CONTAINER_RUNNING
     if [[ ${CONTAINER_RUNNING} == true ]];
       then
         # now, let's check if we should stop and remove it
@@ -147,16 +151,16 @@ else
             if [[ ${FORCE_DEFAULT_PORT} == false ]];
              then
                 echo "Getting existing port mapping for re-use"
-                DEFAULT_PORT=$(docker port ${PANHANDLER_ID} | grep '80/tcp'| cut -d':' -f2)
+                DEFAULT_PORT=$(docker port "${PANHANDLER_ID}" | grep '80/tcp'| cut -d':' -f2)
                 echo "Using ${DEFAULT_PORT} as local port mapping"
             fi
             echo "  Stopping Panhandler container"
             echo " "
-            docker stop ${PANHANDLER_ID}
+            docker stop "${PANHANDLER_ID}"
 
             echo "  Removing old Panhandler container"
             echo " "
-            docker rm -f ${PANHANDLER_ID}
+            docker rm -f "${PANHANDLER_ID}"
 
         else
             echo "  Panhandler is already up to date and is currently running"
@@ -171,7 +175,7 @@ else
     else
         echo "  Restarting Panhandler..."
         echo " "
-        docker start ${PANHANDLER_ID} 2>&1 >>/dev/null
+        docker start "${PANHANDLER_ID}" >>/dev/null 2>&1
         docker ps
         echo " "
         echo "==================================================================================================="
@@ -183,10 +187,12 @@ echo "  Creating and running new Panhandler container"
 echo " "
 if [[ ${IMAGE_TAG} == latest ]];
  then
-    docker run -p ${DEFAULT_PORT}:80 -t -v $HOME:/root -d -n panhandler ${PANHANDLER_IMAGE}
+    # shellcheck disable=SC2086
+    docker run -p ${DEFAULT_PORT}:80 -t -v "$HOME":/root -d -n panhandler ${PANHANDLER_IMAGE}
 else
     # this is only necessary while 2.3 is in development
-    docker run -p ${DEFAULT_PORT}:80 -t -v $HOME:/home/cnc_user -d -n panhandler ${PANHANDLER_IMAGE}
+    # shellcheck disable=SC2086
+    docker run -p ${DEFAULT_PORT}:8080 -t -v "$HOME":/home/cnc_user -d -n panhandler ${PANHANDLER_IMAGE}
 fi
 echo " "
 echo " "
