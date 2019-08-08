@@ -46,4 +46,4 @@ RUN curl -i -s -X POST https://scanapi.redlock.io/v1/vuln/os \
 
 USER cnc_user
 EXPOSE 8080
-ENTRYPOINT ["/app/cnc/start_app.sh"]
+CMD ["/app/cnc/start_app.sh"]
