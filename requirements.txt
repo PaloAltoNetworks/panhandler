@@ -13,3 +13,4 @@ jsonpath-ng
 netaddr
 django-widget-tweaks
 azure-cli
+virtualenv
