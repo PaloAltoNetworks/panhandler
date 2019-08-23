@@ -76,6 +76,7 @@ Each .meta-cnc.yaml file must contain the following top-level keys:
     * name: knickname of the skillet
     * file: relative path to the configuration template
     * xpath (optional): XPath where this fragment belongs in the target OS hierarchy (for XML skillets)
+    * when (optional): Jinja conditional that evaluates to 'true' or 'false'. If 'false', this snippet will be skipped
 
 
 .. note::
