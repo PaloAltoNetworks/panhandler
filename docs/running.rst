@@ -30,7 +30,7 @@ If port 80 is unavailable, you can switch to a different port. This example uses
 
 Then access the UI via http://localhost:9999
 
-To persist any environments and secrets, you can mount a volume on the `/root/.pan_cnc` folder like this:
+To persist any environments and secrets, you can mount a volume on the `/home/cnc_user/.pan_cnc` folder like this:
 
 .. code-block:: bash
 
