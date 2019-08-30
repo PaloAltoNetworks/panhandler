@@ -16,6 +16,13 @@
             </div>
         </div>
         <div>
+            <label for="repo_options" class="text-muted d-block">Options</label>
+            <div id="repo_options">
+                <a class="btn btn-outline-secondary" href="/panhandler/import">Import Skillet Repository</a>
+                <a class="btn btn-outline-secondary" href="/panhandler/update_all_repos">Update All Repositories</a>
+            </div>
+        </div>
+        <div>
             <label for="search_repos" class="text-muted d-block">Search</label>
             <input type="text" id="search_repos"/>
         </div>
@@ -30,10 +37,10 @@
                     </div>
                     <div class="card-body" style="height: 85%; overflow-y: auto">
                         <p class="card-text">Branch: {{ repo.branch }}</p>
-                    {% if repo.description != repo.branch %}
-                    <p class="card-text">{{ repo.description }}</p>
-                    {% endif %}
-                    <p class="card-text">Last Updated: {{ repo.last_updated }}</p>
+                        {% if repo.description != repo.branch %}
+                            <p class="card-text">{{ repo.description }}</p>
+                        {% endif %}
+                        <p class="card-text">Last Updated: {{ repo.last_updated }}</p>
                     </div>
                     <div class="card-footer text-right">
                         <a href="/panhandler/repo_detail/{{ repo.name }}" class="btn btn-primary">Detail</a>
@@ -56,7 +63,7 @@
             selector.removeClass('bg-primary text-white');
         }
 
-        function perform_sort(ele, sort_term, reverse=false) {
+        function perform_sort(ele, sort_term, reverse = false) {
             clear_sort_buttons();
             $(ele).addClass('bg-primary text-white');
             let sort_options = {
@@ -105,7 +112,7 @@
             });
         });
     </script>
-        <a class="btn btn-outline-primary" href="/panhandler/import">Import Skillet Repository</a>
+    <a class="btn btn-outline-primary" href="/panhandler/import">Import Skillet Repository</a>
     <a class="btn btn-outline-primary" href="/panhandler/update_all_repos">Update All Repositories</a>
 
 {% endblock %}

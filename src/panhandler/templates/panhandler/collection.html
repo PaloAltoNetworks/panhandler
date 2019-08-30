@@ -5,7 +5,7 @@
 {% endblock %}
 {% block content %}
 
-    <h3 class="mb-4">Skillet Collection: {{ collection }}</h3>
+    <h3 class="mb-4"><a href="/panhandler/collections" class="text-dark">Collections</a> -> {{ collection }}</h3>
 
     <div class="d-flex justify-content-between">
         <div>
@@ -20,7 +20,6 @@
             <div class="btn-group" role="group" id="filter_buttons">
                 <button type="button" class="btn btn-outline-secondary" id="filter_panos">PAN-OS</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_panorama">Panorama</button>
-                <button type="button" class="btn btn-outline-secondary" id="filter_panorama_gpcs">Panorama-GPCS</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_rest">REST</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_template">Template</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_terraform">Terraform</button>

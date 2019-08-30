@@ -38,7 +38,7 @@ For example, this portion of the configuration describes the log-settings we wou
     </syslog>
 
 
-Notice here we have defined one variable: `MGMT_IP`. This will allow the user to insert their own managemet ip when
+Notice here we have defined one variable: `MGMT_IP`. This will allow the user to insert their own management ip when
 deploying.
 
 .meta-cnc file

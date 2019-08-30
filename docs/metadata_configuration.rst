@@ -76,6 +76,7 @@ Each .meta-cnc.yaml file must contain the following top-level keys:
     * name: knickname of the skillet
     * file: relative path to the configuration template
     * xpath (optional): XPath where this fragment belongs in the target OS hierarchy (for XML skillets)
+    * when (optional): Jinja conditional that evaluates to 'true' or 'false'. If 'false', this snippet will be skipped
 
 
 .. note::
@@ -394,3 +395,34 @@ YAML Syntax
 YAML is notoriously finicky about whitespace and formatting. While it's a relatively simple structure and easy to learn,
 it can often also be frustrating to work with, especially for large files. A good reference to use to check your
 YAML syntax is the `YAML Lint site <http://www.yamllint.com/>`_.
+
+Jinja Whitespace control
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Care must usually be taken to ensure no extra whitespace creeps into your templates due to Jinja looping
+constructs or control characters. For example, consider the following fragment:
+
+.. code-block:: jinja
+
+    <dns-servers>
+    {% for member in CLIENT_DNS_SUFFIX %}
+        <member>{{ member }}</member>
+    {% endfor %}
+    </dns-servers>
+
+This fragment will result in blank lines being inserted where the 'for' and 'endfor' control tags are placed. To
+ensure this does not happen and to prevent any unintentioal whitespace, you can use jinja whitespace control like
+so:
+
+.. code-block:: jinja
+
+    <dns-servers>
+    {%- for member in CLIENT_DNS_SUFFIX %}
+        <member>{{ member }}</member>
+    {%- endfor %}
+    </dns-servers>
+
+.. note:: Note the '-' after the leading '{%'. This instructs jinja to remove these blank lines in the resulting
+parsed output template.
+
+
