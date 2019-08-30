@@ -125,7 +125,7 @@ function create_panhandler_container {
       # this is only necessary while 2.3 is in development
       # shellcheck disable=SC2086
       ensure_docker_volume
-      docker run -p "${DEFAULT_PORT}":${DEV_EXPOSED_PORT} -t -d -v "$CNC_VOLUME":/home/cnc_user/.panc_cnc \
+      docker run -p "${DEFAULT_PORT}":${DEV_EXPOSED_PORT} -t -d -v "$CNC_VOLUME":/home/cnc_user/.pan_cnc \
               -e CNC_USERNAME \
               -e CNC_PASSWORD \
               --name "panhandler_${IMAGE_TAG}" "${PANHANDLER_IMAGE}"
