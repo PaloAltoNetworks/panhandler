@@ -20,7 +20,9 @@ Panhandler
    updating
    debugging
    examples/rest_skillet
+   switching_dev_latest
    examples/rest_skillet_with_output_capture
+
 
 
 About
