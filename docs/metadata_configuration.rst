@@ -382,11 +382,20 @@ Ensuring all variables are defined
 When working with a large amount of configuration temlates, it's easy to miss a variable definition. Use this one-liner
 to find them all.
 
-cd into a skillet dir and run this to find all vars
+cd into a skillet dir and run this to find all configured variables:
 
 .. code-block:: bash
 
     grep -r '{{' . |  cut -d'{' -f3 | awk '{ print $1 }' | sort -u
+
+
+Of, if you have `perl` available, the following may also catch any configuration commands that may have
+more than one variable defined:
+
+.. code-block:: bash
+
+    grep -r '{{' . | perl -pne 'chomp(); s/.*?{{ (.*?) }}/$1\n/g;' | sort -u
+
 
 
 YAML Syntax
