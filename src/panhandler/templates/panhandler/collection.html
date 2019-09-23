@@ -103,7 +103,11 @@
                 itemSelector: '.grid__brick',
                 sizer: '.sizer-element'
             });
+            {% if default_sort == 'order' %}
+            perform_sort('#sort_order', 'order');
+            {% else %}
             perform_sort('#sort_name', 'name');
+            {% endif %}
         });
 
         $('#sort_name').on('click', function () {

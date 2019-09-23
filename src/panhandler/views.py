@@ -531,14 +531,20 @@ class ListSkilletsInCollectionView(CNCView):
         else:
             skillets = snippet_utils.load_snippets_by_label('collection', collection, self.app_dir)
 
+        # Check if the skillet builder has specified an order for their Skillets
+        # if so, sort them that way be default, otherwise sort by name
         order_index = 1000
+        default_sort = 'name'
         for skillet in skillets:
             if 'order' not in skillet['labels']:
                 skillet['labels']['order'] = order_index
                 order_index += 1
+            else:
+                default_sort = 'order'
 
         context['skillets'] = skillets
         context['collection'] = collection
+        context['default_sort'] = default_sort
 
         return context
 
