@@ -531,6 +531,12 @@ class ListSkilletsInCollectionView(CNCView):
         else:
             skillets = snippet_utils.load_snippets_by_label('collection', collection, self.app_dir)
 
+        order_index = 1000
+        for skillet in skillets:
+            if 'order' not in skillet['labels']:
+                skillet['labels']['order'] = order_index
+                order_index += 1
+
         context['skillets'] = skillets
         context['collection'] = collection
 

@@ -13,6 +13,7 @@
             <div class="btn-group" role="group" aria-label="..." id="sort_buttons">
                 <button type="button" class="btn btn-outline-secondary" id="sort_name">Name</button>
                 <button type="button" class="btn btn-outline-secondary" id="sort_type">Type</button>
+                <button type="button" class="btn btn-outline-secondary" id="sort_order">Order</button>
             </div>
         </div>
         <div>
@@ -35,6 +36,7 @@
     <div id="collection_grid" class="pb-6 mb-4 col-sm-12">
         {% for skillet in skillets %}
             <div class="grid__brick mt-3 mb-3 col-sm-4" data-name="{{ skillet.label }}"
+                 data-order="{{ skillet.labels.order | default:forloop.counter }}"
                  data-groups=["{{ skillet.type }}"] data-skillet_type="{{ skillet.type }}">
                 <div class="card shadow" style="height: 400px">
                     <div class="card-header">
@@ -111,6 +113,11 @@
 
         $('#sort_type').on('click', function () {
                 perform_sort(this, 'skillet_type');
+            }
+        );
+
+        $('#sort_order').on('click', function () {
+                perform_sort(this, 'order');
             }
         );
 
