@@ -94,3 +94,11 @@ views:
 
   - name: check_update
     class: CheckAppUpdateView
+
+# Test validation views below
+  - name: validate
+    class: ExecuteValidationSkilletView
+    parameter: skillet
+
+  - name: validate-results
+    class: ViewValidationResultsView

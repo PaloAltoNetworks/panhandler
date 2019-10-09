@@ -17,3 +17,4 @@ urllib3
 virtualenv
 xmldiff
 xmltodict
+git+git://github.com/nembery/skilletlib.git@develop#egg=skilletlib

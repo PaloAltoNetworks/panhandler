@@ -55,7 +55,12 @@
                         </p>
                     </div>
                     <div class="card-footer text-right">
-                        <a href="/panhandler/skillet/{{ skillet.name }}" class="btn btn-primary">Go</a>
+                        {%  if skillet.type == 'pan_validation' %}
+                            <a href="/panhandler/validate/{{ skillet.name }}" class="btn btn-primary">Go</a>
+                        {%  else %}
+                            <a href="/panhandler/skillet/{{ skillet.name }}" class="btn btn-primary">Go</a>
+                        {% endif %}
+
                     </div>
                 </div>
             </div>
