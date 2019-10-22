@@ -32,6 +32,8 @@ from skilletlib.exceptions import LoginException
 from skilletlib.exceptions import PanoplyException
 from skilletlib.exceptions import SkilletLoaderException
 from skilletlib.panoply import Panoply
+from skilletlib import SkilletLoader
+from skilletlib.skillet import PanValidationSkillet
 from skilletlib.skillet.panos import PanosSkillet
 
 from pan_cnc.lib import git_utils
@@ -749,8 +751,8 @@ class ViewValidationResultsView(EditTargetView):
         skillet_context = dict()
         context = self.get_context_data()
         try:
-            # skillet_context['facts'] = p.facts
-            skillet = PanosSkillet(meta['snippet_path'])
+
+            skillet = PanValidationSkillet(meta)
             skillet_context = p.execute_skillet(skillet, skillet_context)
             results = list()
             for snippet in skillet.snippet_stack:

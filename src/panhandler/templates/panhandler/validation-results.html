@@ -27,6 +27,7 @@
                 </thead>
                 <tbody>
                 {% for r in results %}
+                    {% if r.results.label %}
                     <tr>
                         <th scope="row">{{ forloop.counter }}</th>
                         <td>
@@ -35,14 +36,15 @@
                             </a>
                         </td>
                         <td>
-                            {% if r.results.results %}
-                                <a class="text-danger" href="{{ r.results.documentation_link }}">
-                                    Failed
-                                </a>
-                            {% else %}
+                            {% if r.results.results is True %}
                                 <a class="text-success" href="{{ r.results.documentation_link }}">
                                     Passed
                                 </a>
+                            {% else %}
+                                 <a class="text-danger" href="{{ r.results.documentation_link }}">
+                                    Failed
+                                </a>
+
                             {% endif %}
                         </td>
                         <td>
@@ -62,10 +64,10 @@
                             </a>
                         </td>
                     </tr>
+                    {% endif %}
                 {% endfor %}
                 </tbody>
             </table>
-
             </p>
             <div class="card-footer text-right">
                 <p class="card-text">
@@ -99,4 +101,5 @@
             </div>
         </div>
     {% endfor %}
+    {{ results }}
 {% endblock %}
