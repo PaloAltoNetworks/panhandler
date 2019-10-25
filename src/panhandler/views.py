@@ -564,7 +564,9 @@ class ViewSkilletView(ProvisionSnippetView):
         :return: name of the skillet found in the kwargs
         """
         skillet = self.kwargs.get('skillet', '')
-        self.save_value_to_workflow('snippet_name', skillet)
+        if skillet is not None or skillet != '':
+            self.snippet = skillet
+            self.save_value_to_workflow('snippet_name', skillet)
         return skillet
 
 
