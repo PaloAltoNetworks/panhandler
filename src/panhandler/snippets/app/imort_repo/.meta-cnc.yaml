@@ -16,7 +16,7 @@ variables:
   - name: url
     description: Git Repository HTTPS URL
     default: https://github.com/PaloAltoNetworks/Skillets.git
-    type_hint: url
+    type_hint: text
   - name: branch
     description: Branch
     default: master
