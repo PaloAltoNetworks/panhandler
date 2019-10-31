@@ -587,6 +587,7 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
         """
         skillet = self.kwargs.get('skillet', '')
         self.save_value_to_workflow('snippet_name', skillet)
+        self.snippet = skillet
         return skillet
 
     def get_context_data(self, **kwargs):
