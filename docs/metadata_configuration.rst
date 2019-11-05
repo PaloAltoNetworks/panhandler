@@ -273,6 +273,21 @@ Variable Examples:
       min: 1000
       max: 2000
 
+ * float
+
+  This type will ensure the entered value is a float. You may optionally supply the `min` and `max`
+  attributes to ensure the entered value do not exceed or fall below those values.
+
+.. code-block:: yaml
+
+  - name: price_per_mbps
+    description: Price Per Mbps
+    default: 1.50
+    type_hint: float
+    attributes:
+      min: 1.00
+      max: 500.00
+
 * dropdown
 
   This type will render a `select` input control. This ensures the user can only select one of the options
