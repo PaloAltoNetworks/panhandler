@@ -19,6 +19,18 @@ Then access the UI via http://localhost:80
 
 The default username and password is: `paloalto` and `panhandler`
 
+
+Setting the Default Username and Password
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To set the default username and password, pass in the following environment variables:
+
+.. code-block:: bash
+
+   docker run -t -e CNC_USERNAME=myuser -e CNC_PASSWORD=mypass -p 80:80 -v ~:/home/cnc_user paloaltonetworks/panhandler
+
+
+
 Using an alternate TCP port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
