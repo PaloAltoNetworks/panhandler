@@ -32,9 +32,7 @@ from skilletlib.exceptions import LoginException
 from skilletlib.exceptions import PanoplyException
 from skilletlib.exceptions import SkilletLoaderException
 from skilletlib.panoply import Panoply
-from skilletlib import SkilletLoader
-from skilletlib.skillet import PanValidationSkillet
-from skilletlib.skillet.panos import PanosSkillet
+from skilletlib.skillet.pan_validation import PanValidationSkillet
 
 from pan_cnc.lib import git_utils
 from pan_cnc.lib.exceptions import ImportRepositoryException
@@ -580,6 +578,22 @@ class CheckAppUpdateView(CNCBaseAuth, RedirectView):
 # Validation Testing Class below
 class ExecuteValidationSkilletView(ProvisionSnippetView):
 
+    header = 'Configure Validation Skillet'
+
+    def generate_dynamic_form(self, data=None) -> forms.Form:
+        dynamic_form = super().generate_dynamic_form(data)
+        choices_list = [('offline', 'Offline'), ('online', 'Online')]
+        description = 'Validation Mode'
+        mode = self.get_value_from_workflow('mode', 'online')
+        default = mode
+        required = True
+        help_text = 'Online mode will pull configuration directly from an accessible PAN-OS device. Offline ' \
+                    'allows an XML configuration file to be uploaded.'
+        dynamic_form.fields['mode'] = forms.ChoiceField(widget=forms.RadioSelect, choices=choices_list,
+                                                        label=description, initial=default,
+                                                        required=required, help_text=help_text)
+        return dynamic_form
+
     def get_snippet(self):
         """
         Override the get_snippet as the snippet_name is passed as a kwargs param and not a POST or in the session
@@ -591,6 +605,8 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
         return skillet
 
     def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
         if self.service is not None:
 
             if 'type' not in self.service:
@@ -598,20 +614,22 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
 
             self.header = 'Perform Validation'
             self.title = self.service['label']
+            context['header'] = 'Perform Validation'
+            context['title'] = self.service['label']
 
-        return super().get_context_data(**kwargs)
+        return context
 
     def form_valid(self, form):
-        # CNC apps may create custom hard coded workflows by setting a 'next_url' attribute
-        # in the .pan_cnc.yaml file. Let's make sure to capture this before redirecting to editTargetView
         self.request.session['next_url'] = self.next_url
+        mode = self.request.POST.get('mode', 'NOTFOUND')
+        self.save_value_to_workflow('mode', mode)
         return HttpResponseRedirect('/panhandler/validate-results')
 
 
 class ViewValidationResultsView(EditTargetView):
 
-    title = 'Validation Results'
-    header = 'Validation Results'
+    header = 'Perform Validation - Step 2'
+    title = 'Validation - Step 2'
 
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data()
@@ -627,35 +645,43 @@ class ViewValidationResultsView(EditTargetView):
         if meta is None:
             raise SnippetRequiredException('Could not find a valid skillet!!')
 
-        target_ip_label = 'Target IP'
-        target_port_label = 'Target Port'
-        target_username_label = 'Target Username'
-        target_password_label = 'Target Password'
+        mode = self.get_value_from_workflow('mode', 'online')
 
-        target_ip = self.get_value_from_workflow('TARGET_IP', '')
-        # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
-        target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
-        target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
+        if mode == 'online':
+            self.title = 'PAN-OS NGFW to Validate'
 
-        target_ip_field = forms.CharField(label=target_ip_label, initial=target_ip, required=True,
-                                          validators=[FqdnOrIp])
-        # FR #82 - Add port to EditTarget Screen
-        # target_port_field = forms.IntegerField(label=target_port_label, initial=target_port, required=True,
-        #                                        validators=[
-        #                                            MaxValueValidator(65535),
-        #                                            MinValueValidator(0)])
-        target_username_field = forms.CharField(label=target_username_label, initial=target_username, required=True)
-        target_password_field = forms.CharField(widget=forms.PasswordInput(render_value=True), required=True,
-                                                label=target_password_label,
-                                                initial=target_password)
+            target_ip_label = 'Target IP'
+            target_port_label = 'Target Port'
+            target_username_label = 'Target Username'
+            target_password_label = 'Target Password'
 
-        debug_field = forms.CharField(initial='False', widget=forms.HiddenInput())
+            target_ip = self.get_value_from_workflow('TARGET_IP', '')
+            # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
+            target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
+            target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
 
-        form.fields['TARGET_IP'] = target_ip_field
-        # form.fields['TARGET_PORT'] = target_port_field
-        form.fields['TARGET_USERNAME'] = target_username_field
-        form.fields['TARGET_PASSWORD'] = target_password_field
-        form.fields['debug'] = debug_field
+            target_ip_field = forms.CharField(label=target_ip_label, initial=target_ip, required=True,
+                                              validators=[FqdnOrIp])
+            target_username_field = forms.CharField(label=target_username_label, initial=target_username, required=True)
+            target_password_field = forms.CharField(widget=forms.PasswordInput(render_value=True), required=True,
+                                                    label=target_password_label,
+                                                    initial=target_password)
+
+            debug_field = forms.CharField(initial='False', widget=forms.HiddenInput())
+
+            form.fields['TARGET_IP'] = target_ip_field
+            form.fields['TARGET_USERNAME'] = target_username_field
+            form.fields['TARGET_PASSWORD'] = target_password_field
+            form.fields['debug'] = debug_field
+        else:
+            self.title = 'PAN-OS XML Configuration to Validate'
+            label = 'Configuration'
+            initial = self.get_value_from_workflow('config', '<xml></xml>')
+            help_text = 'Paste the full XML configuration file to validate here.'
+            config_field = forms.CharField(label=label, initial=initial, required=True,
+                                           help_text=help_text,
+                                           widget=forms.Textarea(attrs={'cols': 40}))
+            form.fields['config'] = config_field
 
         return form
 
@@ -667,22 +693,21 @@ class ViewValidationResultsView(EditTargetView):
         :param form: blank form data from request
         :return: render of a success template after service is provisioned
         """
-        print('DO I GET TO HERE?')
         snippet_name = self.get_value_from_workflow('snippet_name', '')
+        mode = self.get_value_from_workflow('mode', 'online')
+
         if snippet_name == '':
             print('Could not find a valid meta-cnc def')
             raise SnippetRequiredException
 
         meta = snippet_utils.load_snippet_with_name(snippet_name, self.app_dir)
 
-        self.title = meta['label']
-
-        # Grab the values from the form, this is always hard-coded in this class
-        target_ip = self.request.POST.get('TARGET_IP', None)
-        # target_port = self.request.POST.get('TARGET_IP', 443)
-        target_username = self.request.POST.get('TARGET_USERNAME', None)
-        target_password = self.request.POST.get('TARGET_PASSWORD', None)
-        debug = self.request.POST.get('debug', False)
+        context = dict()
+        self.header = 'Validation Results'
+        context['header'] = self.header
+        context['title'] = meta['label']
+        context['base_html'] = self.base_html
+        context['app_dir'] = self.app_dir
 
         # Always grab all the default values, then update them based on user input in the workflow
         jinja_context = dict()
@@ -693,71 +718,82 @@ class ViewValidationResultsView(EditTargetView):
         # let's grab the current workflow values (values saved from ALL forms in this app
         jinja_context.update(self.get_workflow())
 
-        if debug == 'True' or debug is True:
-            context = dict()
-            context['base_html'] = self.base_html
+        if mode == 'online':
+            # Grab the values from the form, this is always hard-coded in this class
+            target_ip = self.request.POST.get('TARGET_IP', None)
+            # target_port = self.request.POST.get('TARGET_IP', 443)
+            target_username = self.request.POST.get('TARGET_USERNAME', None)
+            target_password = self.request.POST.get('TARGET_PASSWORD', None)
+            debug = self.request.POST.get('debug', False)
+            if debug == 'True' or debug is True:
+
+                context['base_html'] = self.base_html
+                try:
+                    changes = pan_utils.debug_meta(meta, jinja_context)
+                except CCFParserError as cpe:
+                    label = meta['label']
+                    messages.add_message(self.request, messages.ERROR, f'Could not debug Skillet: {label}')
+                    context['results'] = str(cpe)
+                    return render(self.request, 'pan_cnc/results.html', context=context)
+
+                context['results'] = changes
+                context['meta'] = meta
+                context['target_ip'] = target_ip
+                self.request.session['last_page'] = '/editTarget'
+                return render(self.request, 'pan_cnc/debug_panos_skillet.html', context=context)
+
+            self.save_value_to_workflow('TARGET_IP', target_ip)
+            # self.save_value_to_workflow('TARGET_PORT', target_port)
+            self.save_value_to_workflow('TARGET_USERNAME', target_username)
+
+            err_condition = False
+            if target_ip is None or target_ip == '':
+                form.add_error('TARGET_IP', 'Host entry cannot be blank')
+                err_condition = True
+
+            if target_username is None or target_username == '':
+                form.add_error('TARGET_USERNAME', 'Username cannot be blank')
+                err_condition = True
+
+            if target_password is None or target_password == '':
+                form.add_error('TARGET_PASSWORD', 'Password cannot be blank')
+                err_condition = True
+
+            if err_condition:
+                return self.form_invalid(form)
+
             try:
-                changes = pan_utils.debug_meta(meta, jinja_context)
-            except CCFParserError as cpe:
-                label = meta['label']
-                messages.add_message(self.request, messages.ERROR, f'Could not debug Skillet: {label}')
-                context['results'] = str(cpe)
-                return render(self.request, 'pan_cnc/results.html', context=context)
+                print(f'checking {target_ip} {target_username}')
+                panoply = Panoply(hostname=target_ip, api_username=target_username,
+                                  api_password=target_password, debug=True)
 
-            context['results'] = changes
-            context['meta'] = meta
-            context['target_ip'] = target_ip
-            self.request.session['last_page'] = '/editTarget'
-            return render(self.request, 'pan_cnc/debug_panos_skillet.html', context=context)
+            except LoginException as le:
+                print(le)
+                form.add_error('TARGET_USERNAME', 'Invalid Credentials, ensure your username and password are correct')
+                form.add_error('TARGET_PASSWORD', 'Invalid Credentials, ensure your username and password are correct')
+                return self.form_invalid(form)
+            except PanoplyException as pe:
+                form.add_error('TARGET_IP', 'Connection Refused Error, check the IP and try again')
+                return self.form_invalid(form)
 
-        self.save_value_to_workflow('TARGET_IP', target_ip)
-        # self.save_value_to_workflow('TARGET_PORT', target_port)
-        self.save_value_to_workflow('TARGET_USERNAME', target_username)
+            if not panoply.connected:
+                form.add_error('TARGET_IP', 'Connection Refused Error, check the IP and try again')
+                return self.form_invalid(form)
 
-        workflow = self.get_workflow()
-        self.request.session[self.app_dir] = workflow
+        else:
+            config = self.request.POST.get('config', '')
+            self.save_value_to_workflow('config', config)
+            panoply = None
+            jinja_context['config'] = config
 
-        err_condition = False
-        if target_ip is None or target_ip == '':
-            form.add_error('TARGET_IP', 'Host entry cannot be blank')
-            err_condition = True
-
-        if target_username is None or target_username == '':
-            form.add_error('TARGET_USERNAME', 'Username cannot be blank')
-            err_condition = True
-
-        if target_password is None or target_password == '':
-            form.add_error('TARGET_PASSWORD', 'Password cannot be blank')
-            err_condition = True
-
-        if err_condition:
-            return self.form_invalid(form)
+        # why is this here?
+        # workflow = self.get_workflow()
+        # self.request.session[self.app_dir] = workflow
 
         try:
-            print(f'checking {target_ip} {target_username} {target_password}')
-            p = Panoply(hostname=target_ip, api_username=target_username, api_password=target_password, debug=True)
-
-        except LoginException as le:
-            print(le)
-            print('WTF Happened here?')
-            form.add_error('TARGET_USERNAME', 'Invalid Credentials, ensure your username and password are correct')
-            form.add_error('TARGET_PASSWORD', 'Invalid Credentials, ensure your username and password are correct')
-            return self.form_invalid(form)
-        except PanoplyException as pe:
-            form.add_error('TARGET_IP', 'Connection Refused Error, check the IP and try again')
-            return self.form_invalid(form)
-
-        if not p.connected:
-            form.add_error('TARGET_IP', 'Connection Refused Error, check the IP and try again')
-            return self.form_invalid(form)
-
-        skillet_context = dict()
-        context = self.get_context_data()
-        try:
-
-            skillet = PanValidationSkillet(meta)
-            skillet_context = p.execute_skillet(skillet, skillet_context)
+            skillet = PanValidationSkillet(meta, panoply)
             results = list()
+            skillet_output = skillet.execute(jinja_context)
             for snippet in skillet.snippet_stack:
                 name = snippet.get('name', '')
                 cmd = snippet.get('cmd', '')
@@ -766,9 +802,9 @@ class ViewValidationResultsView(EditTargetView):
                     continue
 
                 result_object = dict()
-                if snippet['name'] in skillet_context:
+                if snippet['name'] in skillet_output:
                     result_object['name'] = name
-                    result_object['results'] = skillet_context[name]
+                    result_object['results'] = skillet_output[name]
                 else:
                     result_object['name'] = name
                     result_object['results'] = {}
@@ -776,9 +812,9 @@ class ViewValidationResultsView(EditTargetView):
                 results.append(result_object)
 
             context['results'] = results
+
         except SkilletLoaderException:
             print(f"Could not load it for some reason")
             return render(self.request, 'pan_cnc/results.html', context)
 
         return render(self.request, 'panhandler/validation-results.html', context)
-
