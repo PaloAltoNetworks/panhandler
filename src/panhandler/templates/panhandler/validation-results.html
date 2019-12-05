@@ -1,6 +1,19 @@
 {% extends base_html|default:'pan_cnc/base.html' %}
 {% load static %}
-
+{% block head %}
+    <script type="text/javascript">
+    function show_modal(url) {
+        console.log('setting url to ' + url);
+        let m = $('#test_modal');
+        let b = $('#modal_container');
+        b.empty();
+        let i = $('<iframe class="embed-responsive-item" allowfullscreen></iframe>');
+        b.append(i);
+        i.attr('src', url);
+        m.modal('toggle');
+    }
+    </script>
+{% endblock %}
 {% block content %}
     <div class="card border-primary mb-5 shadow-lg">
         <div class="card-header">
@@ -28,23 +41,29 @@
                 <tbody>
                 {% for r in results %}
                     {% if r.results.label %}
-                    <tr>
-                        <th scope="row">{{ forloop.counter }}</th>
-                        <td>
-                            <a href="{{ r.results.documentation_link }}" target="_blank">
-                                {{ r.results.label }}
-                            </a>
-                        </td>
+                        <tr>
+                            <th scope="row">{{ forloop.counter }}</th>
+                            <td>
+                                <div class="p-3">
+                                <a href="#{{ r.name }}_div" data-toggle="collapse">
+                                    {{ r.results.label }}
+                                </a>
+                                <div id="{{ r.name }}_div" class="collapse text-secondary p-3">
+                                    {{ r.results.output_message }}
+                                </div>
+                                </div>
+                            </td>
                         <td>
                             {% if r.results.results is True %}
-                                <a class="text-success" href="{{ r.results.documentation_link }}">
+                                <a class="text-success" href="#"
+                                   onclick="show_modal('{{ r.results.documentation_link }}')">
                                     Passed
                                 </a>
                             {% else %}
-                                 <a class="text-danger" href="{{ r.results.documentation_link }}">
-                                    Failed
+                                 <a class="text-danger" href="#"
+                                   onclick="show_modal('{{ r.results.documentation_link }}')">
+                                 Failed
                                 </a>
-
                             {% endif %}
                         </td>
                         <td>
@@ -59,8 +78,8 @@
                             </div>
                         </td>
                         <td>
-                            <a type="button" href="#modal_{{ r.name }}" data-toggle="modal"
-                                    data-target="#modal_{{ r.name }}">Documentation
+                            <a href="{{ r.results.documentation_link }}" target="_blank">
+                                Documentation
                             </a>
                         </td>
                     </tr>
@@ -84,21 +103,19 @@
             </div>
         </div>
     </div>
-    {% for r in results %}
-        <!--Modal: Name-->
-        <div class="modal fade" id="modal_{{ r.name }}" tabindex="-1" role="dialog"
-             aria-labelledby="{{ r.results.label }}" aria-hidden="true">
-            <div class="modal-dialog modal-lg" role="document">
-                <div class="modal-content">
-                    <div class="modal-body mb-0 p-0">
-                        <div class="embed-responsive embed-responsive-16by9">
-                            <iframe class="embed-responsive-item"
-                                    src="{{ r.results.documentation_link }}"
-                                    allowfullscreen></iframe>
-                        </div>
+    <div class="modal fade" id="test_modal" tabinex="-1" role="dialog"
+         aria-labelledby="{{ r.results.label }}" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-body mb-0 p-0">
+                    <div id="modal_container" class="embed-responsive embed-responsive-16by9">
+
                     </div>
                 </div>
             </div>
         </div>
-    {% endfor %}
+    </div>
+    <div class="text-white mt-5">{{ results }}</div>
 {% endblock %}
+
+
