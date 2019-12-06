@@ -44,13 +44,11 @@
                         <tr>
                             <th scope="row">{{ forloop.counter }}</th>
                             <td>
-                                <div class="p-3">
                                 <a href="#{{ r.name }}_div" data-toggle="collapse">
                                     {{ r.results.label }}
                                 </a>
                                 <div id="{{ r.name }}_div" class="collapse text-secondary p-3">
-                                    {{ r.results.output_message }}
-                                </div>
+                                    {{ r.results.output_message | linebreaksbr }}
                                 </div>
                             </td>
                         <td>
