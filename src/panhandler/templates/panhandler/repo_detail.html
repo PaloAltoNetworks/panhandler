@@ -88,9 +88,11 @@
                     <tr>
                         <th scope="row">{{ forloop.counter }}</th>
                         <td>
-                            <a href="/panhandler/skillet/{{ s.name }}">
-                                {{ s.label }}
-                            </a>
+                             {%  if s.type == 'pan_validation' %}
+                                 <a href="/panhandler/validate/{{ s.name }}">{{ s.label }}</a>
+                             {%  else %}
+                                 <a href="/panhandler/skillet/{{ s.name }}">{{ s.label }}</a>
+                             {% endif %}
                         </td>
                         <td>
                             <a href="/debug/{{ app_dir }}/{{ s.name }}">
