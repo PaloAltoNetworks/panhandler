@@ -19,7 +19,7 @@ COPY cnc /app/cnc
 COPY src /app/src
 
 RUN apk add --update --no-cache git curl build-base musl-dev python3-dev libffi-dev openssl-dev \
-    linux-headers libxml2-dev libxslt-dev && \
+    linux-headers libxml2-dev libxslt-dev openssh && \
     pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt && \
     echo "===> Installing Terraform..."  && \
     curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
