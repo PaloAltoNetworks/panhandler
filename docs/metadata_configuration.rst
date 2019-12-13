@@ -326,8 +326,12 @@ Variable Examples:
     default: |
       This is some very long input with lots of
       newlines and white    space
-      and stuff
+      and stuff. The optional attributes key can also be specified
+      to control now the text_area is rendered in panhandler and other cnc apps.
     type_hint: text_area
+    attributes:
+      rows: 5
+      cols: 10
 
 * json
 
