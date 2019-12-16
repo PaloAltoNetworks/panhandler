@@ -490,12 +490,31 @@ class ListSkilletCollectionsView(CNCView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        print('Getting all labels')
+
+        cached_collections = cnc_utils.get_long_term_cached_value(self.app_dir, 'cached_collections')
+        cached_collections_info = cnc_utils.get_long_term_cached_value(self.app_dir, 'cached_collections_info')
+        if cached_collections is not None:
+            context['collections'] = cached_collections
+            context['collections_info'] = cached_collections_info
+            return context
+
+        # return a list of all defined collections
         collections = snippet_utils.load_all_label_values(self.app_dir, 'collection')
 
-        collections_info = dict()
         # build dict of collections related to other collections (if any)
+        # and a count of how many skillets are in the collection
+        collections_info = dict()
 
+        # manually create a collection called 'All'
+        all_skillets = 'All Skillets'
+
+        # get the full list of all snippets
+        all_snippets = snippet_utils.load_all_snippets(self.app_dir)
+
+        collections_info[all_skillets] = dict()
+        collections_info[all_skillets]['count'] = len(all_snippets)
+
+        # iterate over the list of collections
         for c in collections:
             if c not in collections_info:
                 collections_info[c] = dict()
@@ -516,9 +535,14 @@ class ListSkilletCollectionsView(CNCView):
             collections_info[c]['related'] = json.dumps(related)
 
         collections.append('Kitchen Sink')
+        collections.append(all_skillets)
         context['collections'] = collections
         context['collections_info'] = collections_info
 
+        cnc_utils.set_long_term_cached_value(self.app_dir, 'cached_collections',
+                                             collections, 86400, 'snippets')
+        cnc_utils.set_long_term_cached_value(self.app_dir, 'cached_collections_info',
+                                             collections_info, 86400, 'snippets')
         return context
 
 
@@ -533,6 +557,8 @@ class ListSkilletsInCollectionView(CNCView):
         print(f'Getting all snippets with collection label {collection}')
         if collection == 'Kitchen Sink':
             skillets = snippet_utils.load_all_snippets_without_label_key(self.app_dir, 'collection')
+        elif collection == 'All Skillets':
+            skillets = snippet_utils.load_all_snippets(self.app_dir)
         else:
             skillets = snippet_utils.load_snippets_by_label('collection', collection, self.app_dir)
 
