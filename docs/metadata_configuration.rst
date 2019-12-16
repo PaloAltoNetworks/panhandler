@@ -159,6 +159,8 @@ variable defined in the `variables` list should define the following:
    entered value unless this value is set to True. The default is False. Setting to True will ensure the default
    value will always be rendered in the panhandler UI.
 6. required: Determines if a value is required for this field. The default is False.
+7. help_text: Optional attribute that will be displayed immediately under the field. This is useful for giving
+   extra information to the user about the purpose of a field.
 
 .. note::
 
@@ -184,6 +186,7 @@ Variable Examples:
     description: Firewall hostname
     default: panos-01
     type_hint: text
+    help_text: Hostname for this firewall.
     allow_special_characters: false
     attributes:
       min: 6
@@ -257,6 +260,7 @@ Variable Examples:
     description: Email
     default: support@noway.com
     type_hint: email
+    help_text: Enter your email address here to receive lots of spam
 
 * number
 
@@ -317,7 +321,8 @@ Variable Examples:
 
 * text_area
 
-  This type renders a `TextArea` input control. This allows the user to enter multiple lines of input.
+  This type renders a `TextArea` input control. This allows the user to enter multiple lines of input. The optional
+  `attributes` attribute allows you to customize the size of the text area control.
 
 .. code-block:: yaml
 
