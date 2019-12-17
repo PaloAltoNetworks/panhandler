@@ -224,7 +224,7 @@ if [[ ${IMAGE_TAG} == latest ]];
     EXPOSED_PORT=${DEV_EXPOSED_PORT}
     export EXPOSED_PORT
 
-    PANHANDLER_IMAGE=paloaltonetworks/panhandler:${IMAGE_TAG}
+    PANHANDLER_IMAGE=nembery/panhandler:${IMAGE_TAG}
     export PANHANDLER_IMAGE
 
     # fix for returning more than 1 container. This returns only the latest created container

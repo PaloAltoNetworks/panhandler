@@ -13,7 +13,7 @@ Using a standard web port
 
 .. code-block:: bash
 
-    docker run -t -p 80:80 -v ~:/home/cnc_user paloaltonetworks/panhandler
+    docker run -t -p 8080:8080 -v ~:/home/cnc_user paloaltonetworks/panhandler
 
 Then access the UI via http://localhost:80
 
@@ -27,7 +27,7 @@ To set the default username and password, pass in the following environment vari
 
 .. code-block:: bash
 
-   docker run -t -e CNC_USERNAME=myuser -e CNC_PASSWORD=mypass -p 80:80 -v ~:/home/cnc_user paloaltonetworks/panhandler
+   docker run -t -e CNC_USERNAME=myuser -e CNC_PASSWORD=mypass -p 80:8080 -v ~:/home/cnc_user paloaltonetworks/panhandler
 
 
 
@@ -38,7 +38,7 @@ If port 80 is unavailable, you can switch to a different port. This example uses
 
 .. code-block:: bash
 
-    docker run -t -p 9999:80 -v ~:/home/cnc_user paloaltonetworks/panhandler
+    docker run -t -p 9999:8080 -v ~:/home/cnc_user paloaltonetworks/panhandler
 
 Then access the UI via http://localhost:9999
 
