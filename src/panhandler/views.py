@@ -128,7 +128,14 @@ class ImportRepoView(CNCBaseFormView):
         else:
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
-            cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
+
+            # no need to evict all these items, just grab the new repo details and append it to list and re-cache
+            # cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
+            repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
+            repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+            repos.append(repo_detail)
+            cnc_utils.set_long_term_cached_value(self.app_dir, 'imported_repositories', repos, 604800,
+                                                 'imported_git_repos')
 
             debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
             if debug_errors:
@@ -540,9 +547,9 @@ class ListSkilletCollectionsView(CNCView):
         context['collections_info'] = collections_info
 
         cnc_utils.set_long_term_cached_value(self.app_dir, 'cached_collections',
-                                             collections, 86400, 'snippets')
+                                             collections, 86400, 'snippet')
         cnc_utils.set_long_term_cached_value(self.app_dir, 'cached_collections_info',
-                                             collections_info, 86400, 'snippets')
+                                             collections_info, 86400, 'snippet')
         return context
 
 
