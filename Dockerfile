@@ -22,7 +22,7 @@ RUN apk add --update --no-cache git curl build-base musl-dev python3-dev libffi-
     linux-headers libxml2-dev libxslt-dev openssh && \
     pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt && \
     echo "===> Installing Terraform..."  && \
-    curl https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
+    curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
     > terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
     echo "${TERRAFORM_SHA256SUM}  terraform_${TERRAFORM_VERSION}_linux_amd64.zip" > terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
     sha256sum -cs terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
