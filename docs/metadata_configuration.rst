@@ -110,8 +110,15 @@ Required fields for each metadata type is listed below:
 
 * panos, panorama, panorama-gpcs
     * name - name of this snippet
-    * file - path to the XML fragment to load and parse
+    * cmd - operation to perform. Default is 'set'. Any valid PAN-OS API Command is accepted
+        (set, edit, override, get, show, etc)
     * xpath - XPath where this fragment belongs
+    * file - path to the XML fragment to load and parse
+    * element - inline XML fragment to load and parse. Can be used in leu of a separate 'file' field
+* pan_validation
+    * name - name of the validation test to perform
+    * cmd - validate, validate_xml, noop, or parse. Default is validate
+    * test - Boolean test to perform using jinja expressions
 * template
     * name - name of this snippet
     * file - path to the jinja2 template to load and parse
