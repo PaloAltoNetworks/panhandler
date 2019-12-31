@@ -25,17 +25,23 @@
         </div>
         <div class="card-body">
             <h5 class="card-title">Details</h5>
-            <p class="card-text">Branch: {{ repo_detail.branch }}</p>
+            <p class="card-text">Active Branch: <a href="#checkout_form">{{ repo_detail.branch }}</a></p>
+
             <p class="card-text">
                 {% if repo_detail.description != repo_detail.branch %}
-                {{ repo_detail.description }}
+                    {{ repo_detail.description }}
                 {% endif %}
             <div class="mt-3">
-                <a href="{{ repo_detail.link }}">{{ repo_detail.url }}</a>
+                {% if repo_detail.is_github %}
+                    <a href="{{ repo_detail.link }}/tree/{{ repo_detail.branch }}">{{ repo_detail.url }}</a>
+                {% else %}
+                    <a href="{{ repo_detail.link }}">{{ repo_detail.url }}</a>
+                {% endif %}
             </div>
             </p>
             <p class="card-text mt-4 mb-4">
-                <a href="/panhandler/update_repo/{{ repo_name }}" class="btn btn-primary mr-2">Update To Latest</a>
+                <a href="/panhandler/update_repo/{{ repo_name }}/{{ repo_detail.branch }}"
+                   class="btn btn-primary mr-2">Update To Latest</a>
                 <a href="/panhandler/remove_repo/{{ repo_name }}" class="btn btn-danger mr-2">Remove Repository</a>
                 <a href="/panhandler/repos" class="btn btn-secondary mr-2">Repositories</a>
             </p>
@@ -88,11 +94,11 @@
                     <tr>
                         <th scope="row">{{ forloop.counter }}</th>
                         <td>
-                             {%  if s.type == 'pan_validation' %}
-                                 <a href="/panhandler/validate/{{ s.name }}">{{ s.label }}</a>
-                             {%  else %}
-                                 <a href="/panhandler/skillet/{{ s.name }}">{{ s.label }}</a>
-                             {% endif %}
+                            {% if s.type == 'pan_validation' %}
+                                <a href="/panhandler/validate/{{ s.name }}">{{ s.label }}</a>
+                            {% else %}
+                                <a href="/panhandler/skillet/{{ s.name }}">{{ s.label }}</a>
+                            {% endif %}
                         </td>
                         <td>
                             <a href="/debug/{{ app_dir }}/{{ s.name }}">
@@ -106,7 +112,7 @@
             </table>
             </p>
 
-       <h5 class="card-title">Collections</h5>
+            <h5 class="card-title">Collections</h5>
             <p class="card-text">
             <table class="table">
                 <caption>All collections found in repository: {{ repo_detail.name }}</caption>
@@ -131,6 +137,46 @@
                 </tbody>
             </table>
             </p>
+        </div>
+    </div>
+
+    <script type="application/javascript">
+        function update_repo() {
+            let branch = $('#branch_select').val();
+            if (branch === "{{ repo_detail.branch }}") {
+                console.log('nothing to switch to!');
+                return;
+            }
+            let doc = $(document.documentElement);
+            doc.css('cursor', 'progress');
+            window.location = '/panhandler/update_repo/{{ repo_detail.name }}/' + branch;
+        }
+    </script>
+    <div class="card border-primary mb-5 shadow-lg">
+        <div class="card-header" id="checkout_form">Checkout New Branch for {{ repo_detail.name }}</div>
+        <div class="card-body">
+            <p class="card-text">
+                Current Branch: {{ repo_detail.branch }}
+            <div class="form-group">
+                <label for="branch_select">Available Branches</label>
+                <select class="form-control" id="branch_select" name="branch">
+                    {% for b in repo_detail.branches %}
+                        {% if b == repo_detail.branch %}
+                            <option selected>{{ b }}</option>
+                        {% else %}
+                            <option>{{ b }}</option>
+                        {% endif %}
+                    {% endfor %}
+                </select>
+                <small class="form-text text-muted">This will checkout a different branch from the
+                    {{ repo_detail.name }} git repository. Only Skillets found in this branch of this repository
+                    will be available for use.
+                </small>
+            </div>
+            </p>
+        </div>
+        <div class="card-footer text-right">
+            <button type="submit" class="btn btn-primary" id="submit_button" onclick="update_repo()">Checkout</button>
         </div>
     </div>
 

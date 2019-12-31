@@ -82,7 +82,6 @@ class ImportRepoView(CNCBaseFormView):
 
         # get the values from the user submitted form here
         url = workflow.get('url')
-        branch = workflow.get('branch')
         repo_name = workflow.get('repo_name')
 
         if not re.match(r'^[a-zA-Z0-9-_ \.]*$', repo_name):
@@ -121,7 +120,7 @@ class ImportRepoView(CNCBaseFormView):
                 clone_url = details['clone_url']
 
         try:
-            message = git_utils.clone_repository(repo_dir, repo_name, clone_url, branch)
+            message = git_utils.clone_repository(repo_dir, repo_name, clone_url)
             print(message)
         except ImportRepositoryException as ire:
             messages.add_message(self.request, messages.ERROR, f'Could not Import Repository: {ire}')
@@ -266,6 +265,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         repo_name = kwargs['repo_name']
+        branch = kwargs['branch']
         user_dir = os.path.expanduser('~')
         repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
@@ -273,19 +273,29 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             messages.add_message(self.request, messages.ERROR, 'Repository directory does not exist!')
             return f'/panhandler/repo_detail/{repo_name}'
 
-        msg = git_utils.update_repo(repo_dir)
+        msg = git_utils.update_repo(repo_dir, branch)
         if 'Error' in msg:
             level = messages.ERROR
             cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
+        # msg updated will catch both switching branches as well as new commits
         elif 'Updated' in msg:
+            # since this repoo has been updated, we need to ensure the caches are all in sync
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
-            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'git_repo_details')
+            git_utils.update_repo_in_cache(repo_name, repo_dir, self.app_dir)
+
             level = messages.INFO
         else:
             level = messages.INFO
 
         messages.add_message(self.request, level, msg)
+
+        # check if there are new branches available
+        repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+        repo_branches = git_utils.get_repo_branches_from_dir(repo_dir)
+        if repo_detail['branches'] != repo_branches:
+            messages.add_message(self.request, messages.INFO, 'New Branches are available')
+            git_utils.update_repo_in_cache(repo_name, repo_dir, self.app_dir)
 
         debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
         if debug_errors:
