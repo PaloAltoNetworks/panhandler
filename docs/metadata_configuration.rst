@@ -404,6 +404,20 @@ Variable Examples:
     default: 10.10.10.1/24
     type_hint: list
 
+* hidden
+
+  This type will NOT show an input form control to the user, but the default value will be passed to the
+  skillet. This is useful is you want to 'capture' an input from another skillet and pass it into the input
+  of this skillet without having to include it in the input form.
+
+.. code-block:: yaml
+
+  - name: previous_value
+    description: from previous skillet in workflow
+    default: some_value
+    type_hint: hidden
+
+
 Hints
 -----
 

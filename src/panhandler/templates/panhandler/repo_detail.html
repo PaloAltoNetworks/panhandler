@@ -34,6 +34,8 @@
             <div class="mt-3">
                 {% if repo_detail.is_github %}
                     <a href="{{ repo_detail.link }}/tree/{{ repo_detail.branch }}">{{ repo_detail.url }}</a>
+                {% elif 'spring.paloalto' in repo_detail.link %}
+                    <a href="{{ repo_detail.link }}/tree/{{ repo_detail.branch }}">{{ repo_detail.url }}</a>
                 {% else %}
                     <a href="{{ repo_detail.link }}">{{ repo_detail.url }}</a>
                 {% endif %}
