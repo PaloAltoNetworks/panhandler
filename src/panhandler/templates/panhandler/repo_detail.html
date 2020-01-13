@@ -92,7 +92,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for s in snippets %}
+                {% for s in snippets|dictsort:"label" %}
                     <tr>
                         <th scope="row">{{ forloop.counter }}</th>
                         <td>
