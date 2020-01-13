@@ -28,10 +28,7 @@ import shutil
 from pathlib import Path
 
 from django.conf import settings
-from skilletlib.exceptions import LoginException
-from skilletlib.exceptions import PanoplyException
 from skilletlib.exceptions import SkilletLoaderException
-from skilletlib.panoply import Panoply
 from skilletlib.skillet.pan_validation import PanValidationSkillet
 
 from pan_cnc.lib import git_utils
@@ -620,7 +617,6 @@ class CheckAppUpdateView(CNCBaseAuth, RedirectView):
 
 # Validation Testing Class below
 class ExecuteValidationSkilletView(ProvisionSnippetView):
-
     header = 'Configure Validation Skillet'
 
     def generate_dynamic_form(self, data=None) -> forms.Form:
@@ -670,12 +666,12 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
 
 
 class ViewValidationResultsView(EditTargetView):
-
     header = 'Perform Validation - Step 2'
     title = 'Validation - Step 2'
+    template_name = 'pan_cnc/dynamic_form.html'
 
     def get_context_data(self, **kwargs) -> dict:
-        context = super().get_context_data()
+        context = super().get_context_data(**kwargs)
         context['title'] = self.title
         context['header'] = self.header
         return context
@@ -692,6 +688,9 @@ class ViewValidationResultsView(EditTargetView):
 
         if mode == 'online':
             self.title = 'PAN-OS NGFW to Validate'
+            self.help_text = 'This form allows you to enter the connection information for a PAN-OS NGFW. This' \
+                             'tool will connect to that device and pull it\'s configuration to perform the' \
+                             'validation.'
 
             target_ip_label = 'Target IP'
             target_port_label = 'Target Port'
@@ -710,14 +709,13 @@ class ViewValidationResultsView(EditTargetView):
                                                     label=target_password_label,
                                                     initial=target_password)
 
-            debug_field = forms.CharField(initial='False', widget=forms.HiddenInput())
-
             form.fields['TARGET_IP'] = target_ip_field
             form.fields['TARGET_USERNAME'] = target_username_field
             form.fields['TARGET_PASSWORD'] = target_password_field
-            form.fields['debug'] = debug_field
         else:
             self.title = 'PAN-OS XML Configuration to Validate'
+            self.help_text = 'This form allows you to paste in a full configuration from a PAN-OS NGFW. This ' \
+                             'will then be used to perform the validation.'
             label = 'Configuration'
             initial = self.get_value_from_workflow('config', '<xml></xml>')
             help_text = 'Paste the full XML configuration file to validate here.'
@@ -768,22 +766,6 @@ class ViewValidationResultsView(EditTargetView):
             target_username = self.request.POST.get('TARGET_USERNAME', None)
             target_password = self.request.POST.get('TARGET_PASSWORD', None)
             debug = self.request.POST.get('debug', False)
-            if debug == 'True' or debug is True:
-
-                context['base_html'] = self.base_html
-                try:
-                    changes = pan_utils.debug_meta(meta, jinja_context)
-                except CCFParserError as cpe:
-                    label = meta['label']
-                    messages.add_message(self.request, messages.ERROR, f'Could not debug Skillet: {label}')
-                    context['results'] = str(cpe)
-                    return render(self.request, 'pan_cnc/results.html', context=context)
-
-                context['results'] = changes
-                context['meta'] = meta
-                context['target_ip'] = target_ip
-                self.request.session['last_page'] = '/editTarget'
-                return render(self.request, 'pan_cnc/debug_panos_skillet.html', context=context)
 
             self.save_value_to_workflow('TARGET_IP', target_ip)
             # self.save_value_to_workflow('TARGET_PORT', target_port)
@@ -807,8 +789,8 @@ class ViewValidationResultsView(EditTargetView):
 
             try:
                 print(f'checking {target_ip} {target_username}')
-                panoply = Panoply(hostname=target_ip, api_username=target_username,
-                                  api_password=target_password, debug=True)
+                panoply = Panos(hostname=target_ip, api_username=target_username,
+                                api_password=target_password, debug=True)
 
             except LoginException as le:
                 print(le)
@@ -828,10 +810,6 @@ class ViewValidationResultsView(EditTargetView):
             self.save_value_to_workflow('config', config)
             panoply = None
             jinja_context['config'] = config
-
-        # why is this here?
-        # workflow = self.get_workflow()
-        # self.request.session[self.app_dir] = workflow
 
         try:
             skillet = PanValidationSkillet(meta, panoply)
