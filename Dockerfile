@@ -42,10 +42,10 @@ RUN apk add --update --no-cache git curl build-base musl-dev python3-dev libffi-
 
 # Run  Prisma Public Cloud Vulnerability Scan API
 # add -k option for SSL decrypt scenarios
-RUN curl -i -s -k -X POST https://scanapi.redlock.io/v1/vuln/os \
- -F "fileName=/etc/alpine-release" -F "file=@/etc/alpine-release" \
- -F "fileName=/lib/apk/db/installed" -F "file=@/lib/apk/db/installed" \
- -F "rl_args=report=detail" | grep -i "x-redlock-scancode: pass"
+#RUN curl -i -s -k -X POST https://scanapi.redlock.io/v1/vuln/os \
+# -F "fileName=/etc/alpine-release" -F "file=@/etc/alpine-release" \
+# -F "fileName=/lib/apk/db/installed" -F "file=@/lib/apk/db/installed" \
+# -F "rl_args=report=detail" | grep -i "x-redlock-scancode: pass"
 
 USER cnc_user
 EXPOSE 8080
