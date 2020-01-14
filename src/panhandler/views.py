@@ -815,6 +815,7 @@ class ViewValidationResultsView(EditTargetView):
             skillet = PanValidationSkillet(meta, panoply)
             results = list()
             skillet_output = skillet.execute(jinja_context)
+            validation_output = skillet_output.get('pan_validation', dict())
             for snippet in skillet.snippet_stack:
                 name = snippet.get('name', '')
                 cmd = snippet.get('cmd', '')
@@ -823,9 +824,9 @@ class ViewValidationResultsView(EditTargetView):
                     continue
 
                 result_object = dict()
-                if snippet['name'] in skillet_output:
+                if snippet['name'] in validation_output:
                     result_object['name'] = name
-                    result_object['results'] = skillet_output[name]
+                    result_object['results'] = validation_output[name]
                 else:
                     result_object['name'] = name
                     result_object['results'] = {}
