@@ -649,7 +649,7 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
         # w.attrs.update({'data-source': 'mode'})
         # w.attrs.update({'data-value': 'online'})
         #
-        # return dynamic_form
+        return dynamic_form
 
     def get_snippet(self):
         """
