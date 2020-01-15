@@ -20,7 +20,7 @@ export CNC_VOLUME=pan_cnc_volume
 
 # used for filtering containers
 export DEV_EXPOSED_PORT=8080
-export LATEST_EXPOSED_PORT=80
+export LATEST_EXPOSED_PORT=8080
 
 # default panhandler auth
 export CNC_USERNAME=paloalto
