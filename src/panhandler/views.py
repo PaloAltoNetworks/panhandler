@@ -527,6 +527,7 @@ class ListSkilletCollectionsView(CNCView):
 
         collections_info[all_skillets] = dict()
         collections_info[all_skillets]['count'] = len(all_snippets)
+        collections_info[all_skillets]['related'] = list()
 
         # iterate over the list of collections
         for c in collections:
@@ -537,7 +538,6 @@ class ListSkilletCollectionsView(CNCView):
             skillets = snippet_utils.load_snippets_by_label('collection', c, self.app_dir)
             collections_info[c]['count'] = len(skillets)
             related = list()
-            # related.append(c)
 
             for skillet in skillets:
                 if 'labels' in skillet and 'collection' in skillet['labels']:
@@ -628,10 +628,28 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
         required = True
         help_text = 'Online mode will pull configuration directly from an accessible PAN-OS device. Offline ' \
                     'allows an XML configuration file to be uploaded.'
-        dynamic_form.fields['mode'] = forms.ChoiceField(widget=forms.RadioSelect, choices=choices_list,
+        dynamic_form.fields['mode'] = forms.ChoiceField(choices=choices_list,
                                                         label=description, initial=default,
                                                         required=required, help_text=help_text)
-        return dynamic_form
+
+        # Uncomment when skilletlib can take a config_source
+        # choices_list = list()
+        # candidate = ('candidate', 'Candidate')
+        # running = ('running', 'Running')
+        # choices_list.append(candidate)
+        # choices_list.append(running)
+        # dynamic_form.fields['config_source'] = forms.ChoiceField(widget=forms.Select, choices=tuple(choices_list),
+        #                                                          label='Configuration Source',
+        #                                                          initial='running', required=True,
+        #                                                          help_text='Which configuration file to use '
+        #                                                                    'for validation')
+        #
+        # f = dynamic_form.fields['config_source']
+        # w = f.widget
+        # w.attrs.update({'data-source': 'mode'})
+        # w.attrs.update({'data-value': 'online'})
+        #
+        # return dynamic_form
 
     def get_snippet(self):
         """
@@ -660,8 +678,10 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
 
     def form_valid(self, form):
         self.request.session['next_url'] = self.next_url
-        mode = self.request.POST.get('mode', 'NOTFOUND')
+        mode = self.request.POST.get('mode', 'online')
+        # config_source = self.request.POST.get('config_source', 'running')
         self.save_value_to_workflow('mode', mode)
+        # self.save_value_to_workflow('config_source', config_source)
         return HttpResponseRedirect('/panhandler/validate-results')
 
 
@@ -765,7 +785,6 @@ class ViewValidationResultsView(EditTargetView):
             # target_port = self.request.POST.get('TARGET_IP', 443)
             target_username = self.request.POST.get('TARGET_USERNAME', None)
             target_password = self.request.POST.get('TARGET_PASSWORD', None)
-            debug = self.request.POST.get('debug', False)
 
             self.save_value_to_workflow('TARGET_IP', target_ip)
             # self.save_value_to_workflow('TARGET_PORT', target_port)
