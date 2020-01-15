@@ -24,12 +24,12 @@ Please see http://panhandler.readthedocs.io for more information
 This software is provided without support, warranty, or guarantee.
 Use at your own risk.
 """
-import os
-import re
 import shutil
 from pathlib import Path
 
 from django.conf import settings
+from skilletlib.exceptions import SkilletLoaderException
+from skilletlib.skillet.pan_validation import PanValidationSkillet
 
 from pan_cnc.lib import git_utils
 from pan_cnc.lib.exceptions import ImportRepositoryException
@@ -79,7 +79,6 @@ class ImportRepoView(CNCBaseFormView):
 
         # get the values from the user submitted form here
         url = workflow.get('url')
-        branch = workflow.get('branch')
         repo_name = workflow.get('repo_name')
 
         if not re.match(r'^[a-zA-Z0-9-_ \.]*$', repo_name):
@@ -111,21 +110,28 @@ class ImportRepoView(CNCBaseFormView):
                 return HttpResponseRedirect('repos')
 
         # where to clone from
-        clone_url = url
+        clone_url = url.strip()
         if 'github' in url.lower():
             details = git_utils.get_repo_upstream_details(repo_name, url, self.app_dir)
             if 'clone_url' in details:
                 clone_url = details['clone_url']
 
         try:
-            message = git_utils.clone_repository(repo_dir, repo_name, clone_url, branch)
+            message = git_utils.clone_repository(repo_dir, repo_name, clone_url)
             print(message)
         except ImportRepositoryException as ire:
             messages.add_message(self.request, messages.ERROR, f'Could not Import Repository: {ire}')
         else:
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
-            cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
+
+            # no need to evict all these items, just grab the new repo details and append it to list and re-cache
+            # cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
+            repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
+            repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+            repos.append(repo_detail)
+            cnc_utils.set_long_term_cached_value(self.app_dir, 'imported_repositories', repos, 604800,
+                                                 'imported_git_repos')
 
             debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
             if debug_errors:
@@ -162,7 +168,7 @@ class ListReposView(CNCView):
         try:
             if not snippets_dir.exists():
                 messages.add_message(self.request, messages.ERROR,
-                                 'Could not load repositories from directory as it does not exists')
+                                     'Could not load repositories from directory as it does not exists')
                 context['repos'] = list()
                 return context
         except PermissionError as pe:
@@ -176,6 +182,7 @@ class ListReposView(CNCView):
 
         repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
         if repos is not None:
+            print(f'Returning cached repos')
             context['repos'] = repos
         else:
             repos = list()
@@ -255,6 +262,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         repo_name = kwargs['repo_name']
+        branch = kwargs['branch']
         user_dir = os.path.expanduser('~')
         repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
@@ -262,19 +270,29 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             messages.add_message(self.request, messages.ERROR, 'Repository directory does not exist!')
             return f'/panhandler/repo_detail/{repo_name}'
 
-        msg = git_utils.update_repo(repo_dir)
+        msg = git_utils.update_repo(repo_dir, branch)
         if 'Error' in msg:
             level = messages.ERROR
             cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
+        # msg updated will catch both switching branches as well as new commits
         elif 'Updated' in msg:
+            # since this repoo has been updated, we need to ensure the caches are all in sync
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
-            cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'git_repo_details')
+            git_utils.update_repo_in_cache(repo_name, repo_dir, self.app_dir)
+
             level = messages.INFO
         else:
             level = messages.INFO
 
         messages.add_message(self.request, level, msg)
+
+        # check if there are new branches available
+        repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+        repo_branches = git_utils.get_repo_branches_from_dir(repo_dir)
+        if repo_detail['branches'] != repo_branches:
+            messages.add_message(self.request, messages.INFO, 'New Branches are available')
+            git_utils.update_repo_in_cache(repo_name, repo_dir, self.app_dir)
 
         debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
         if debug_errors:
@@ -364,7 +382,7 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
             if os.path.exists(repo_dir):
                 shutil.rmtree(repo_dir, ignore_errors=True)
             else:
-                print('This dir is already gone!')
+                print(f'dir {repo_dir} is already gone!')
 
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
@@ -486,12 +504,32 @@ class ListSkilletCollectionsView(CNCView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        print('Getting all labels')
+
+        cached_collections = cnc_utils.get_long_term_cached_value(self.app_dir, 'cached_collections')
+        cached_collections_info = cnc_utils.get_long_term_cached_value(self.app_dir, 'cached_collections_info')
+        if cached_collections is not None:
+            context['collections'] = cached_collections
+            context['collections_info'] = cached_collections_info
+            return context
+
+        # return a list of all defined collections
         collections = snippet_utils.load_all_label_values(self.app_dir, 'collection')
 
-        collections_info = dict()
         # build dict of collections related to other collections (if any)
+        # and a count of how many skillets are in the collection
+        collections_info = dict()
 
+        # manually create a collection called 'All'
+        all_skillets = 'All Skillets'
+
+        # get the full list of all snippets
+        all_snippets = snippet_utils.load_all_snippets(self.app_dir)
+
+        collections_info[all_skillets] = dict()
+        collections_info[all_skillets]['count'] = len(all_snippets)
+        collections_info[all_skillets]['related'] = list()
+
+        # iterate over the list of collections
         for c in collections:
             if c not in collections_info:
                 collections_info[c] = dict()
@@ -500,7 +538,6 @@ class ListSkilletCollectionsView(CNCView):
             skillets = snippet_utils.load_snippets_by_label('collection', c, self.app_dir)
             collections_info[c]['count'] = len(skillets)
             related = list()
-            # related.append(c)
 
             for skillet in skillets:
                 if 'labels' in skillet and 'collection' in skillet['labels']:
@@ -512,9 +549,14 @@ class ListSkilletCollectionsView(CNCView):
             collections_info[c]['related'] = json.dumps(related)
 
         collections.append('Kitchen Sink')
+        collections.append(all_skillets)
         context['collections'] = collections
         context['collections_info'] = collections_info
 
+        cnc_utils.set_long_term_cached_value(self.app_dir, 'cached_collections',
+                                             collections, 86400, 'snippet')
+        cnc_utils.set_long_term_cached_value(self.app_dir, 'cached_collections_info',
+                                             collections_info, 86400, 'snippet')
         return context
 
 
@@ -529,11 +571,25 @@ class ListSkilletsInCollectionView(CNCView):
         print(f'Getting all snippets with collection label {collection}')
         if collection == 'Kitchen Sink':
             skillets = snippet_utils.load_all_snippets_without_label_key(self.app_dir, 'collection')
+        elif collection == 'All Skillets':
+            skillets = snippet_utils.load_all_snippets(self.app_dir)
         else:
             skillets = snippet_utils.load_snippets_by_label('collection', collection, self.app_dir)
 
+        # Check if the skillet builder has specified an order for their Skillets
+        # if so, sort them that way be default, otherwise sort by name
+        order_index = 1000
+        default_sort = 'name'
+        for skillet in skillets:
+            if 'order' not in skillet['labels']:
+                skillet['labels']['order'] = order_index
+                order_index += 1
+            else:
+                default_sort = 'order'
+
         context['skillets'] = skillets
         context['collection'] = collection
+        context['default_sort'] = default_sort
 
         return context
 
@@ -546,7 +602,9 @@ class ViewSkilletView(ProvisionSnippetView):
         :return: name of the skillet found in the kwargs
         """
         skillet = self.kwargs.get('skillet', '')
-        self.save_value_to_workflow('snippet_name', skillet)
+        if skillet is not None or skillet != '':
+            self.snippet = skillet
+            self.save_value_to_workflow('snippet_name', skillet)
         return skillet
 
 
@@ -555,3 +613,249 @@ class CheckAppUpdateView(CNCBaseAuth, RedirectView):
     def get_redirect_url(self, *args, **kwargs):
         cnc_utils.evict_cache_items_of_type('panhandler', 'app_update')
         return '/'
+
+
+# Validation Testing Class below
+class ExecuteValidationSkilletView(ProvisionSnippetView):
+    header = 'Configure Validation Skillet'
+
+    def generate_dynamic_form(self, data=None) -> forms.Form:
+        dynamic_form = super().generate_dynamic_form(data)
+        choices_list = [('offline', 'Offline'), ('online', 'Online')]
+        description = 'Validation Mode'
+        mode = self.get_value_from_workflow('mode', 'online')
+        default = mode
+        required = True
+        help_text = 'Online mode will pull configuration directly from an accessible PAN-OS device. Offline ' \
+                    'allows an XML configuration file to be uploaded.'
+        dynamic_form.fields['mode'] = forms.ChoiceField(choices=choices_list,
+                                                        label=description, initial=default,
+                                                        required=required, help_text=help_text)
+
+        # Uncomment when skilletlib can take a config_source
+        # choices_list = list()
+        # candidate = ('candidate', 'Candidate')
+        # running = ('running', 'Running')
+        # choices_list.append(candidate)
+        # choices_list.append(running)
+        # dynamic_form.fields['config_source'] = forms.ChoiceField(widget=forms.Select, choices=tuple(choices_list),
+        #                                                          label='Configuration Source',
+        #                                                          initial='running', required=True,
+        #                                                          help_text='Which configuration file to use '
+        #                                                                    'for validation')
+        #
+        # f = dynamic_form.fields['config_source']
+        # w = f.widget
+        # w.attrs.update({'data-source': 'mode'})
+        # w.attrs.update({'data-value': 'online'})
+        #
+        # return dynamic_form
+
+    def get_snippet(self):
+        """
+        Override the get_snippet as the snippet_name is passed as a kwargs param and not a POST or in the session
+        :return: name of the skillet found in the kwargs
+        """
+        skillet = self.kwargs.get('skillet', '')
+        self.save_value_to_workflow('snippet_name', skillet)
+        self.snippet = skillet
+        return skillet
+
+    def get_context_data(self, **kwargs):
+
+        context = super().get_context_data(**kwargs)
+        if self.service is not None:
+
+            if 'type' not in self.service:
+                return super().get_context_data(**kwargs)
+
+            self.header = 'Perform Validation'
+            self.title = self.service['label']
+            context['header'] = 'Perform Validation'
+            context['title'] = self.service['label']
+
+        return context
+
+    def form_valid(self, form):
+        self.request.session['next_url'] = self.next_url
+        mode = self.request.POST.get('mode', 'online')
+        # config_source = self.request.POST.get('config_source', 'running')
+        self.save_value_to_workflow('mode', mode)
+        # self.save_value_to_workflow('config_source', config_source)
+        return HttpResponseRedirect('/panhandler/validate-results')
+
+
+class ViewValidationResultsView(EditTargetView):
+    header = 'Perform Validation - Step 2'
+    title = 'Validation - Step 2'
+    template_name = 'pan_cnc/dynamic_form.html'
+
+    def get_context_data(self, **kwargs) -> dict:
+        context = super().get_context_data(**kwargs)
+        context['title'] = self.title
+        context['header'] = self.header
+        return context
+
+    def generate_dynamic_form(self, data=None) -> forms.Form:
+
+        form = forms.Form(data=data)
+
+        meta = self.meta
+        if meta is None:
+            raise SnippetRequiredException('Could not find a valid skillet!!')
+
+        mode = self.get_value_from_workflow('mode', 'online')
+
+        if mode == 'online':
+            self.title = 'PAN-OS NGFW to Validate'
+            self.help_text = 'This form allows you to enter the connection information for a PAN-OS NGFW. This' \
+                             'tool will connect to that device and pull it\'s configuration to perform the' \
+                             'validation.'
+
+            target_ip_label = 'Target IP'
+            target_port_label = 'Target Port'
+            target_username_label = 'Target Username'
+            target_password_label = 'Target Password'
+
+            target_ip = self.get_value_from_workflow('TARGET_IP', '')
+            # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
+            target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
+            target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
+
+            target_ip_field = forms.CharField(label=target_ip_label, initial=target_ip, required=True,
+                                              validators=[FqdnOrIp])
+            target_username_field = forms.CharField(label=target_username_label, initial=target_username, required=True)
+            target_password_field = forms.CharField(widget=forms.PasswordInput(render_value=True), required=True,
+                                                    label=target_password_label,
+                                                    initial=target_password)
+
+            form.fields['TARGET_IP'] = target_ip_field
+            form.fields['TARGET_USERNAME'] = target_username_field
+            form.fields['TARGET_PASSWORD'] = target_password_field
+        else:
+            self.title = 'PAN-OS XML Configuration to Validate'
+            self.help_text = 'This form allows you to paste in a full configuration from a PAN-OS NGFW. This ' \
+                             'will then be used to perform the validation.'
+            label = 'Configuration'
+            initial = self.get_value_from_workflow('config', '<xml></xml>')
+            help_text = 'Paste the full XML configuration file to validate here.'
+            config_field = forms.CharField(label=label, initial=initial, required=True,
+                                           help_text=help_text,
+                                           widget=forms.Textarea(attrs={'cols': 40}))
+            form.fields['config'] = config_field
+
+        return form
+
+    def form_valid(self, form):
+        """
+        form_valid is always called on a blank / new form, so this is essentially going to get called on every POST
+        self.request.POST should contain all the variables defined in the service identified by the hidden field
+        'service_id'
+        :param form: blank form data from request
+        :return: render of a success template after service is provisioned
+        """
+        snippet_name = self.get_value_from_workflow('snippet_name', '')
+        mode = self.get_value_from_workflow('mode', 'online')
+
+        if snippet_name == '':
+            print('Could not find a valid meta-cnc def')
+            raise SnippetRequiredException
+
+        meta = snippet_utils.load_snippet_with_name(snippet_name, self.app_dir)
+
+        context = dict()
+        self.header = 'Validation Results'
+        context['header'] = self.header
+        context['title'] = meta['label']
+        context['base_html'] = self.base_html
+        context['app_dir'] = self.app_dir
+
+        # Always grab all the default values, then update them based on user input in the workflow
+        jinja_context = dict()
+        if 'variables' in meta and type(meta['variables']) is list:
+            for snippet_var in meta['variables']:
+                jinja_context[snippet_var['name']] = snippet_var['default']
+
+        # let's grab the current workflow values (values saved from ALL forms in this app
+        jinja_context.update(self.get_workflow())
+
+        if mode == 'online':
+            # Grab the values from the form, this is always hard-coded in this class
+            target_ip = self.request.POST.get('TARGET_IP', None)
+            # target_port = self.request.POST.get('TARGET_IP', 443)
+            target_username = self.request.POST.get('TARGET_USERNAME', None)
+            target_password = self.request.POST.get('TARGET_PASSWORD', None)
+
+            self.save_value_to_workflow('TARGET_IP', target_ip)
+            # self.save_value_to_workflow('TARGET_PORT', target_port)
+            self.save_value_to_workflow('TARGET_USERNAME', target_username)
+
+            err_condition = False
+            if target_ip is None or target_ip == '':
+                form.add_error('TARGET_IP', 'Host entry cannot be blank')
+                err_condition = True
+
+            if target_username is None or target_username == '':
+                form.add_error('TARGET_USERNAME', 'Username cannot be blank')
+                err_condition = True
+
+            if target_password is None or target_password == '':
+                form.add_error('TARGET_PASSWORD', 'Password cannot be blank')
+                err_condition = True
+
+            if err_condition:
+                return self.form_invalid(form)
+
+            try:
+                print(f'checking {target_ip} {target_username}')
+                panoply = Panos(hostname=target_ip, api_username=target_username,
+                                api_password=target_password, debug=True)
+
+            except LoginException as le:
+                print(le)
+                form.add_error('TARGET_USERNAME', 'Invalid Credentials, ensure your username and password are correct')
+                form.add_error('TARGET_PASSWORD', 'Invalid Credentials, ensure your username and password are correct')
+                return self.form_invalid(form)
+            except PanoplyException as pe:
+                form.add_error('TARGET_IP', 'Connection Refused Error, check the IP and try again')
+                return self.form_invalid(form)
+
+            if not panoply.connected:
+                form.add_error('TARGET_IP', 'Connection Refused Error, check the IP and try again')
+                return self.form_invalid(form)
+
+        else:
+            config = self.request.POST.get('config', '')
+            self.save_value_to_workflow('config', config)
+            panoply = None
+            jinja_context['config'] = config
+
+        try:
+            skillet = PanValidationSkillet(meta, panoply)
+            results = list()
+            skillet_output = skillet.execute(jinja_context)
+            validation_output = skillet_output.get('pan_validation', dict())
+            for snippet in skillet.snippet_stack:
+                name = snippet.get('name', '')
+                cmd = snippet.get('cmd', '')
+                if cmd != 'validate':
+                    print('skipping non-validation snippet')
+                    continue
+
+                result_object = dict()
+                if snippet['name'] in validation_output:
+                    result_object['name'] = name
+                    result_object['results'] = validation_output[name]
+                else:
+                    result_object['name'] = name
+                    result_object['results'] = {}
+
+                results.append(result_object)
+
+            context['results'] = results
+
+        except SkilletLoaderException:
+            print(f"Could not load it for some reason")
+            return render(self.request, 'pan_cnc/results.html', context)
+
+        return render(self.request, 'panhandler/validation-results.html', context)

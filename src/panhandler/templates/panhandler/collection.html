@@ -5,27 +5,28 @@
 {% endblock %}
 {% block content %}
 
-    <h3 class="mb-4">Skillet Collection: {{ collection }}</h3>
+    <h3 class="mb-4"><a href="/panhandler/collections" class="text-dark">Collections</a> -> {{ collection }}</h3>
 
     <div class="d-flex justify-content-between">
         <div>
             <label for="sort_buttons" class="text-muted d-block">Sort</label>
-            <div class="btn-group" role="group" aria-label="..." id="sort_buttons">
+            <div class="btn-group btn-group-sm" role="group" aria-label="..." id="sort_buttons">
                 <button type="button" class="btn btn-outline-secondary" id="sort_name">Name</button>
                 <button type="button" class="btn btn-outline-secondary" id="sort_type">Type</button>
+                <button type="button" class="btn btn-outline-secondary" id="sort_order">Order</button>
             </div>
         </div>
         <div>
             <label for="filter_buttons" class="text-muted d-block">Filter</label>
-            <div class="btn-group" role="group" id="filter_buttons">
+            <div class="btn-group btn-group-sm" role="group" id="filter_buttons">
                 <button type="button" class="btn btn-outline-secondary" id="filter_panos">PAN-OS</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_panorama">Panorama</button>
-                <button type="button" class="btn btn-outline-secondary" id="filter_panorama_gpcs">Panorama-GPCS</button>
+                <button type="button" class="btn btn-outline-secondary" id="filter_validation">PAN Validation</button>
+                <button type="button" class="btn btn-outline-secondary" id="filter_python">Python</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_rest">REST</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_template">Template</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_terraform">Terraform</button>
                 <button type="button" class="btn btn-outline-secondary" id="filter_workflow">Workflow</button>
-                <button type="button" class="btn btn-outline-secondary" id="filter_python">Python</button>
             </div>
         </div>
         <div>
@@ -36,6 +37,7 @@
     <div id="collection_grid" class="pb-6 mb-4 col-sm-12">
         {% for skillet in skillets %}
             <div class="grid__brick mt-3 mb-3 col-sm-4" data-name="{{ skillet.label }}"
+                 data-order="{{ skillet.labels.order | default:forloop.counter }}"
                  data-groups=["{{ skillet.type }}"] data-skillet_type="{{ skillet.type }}">
                 <div class="card shadow" style="height: 400px">
                     <div class="card-header">
@@ -54,7 +56,12 @@
                         </p>
                     </div>
                     <div class="card-footer text-right">
-                        <a href="/panhandler/skillet/{{ skillet.name }}" class="btn btn-primary">Go</a>
+                        {%  if skillet.type == 'pan_validation' %}
+                            <a href="/panhandler/validate/{{ skillet.name }}" class="btn btn-primary">Go</a>
+                        {%  else %}
+                            <a href="/panhandler/skillet/{{ skillet.name }}" class="btn btn-primary">Go</a>
+                        {% endif %}
+
                     </div>
                 </div>
             </div>
@@ -102,7 +109,11 @@
                 itemSelector: '.grid__brick',
                 sizer: '.sizer-element'
             });
+            {% if default_sort == 'order' %}
+            perform_sort('#sort_order', 'order');
+            {% else %}
             perform_sort('#sort_name', 'name');
+            {% endif %}
         });
 
         $('#sort_name').on('click', function () {
@@ -115,6 +126,11 @@
             }
         );
 
+        $('#sort_order').on('click', function () {
+                perform_sort(this, 'order');
+            }
+        );
+
         $('#filter_panos').on('click', function () {
                 perform_filter(this, 'panos');
             }
@@ -122,6 +138,11 @@
 
         $('#filter_panorama').on('click', function () {
                 perform_filter(this, 'panorama');
+            }
+        );
+
+        $('#filter_validation').on('click', function () {
+                perform_filter(this, 'pan_validation');
             }
         );
 

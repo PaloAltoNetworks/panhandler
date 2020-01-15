@@ -12,7 +12,7 @@ repositories:
     destination_directory: Default Skillets
 
 application_data:
-  recommended_repos_link: https://raw.githubusercontent.com/nembery/panhandler-content-links/master/links.yaml
+  recommended_repos_link: http://bit.ly/2XmZ7Il
 
 views:
   - name: ''
@@ -72,7 +72,9 @@ views:
 
   - name: update_repo
     class: UpdateRepoView
-    parameter: repo_name
+    parameters:
+      - repo_name
+      - branch
 
   - name: update_all_repos
     class: UpdateAllReposView
@@ -94,3 +96,11 @@ views:
 
   - name: check_update
     class: CheckAppUpdateView
+
+# Test validation views below
+  - name: validate
+    class: ExecuteValidationSkilletView
+    parameter: skillet
+
+  - name: validate-results
+    class: ViewValidationResultsView

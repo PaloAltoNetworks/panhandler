@@ -181,7 +181,7 @@ def _get_current_build_time() -> (datetime, None):
     build_date_string = cnc_utils.get_long_term_cached_value('panhandler', 'current_build_time')
 
     if not build_date_string:
-        print('Getting updated build_date_String')
+        print('Getting updated build_date_string')
         panhandler_config = cnc_utils.get_app_config('panhandler')
         if 'app_dir' not in panhandler_config:
             return None

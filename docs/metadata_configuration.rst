@@ -76,6 +76,7 @@ Each .meta-cnc.yaml file must contain the following top-level keys:
     * name: knickname of the skillet
     * file: relative path to the configuration template
     * xpath (optional): XPath where this fragment belongs in the target OS hierarchy (for XML skillets)
+    * when (optional): Jinja conditional that evaluates to 'true' or 'false'. If 'false', this snippet will be skipped
 
 
 .. note::
@@ -109,8 +110,15 @@ Required fields for each metadata type is listed below:
 
 * panos, panorama, panorama-gpcs
     * name - name of this snippet
-    * file - path to the XML fragment to load and parse
+    * cmd - operation to perform. Default is 'set'. Any valid PAN-OS API Command is accepted
+        (set, edit, override, get, show, etc)
     * xpath - XPath where this fragment belongs
+    * file - path to the XML fragment to load and parse
+    * element - inline XML fragment to load and parse. Can be used in leu of a separate 'file' field
+* pan_validation
+    * name - name of the validation test to perform
+    * cmd - validate, validate_xml, noop, or parse. Default is validate
+    * test - Boolean test to perform using jinja expressions
 * template
     * name - name of this snippet
     * file - path to the jinja2 template to load and parse
@@ -158,6 +166,8 @@ variable defined in the `variables` list should define the following:
    entered value unless this value is set to True. The default is False. Setting to True will ensure the default
    value will always be rendered in the panhandler UI.
 6. required: Determines if a value is required for this field. The default is False.
+7. help_text: Optional attribute that will be displayed immediately under the field. This is useful for giving
+   extra information to the user about the purpose of a field.
 
 .. note::
 
@@ -174,7 +184,8 @@ Variable Examples:
 
   Default input type for user input. Optional `allow_special_characters` if false will ensure only
   letters, digits, underscore, hyphens, and spaces are allowed in the input. Set to True to allow all special
-  characters. Default is to allow special characters.
+  characters. Default is to allow special characters. Optional `attributes` allows forcing a minimum and/or
+  maximum length of the entered value.
 
 .. code-block:: yaml
 
@@ -182,7 +193,11 @@ Variable Examples:
     description: Firewall hostname
     default: panos-01
     type_hint: text
+    help_text: Hostname for this firewall.
     allow_special_characters: false
+    attributes:
+      min: 6
+      max: 256
 
 
 * password
@@ -252,6 +267,7 @@ Variable Examples:
     description: Email
     default: support@noway.com
     type_hint: email
+    help_text: Enter your email address here to receive lots of spam
 
 * number
 
@@ -268,8 +284,9 @@ Variable Examples:
       min: 1000
       max: 2000
 
-
 * float
+=======
+ * float
 
   This type will ensure the entered value is a float. You may optionally supply the `min` and `max`
   attributes to ensure the entered value do not exceed or fall below those values.
@@ -283,7 +300,6 @@ Variable Examples:
     attributes:
       min: 1.00
       max: 500.00
-
 
 * dropdown
 
@@ -314,7 +330,8 @@ Variable Examples:
 
 * text_area
 
-  This type renders a `TextArea` input control. This allows the user to enter multiple lines of input.
+  This type renders a `TextArea` input control. This allows the user to enter multiple lines of input. The optional
+  `attributes` attribute allows you to customize the size of the text area control.
 
 .. code-block:: yaml
 
@@ -323,8 +340,12 @@ Variable Examples:
     default: |
       This is some very long input with lots of
       newlines and white    space
-      and stuff
+      and stuff. The optional attributes key can also be specified
+      to control now the text_area is rendered in panhandler and other cnc apps.
     type_hint: text_area
+    attributes:
+      rows: 5
+      cols: 10
 
 * json
 
@@ -371,6 +392,33 @@ Variable Examples:
       - key: 'Maybe'
         value: 'maybe'
 
+* list
+
+  This type will allow the user to input multiple entries. The values of the multiple
+  entries will be converted to an appropriate type for the Skillet type being used. For
+  python, the entries will be converted to a comma separated list. For Terraform, the
+  values will be converted to a terraform appropriate string representation.
+
+.. code-block:: yaml
+
+  - name: list_input
+    description: IP Subnets
+    default: 10.10.10.1/24
+    type_hint: list
+
+* hidden
+
+  This type will NOT show an input form control to the user, but the default value will be passed to the
+  skillet. This is useful is you want to 'capture' an input from another skillet and pass it into the input
+  of this skillet without having to include it in the input form.
+
+.. code-block:: yaml
+
+  - name: previous_value
+    description: from previous skillet in workflow
+    default: some_value
+    type_hint: hidden
+
 
 Hints
 -----
@@ -381,11 +429,20 @@ Ensuring all variables are defined
 When working with a large amount of configuration temlates, it's easy to miss a variable definition. Use this one-liner
 to find them all.
 
-cd into a skillet dir and run this to find all vars
+cd into a skillet dir and run this to find all configured variables:
 
 .. code-block:: bash
 
     grep -r '{{' . |  cut -d'{' -f3 | awk '{ print $1 }' | sort -u
+
+
+Of, if you have `perl` available, the following may also catch any configuration commands that may have
+more than one variable defined:
+
+.. code-block:: bash
+
+    grep -r '{{' . | perl -pne 'chomp(); s/.*?{{ (.*?) }}/$1\n/g;' | sort -u
+
 
 
 YAML Syntax
@@ -394,3 +451,34 @@ YAML Syntax
 YAML is notoriously finicky about whitespace and formatting. While it's a relatively simple structure and easy to learn,
 it can often also be frustrating to work with, especially for large files. A good reference to use to check your
 YAML syntax is the `YAML Lint site <http://www.yamllint.com/>`_.
+
+Jinja Whitespace control
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Care must usually be taken to ensure no extra whitespace creeps into your templates due to Jinja looping
+constructs or control characters. For example, consider the following fragment:
+
+.. code-block:: jinja
+
+    <dns-servers>
+    {% for member in CLIENT_DNS_SUFFIX %}
+        <member>{{ member }}</member>
+    {% endfor %}
+    </dns-servers>
+
+This fragment will result in blank lines being inserted where the 'for' and 'endfor' control tags are placed. To
+ensure this does not happen and to prevent any unintentioal whitespace, you can use jinja whitespace control like
+so:
+
+.. code-block:: jinja
+
+    <dns-servers>
+    {%- for member in CLIENT_DNS_SUFFIX %}
+        <member>{{ member }}</member>
+    {%- endfor %}
+    </dns-servers>
+
+.. note:: Note the '-' after the leading '{%'. This instructs jinja to remove these blank lines in the resulting
+parsed output template.
+
+

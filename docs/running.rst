@@ -13,11 +13,23 @@ Using a standard web port
 
 .. code-block:: bash
 
-    docker run -t -p 80:80 -v ~/.pan_cnc:/root/.pan_cnc paloaltonetworks/panhandler
+    docker run -t -p 8080:8080 -v ~:/home/cnc_user paloaltonetworks/panhandler
 
 Then access the UI via http://localhost:80
 
 The default username and password is: `paloalto` and `panhandler`
+
+
+Setting the Default Username and Password
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+To set the default username and password, pass in the following environment variables:
+
+.. code-block:: bash
+
+   docker run -t -e CNC_USERNAME=myuser -e CNC_PASSWORD=mypass -p 80:8080 -v ~:/home/cnc_user paloaltonetworks/panhandler
+
+
 
 Using an alternate TCP port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -26,15 +38,15 @@ If port 80 is unavailable, you can switch to a different port. This example uses
 
 .. code-block:: bash
 
-    docker run -t -p 9999:80 -v ~/.pan_cnc:/root/.pan_cnc paloaltonetworks/panhandler
+    docker run -t -p 9999:8080 -v ~:/home/cnc_user paloaltonetworks/panhandler
 
 Then access the UI via http://localhost:9999
 
-To persist any environments and secrets, you can mount a volume on the `/root/.pan_cnc` folder like this:
+To persist any environments and secrets, you can mount a volume on the `/home/cnc_user/.pan_cnc` folder like this:
 
 .. code-block:: bash
 
-    docker run -t -p 9999:80 -v ~/.pan_cnc:/root/.pan_cnc paloaltonetworks/panhandler
+    docker run -t -p 9999:80 -v ~:/home/cnc_user paloaltonetworks/panhandler
 
 .. Note::
     The -t option for `terminal` allows you to view panhandler output data in the terminal window.
@@ -75,7 +87,6 @@ install the pip python requirements for both the app and also CNC, create the lo
     git submodule init
     git submodule update
     pip install -r requirements.txt
-    pip install -r cnc/requirements.txt
     ./cnc/manage.py migrate
     ./cnc/manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('paloalto', 'admin@example.com', 'panhandler')"
 
@@ -88,7 +99,7 @@ To start the application on your local machine on port 80:
 .. code-block:: bash
 
     cd panhandler/cnc
-    celery -A pan_cnc worker --loglevel=info
+    celery -A pan_cnc worker --loglevel=info &
     manage.py runserver 80
 
 To use a different port, supply a different argument to the runserver command above. In this case, the server will

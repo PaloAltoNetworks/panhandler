@@ -11,7 +11,7 @@ jobs:
           name: Build and push Docker image
           command: |
             export DATE=$(date '+%Y-%m-%dT%H:%M:%S')
-            export RELEASE='2.2'
+            export RELEASE='3.0'
             echo $DATE > src/panhandler/build_date
             if [ "${CIRCLE_BRANCH}" == "master" ]; then
               export TAG=$RELEASE.${CIRCLE_BUILD_NUM}
