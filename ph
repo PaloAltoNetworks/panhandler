@@ -120,7 +120,10 @@ function create_panhandler_container {
   if [[ ${IMAGE_TAG} == latest ]];
    then
       # shellcheck disable=SC2086
-      docker run -p ${DEFAULT_PORT}:${LATEST_EXPOSED_PORT} -t -v "$HOME":/root -d -e CNC_USERNAME -e CNC_PASSWORD --name panhandler ${PANHANDLER_IMAGE}
+      docker run -p ${DEFAULT_PORT}:${LATEST_EXPOSED_PORT} -t -d -v "$CNC_VOLUME":/home/cnc_user/.pan_cnc \
+      -e CNC_USERNAME \
+      -e CNC_PASSWORD \
+      --name panhandler ${PANHANDLER_IMAGE}
   else
       # this is only necessary while 2.3 is in development
       # shellcheck disable=SC2086
