@@ -2,10 +2,10 @@ name: panhandler
 label: Panhandler
 
 repositories:
-  - name: Iron-Skillet-v81
+  - name: Iron-Skillet
     url: https://github.com/PaloAltoNetworks/iron-skillet.git
-    branch: panos_v8.1
-    destination_directory: Iron-Skillet v81
+    branch: panos_v9.0
+    destination_directory: Iron-Skillet
   - name: Default Skillets
     url: https://github.com/PaloAltoNetworks/Skillets.git
     branch: master
