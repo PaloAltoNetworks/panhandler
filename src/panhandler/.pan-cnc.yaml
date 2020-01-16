@@ -34,7 +34,7 @@ views:
     attributes:
       snippet: import_repo
       header: Import Repository
-      title: Enter a valid git url and desired branch below
+      title: Enter a valid git URL below
       next_url: view_snippets
       help_text: >
         This view imports a new git repository. Once imported, any skillets defined in that repository will be
