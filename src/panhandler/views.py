@@ -275,7 +275,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             level = messages.ERROR
             cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
         # msg updated will catch both switching branches as well as new commits
-        elif 'Updated' in msg:
+        elif 'updated' in msg or 'Checked out new' in msg:
             # since this repoo has been updated, we need to ensure the caches are all in sync
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
@@ -345,7 +345,7 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
                     print(msg)
                     messages.add_message(self.request, messages.ERROR, f'Could not update repository {d.name}')
                     err_condition = True
-                elif 'Updated' in msg:
+                elif 'updated' in msg or 'Checked out new' in msg:
                     print(f'Updated Repository: {d.name}')
                     updates.append(d.name)
                     cnc_utils.set_long_term_cached_value(self.app_dir, f'{d.name}_detail', None, 0, 'git_repo_details')

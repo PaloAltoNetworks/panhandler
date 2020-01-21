@@ -5,7 +5,6 @@ type: app
 extends:
 
 labels:
-  service_type: docker
 
 variables:
   - name: repo_name
@@ -13,10 +12,12 @@ variables:
     default: Example_Skillets
     type_hint: text
     allow_special_characters: false
+    help_text: The arbitrary name of this Repository.
   - name: url
     description: Git Repository HTTPS URL
     default: https://github.com/PaloAltoNetworks/Skillets.git
     type_hint: text
+    help_text: The 'git' link to the repository you would like to import.
 
 snippets:
 

@@ -21,7 +21,6 @@
 
             $('#id_repo_name').val(name);
             $('#id_url').val(link);
-            $('#id_branch').val(branch);
 
             $('#dynamic_form').submit();
         }
@@ -41,16 +40,8 @@
         <div class="card-header">
             Recommended Repositories
         </div>
-
         <div class="card-body">
             <table class="table">
-                {#                <thead>#}
-                {#                <tr>#}
-                {#                    <th>Name</th>#}
-                {#                    <th>Description</th>#}
-                {#                    <th>Options</th>#}
-                {#                </tr>#}
-                {#                </thead>#}
                 <tbody>
                 {% for item in links %}
                     <tr>
