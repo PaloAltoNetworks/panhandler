@@ -690,6 +690,70 @@ class ViewValidationResultsView(EditTargetView):
     title = 'Validation - Step 2'
     template_name = 'pan_cnc/dynamic_form.html'
 
+    def get(self, request, *args, **kwargs) -> Any:
+        """
+        """
+        mode = self.get_value_from_workflow('mode', 'online')
+        workflow_name = self.get_value_from_workflow('workflow_name', False)
+
+        if mode == 'online' and workflow_name:
+
+            if {'TARGET_IP', 'TARGET_USERNAME', 'TARGET_PASSWORD'}.issubset(self.get_workflow().keys()):
+                print('Skipping validation input as we already have this information cached')
+                snippet = self.get_value_from_workflow('snippet_name', None)
+                self.meta = snippet_utils.load_snippet_with_name(snippet, self.app_dir)
+
+                target_ip = self.get_value_from_workflow('TARGET_IP', '')
+                # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
+                target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
+                target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
+                data = {'TARGET_IP': target_ip, 'TARGET_USERNAME': target_username, 'TARGET_PASSWORD': target_password}
+                form = self.generate_dynamic_form(data=data)
+
+                # this is part of a workflow, and we already have this information in the context
+                return self.form_valid(form)
+
+        return super().get(request, *args, **kwargs)
+
+    def post_old(self, request, *args, **kwargs):
+        snippet_name = self.get_value_from_workflow('snippet_name', '')
+        if snippet_name == '':
+            messages.add_message(self.request, messages.ERROR, 'Process Error - Meta not found')
+            return HttpResponseRedirect('/')
+
+        meta = snippet_utils.load_snippet_with_name(snippet_name, self.app_dir)
+        if meta is None:
+            messages.add_message(self.request, messages.ERROR, 'Process Error - Could not load meta')
+            return HttpResponseRedirect('/')
+
+        self.meta = meta
+
+        workflow_name = self.get_value_from_workflow('workflow_name', False)
+        if workflow_name:
+            target_ip = self.get_value_from_workflow('TARGET_IP', '')
+            # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
+            target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
+            target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
+            # data = {'TARGET_IP', target_ip, 'TARGET_USERNAME': target_username, 'TARGET_PASSWORD', target_password }
+            # form = self.generate_dynamic_form(data=data)
+
+        try:
+            if form.is_valid():
+                # load the snippet into the class attribute here so it's available to all other methods throughout the
+                # call chain in the child classes
+                # go ahead and save all our current POSTed variables to the session for use later
+                self.save_workflow_to_session()
+
+                return self.form_valid(form)
+
+            else:
+                print('This form is not valid!')
+                return self.form_invalid(form)
+
+        except BaseException as te:
+            messages.add_message(self.request, messages.ERROR, str(te))
+            return self.form_invalid(form)
+
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
         context['title'] = self.title
@@ -780,17 +844,29 @@ class ViewValidationResultsView(EditTargetView):
         jinja_context.update(self.get_workflow())
 
         if mode == 'online':
-            # Grab the values from the form, this is always hard-coded in this class
-            target_ip = self.request.POST.get('TARGET_IP', None)
-            # target_port = self.request.POST.get('TARGET_IP', 443)
-            target_username = self.request.POST.get('TARGET_USERNAME', None)
-            target_password = self.request.POST.get('TARGET_PASSWORD', None)
+            # if we are in a workflow, then the input form was skipped and we are using the
+            # values previously saved!
+            workflow_name = self.get_value_from_workflow('workflow_name', False)
 
-            self.save_value_to_workflow('TARGET_IP', target_ip)
-            # self.save_value_to_workflow('TARGET_PORT', target_port)
-            self.save_value_to_workflow('TARGET_USERNAME', target_username)
+            if workflow_name:
+                target_ip = self.get_value_from_workflow('TARGET_IP', '')
+                # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
+                target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
+                target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
+
+            else:
+                # Grab the values from the form, this is always hard-coded in this class
+                target_ip = self.request.POST.get('TARGET_IP', None)
+                # target_port = self.request.POST.get('TARGET_IP', 443)
+                target_username = self.request.POST.get('TARGET_USERNAME', None)
+                target_password = self.request.POST.get('TARGET_PASSWORD', None)
+
+                self.save_value_to_workflow('TARGET_IP', target_ip)
+                # self.save_value_to_workflow('TARGET_PORT', target_port)
+                self.save_value_to_workflow('TARGET_USERNAME', target_username)
 
             err_condition = False
+
             if target_ip is None or target_ip == '':
                 form.add_error('TARGET_IP', 'Host entry cannot be blank')
                 err_condition = True
