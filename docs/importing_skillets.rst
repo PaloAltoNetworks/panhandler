@@ -12,7 +12,7 @@ From the main menu, choose `Import Skillets`.
     :width: 250
 
 
-The import repository fields allow you to specify the repo name, repo url, and the branch to import. You may
+The import repository fields allow you to specify the repo name and URL to import. You may
 import repositories from any git server, including GitHub, gitlab, gogs, etc.
 
 To import a repository from Github, click on the 'Clone or Download' button and copy the full HTTPS link

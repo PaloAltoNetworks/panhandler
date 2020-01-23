@@ -10,6 +10,14 @@ want to work with develop and explore new features. Some skillets being develope
 Updating the Running Latest Version
 -----------------------------------
 
+This script will install or update to the latest 'dev' image for Panhandler. This is recommended for developers
+or power-users who understand this code may be unstable and not all features may work all the time.
+
+.. code-block:: bash
+
+    curl -s -k -L http://bit.ly/34kXVEn  | bash
+
+
 The following bash script can be copy-pasted into the terminal to stop the PanHandler process, pull the latest,
 and run again. The example uses port 9999 for web access.
 
