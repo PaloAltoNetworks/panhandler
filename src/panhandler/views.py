@@ -134,15 +134,41 @@ class ImportRepoView(CNCBaseFormView):
                                                  'imported_git_repos')
 
             debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
+
+            # check each snippet found for dependencies
+            loaded_skillets = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
+            for skillet in loaded_skillets:
+                for depends in skillet['depends']:
+                    url = depends.get('url', None)
+                    name = depends.get('name', None)
+                    branch = depends.get('branch', 'master')
+
+                    # now check each repo to see if we already have it, add an error if not
+                    found = False
+
+                    for repo in repos:
+                        if repo['url'] == url and repo['branch'] == branch:
+                            found = True
+                            break
+
+                    if not found:
+                        messages.add_message(self.request, messages.ERROR,
+                                             f'Unresolved Dependency found!! Please ensure you import the following'
+                                             f'repository: {url} with branch: {branch}')
+
             if debug_errors:
                 messages.add_message(self.request, messages.ERROR,
                                      'Found Skillets with errors! Please open an issue on '
                                      'this repository to help resolve this issue')
+
                 for d in debug_errors:
                     if 'err_list' in d and 'path' in d and 'severity' in d:
+
                         for e in d['err_list']:
+
                             if d['severity'] == 'warn':
                                 level = messages.WARNING
+
                             else:
                                 level = messages.ERROR
 
@@ -171,24 +197,30 @@ class ListReposView(CNCView):
                                      'Could not load repositories from directory as it does not exists')
                 context['repos'] = list()
                 return context
+
         except PermissionError as pe:
             print(pe)
             context['repos'] = list()
             return context
+
         except OSError as oe:
             print(oe)
             context['repos'] = list()
             return context
 
         repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
+
         if repos is not None:
             print(f'Returning cached repos')
             context['repos'] = repos
+
         else:
             repos = list()
+
             for d in snippets_dir.iterdir():
                 # git_dir = os.path.join(d, '.git')
                 git_dir = d.joinpath('.git')
+
                 if git_dir.exists() and git_dir.is_dir():
                     repo_detail = git_utils.get_repo_details(d.name, d, self.app_dir)
                     repos.append(repo_detail)
@@ -226,12 +258,14 @@ class RepoDetailsView(CNCView):
 
         if os.path.exists(repo_dir):
             repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+
         else:
             repo_detail = dict()
             repo_detail['name'] = 'Repository directory not found'
 
         try:
             snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
+
         except CCFParserError:
             messages.add_message(self.request, messages.ERROR, 'Could not read all snippets from repo. Parser error')
             snippets_from_repo = list()
@@ -241,9 +275,11 @@ class RepoDetailsView(CNCView):
         for skillet in snippets_from_repo:
             if 'labels' in skillet and 'collection' in skillet['labels']:
                 collection = skillet['labels']['collection']
+
                 if type(collection) is str:
                     if collection not in collections:
                         collections.append(collection)
+
                 elif type(collection) is list:
                     for collection_member in collection:
                         if collection_member not in collections:
@@ -293,6 +329,27 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         if repo_detail['branches'] != repo_branches:
             messages.add_message(self.request, messages.INFO, 'New Branches are available')
             git_utils.update_repo_in_cache(repo_name, repo_dir, self.app_dir)
+
+        # check each snippet found for dependencies
+        repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
+        loaded_skillets = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
+        for skillet in loaded_skillets:
+            for depends in skillet['depends']:
+                url = depends.get('url', None)
+                branch = depends.get('branch', 'master')
+
+                # now check each repo to see if we already have it, add an error if not
+                found = False
+
+                for repo in repos:
+                    if repo['url'] == url and repo['branch'] == branch:
+                        found = True
+                        break
+
+                if not found:
+                    messages.add_message(self.request, messages.ERROR,
+                                         f'Unresolved Dependency found!! Please ensure you import the following'
+                                         f' repository: {url} with branch: {branch}')
 
         debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
         if debug_errors:
@@ -714,45 +771,6 @@ class ViewValidationResultsView(EditTargetView):
                 return self.form_valid(form)
 
         return super().get(request, *args, **kwargs)
-
-    def post_old(self, request, *args, **kwargs):
-        snippet_name = self.get_value_from_workflow('snippet_name', '')
-        if snippet_name == '':
-            messages.add_message(self.request, messages.ERROR, 'Process Error - Meta not found')
-            return HttpResponseRedirect('/')
-
-        meta = snippet_utils.load_snippet_with_name(snippet_name, self.app_dir)
-        if meta is None:
-            messages.add_message(self.request, messages.ERROR, 'Process Error - Could not load meta')
-            return HttpResponseRedirect('/')
-
-        self.meta = meta
-
-        workflow_name = self.get_value_from_workflow('workflow_name', False)
-        if workflow_name:
-            target_ip = self.get_value_from_workflow('TARGET_IP', '')
-            # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
-            target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
-            target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
-            # data = {'TARGET_IP', target_ip, 'TARGET_USERNAME': target_username, 'TARGET_PASSWORD', target_password }
-            # form = self.generate_dynamic_form(data=data)
-
-        try:
-            if form.is_valid():
-                # load the snippet into the class attribute here so it's available to all other methods throughout the
-                # call chain in the child classes
-                # go ahead and save all our current POSTed variables to the session for use later
-                self.save_workflow_to_session()
-
-                return self.form_valid(form)
-
-            else:
-                print('This form is not valid!')
-                return self.form_invalid(form)
-
-        except BaseException as te:
-            messages.add_message(self.request, messages.ERROR, str(te))
-            return self.form_invalid(form)
 
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
