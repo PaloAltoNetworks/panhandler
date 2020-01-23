@@ -13,14 +13,15 @@ Panhandler
    overview
    running
    using
+   switching_dev_latest
    importing_skillets
    metadata_configuration
    example_skillet
    environments
    updating
    debugging
+   examples/panos_set
    examples/rest_skillet
-   switching_dev_latest
    examples/rest_skillet_with_output_capture
 
 

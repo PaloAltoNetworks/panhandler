@@ -34,9 +34,9 @@ a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. N
 
 .. code-block:: yaml
 
-    name: config_set_name
-    label: menu label text
-    description: config_set description
+    name: config_set_id
+    label: human readable text string
+    description: human readable long form text describing this Skillet
 
     labels:
       collection:
@@ -63,21 +63,21 @@ a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. N
 Metadata details
 ----------------
 
-Each .meta-cnc.yaml file must contain the following top-level keys:
+Each .meta-cnc.yaml file must contain the following top-level attributes:
 
 * name: unique name of this Skillet
 * label: Human readable label that will be displayed in the Panhandler UI
 * description: Short description to give specific information about what this Skillet does
-* labels: YAML dict of optional Skillet configuration information. For example - collection labels
-* extends: name of another skillet that is a requirement for this one. PAN-OS and Panorama types will load extends prior to loading this one
+* type: The type of skillet. This can be 'panos', 'panorama', 'rest', or others.
 * variables: Described in detail below
-* snippets: a dict containing the following keys
+* snippets: a list od dicts. The required attributes vary according to Skillet tupe
 
-    * name: knickname of the skillet
-    * file: relative path to the configuration template
-    * xpath (optional): XPath where this fragment belongs in the target OS hierarchy (for XML skillets)
-    * when (optional): Jinja conditional that evaluates to 'true' or 'false'. If 'false', this snippet will be skipped
 
+Optional top level attributes:
+
+
+* depends: List of dicts containing repository urls and branches that this skillet depends on
+* labels: YAML dict of optional Skillet configuration information. For example - collection labels
 
 .. note::
 
@@ -284,9 +284,8 @@ Variable Examples:
       min: 1000
       max: 2000
 
+
 * float
-=======
- * float
 
   This type will ensure the entered value is a float. You may optionally supply the `min` and `max`
   attributes to ensure the entered value do not exceed or fall below those values.
@@ -324,6 +323,7 @@ Variable Examples:
     and the `value` is what will be used as the value of the variable identified by `name`.
 
 .. warning::
+
     Some values such as `yes`, `no`, `true`, `false`, `on`, `off`, etc are treated differently in YAML. To ensure these values are
     not converted to a `boolean` type, ensure to put single quotes `'` around both the `key` and the `value` as in
     the example above. Refer to the YAML specification for more details: https://yaml.org/type/bool.html
@@ -479,6 +479,6 @@ so:
     </dns-servers>
 
 .. note:: Note the '-' after the leading '{%'. This instructs jinja to remove these blank lines in the resulting
-parsed output template.
+    parsed output template.
 
 

@@ -38,7 +38,7 @@ Select `Go` on the card for the desired collection to see all Skillets that belo
 Skillet builder can create their own collection.
 
 
-Select the Template to Load
+Select the Skillet to Load
 ---------------------------
 
 A list of templates will be available to load into your device. Select the desired item and enter the form data.
@@ -52,9 +52,9 @@ The final form will be the target information for API config loading. Confirm th
 .. image:: images/ph-configure-target.png
 
 For PAN-OS types, you can choose to check or uncheck the 'Perform Commit' option to push the configuration then
-do a 'commit' or only push the configuration witout a commit.
+do a 'commit' or only push the configuration without a commit.
 
-You can also check or unckeck the 'Perform Backup' option to create a named configuration backup on the device prior
+You can also check or uncheck the 'Perform Backup' option to create a named configuration backup on the device prior
 to pushing the new configuration. This provides a roll back mechanism should you desire. The named backups will be
 named with the following format: `panhandler-20190101000000.xml` (panhandler followed by the current timestamp)
 

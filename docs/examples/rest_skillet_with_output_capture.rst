@@ -2,13 +2,13 @@ Example REST Skillet with Output Capturing
 ==========================================
 
 Here is a basic skillet of type 'rest'. This skillet will query the Palo Alto Networks Licensing API to track
-usage of a given authcode. This skillet demonstrates several important aspects of the rest type. This examle also
+usage of a given authorization code. This skillet demonstrates several important aspects of the rest type. This example also
 demonstrates how to parse the output and capture variables for re-use in another skillet.
 
 .meta-cnc.yaml
 --------------
 
-.. code-block:: text
+.. code-block:: yaml
 
     name: generate_api_key
     label: Generate PAN-OS API Key
@@ -25,14 +25,17 @@ demonstrates how to parse the output and capture variables for re-use in another
         description: Host
         default: 127.0.0.1
         type_hint: fqdn_or_ip
+
       - name: TARGET_PORT
         description: Port
         default: 443
         type_hint: number
+
       - name: TARGET_USERNAME
         description: Username
         default: admin
         type_hint: text
+
       - name: TARGET_PASSWORD
         description: Password
         default: admin

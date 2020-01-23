@@ -1,12 +1,28 @@
 Running Panhandler
 ==================
 
-The recommended way to run panhandler is to pull and run the docker container.
+The recommended way to run Panhandler is to pull and run the docker container.
+
+
+Quickstart
+----------
+
+The following command will ensure you have the most up to date version of panhandler and will set
+up all the required ports and volume mounts. This command will also update existing Panhandler containers
+with the latest released version.
+
+.. code-block:: bash
+
+    curl -s -k -L http://bit.ly/2xui5gM | bash
+
+
+If you need special requirements, such as custom volume mounts or non-standard ports, you may use one of the
+following `docker run` commandsL:
 
 Running the Panhandler Docker Container
 ---------------------------------------
 
-To get the latest version of panhandler as a docker container.
+To get the latest version of panhandler as a docker container, run one of the following commands:
 
 Using a standard web port
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -15,7 +31,7 @@ Using a standard web port
 
     docker run -t -p 8080:8080 -v ~:/home/cnc_user paloaltonetworks/panhandler
 
-Then access the UI via http://localhost:80
+Then access the UI via http://localhost:8080
 
 The default username and password is: `paloalto` and `panhandler`
 
@@ -42,7 +58,7 @@ If port 80 is unavailable, you can switch to a different port. This example uses
 
 Then access the UI via http://localhost:9999
 
-To persist any environments and secrets, you can mount a volume on the `/home/cnc_user/.pan_cnc` folder like this:
+To persist any environments and secrets, you can mount a volume on the `/home/cnc_user` folder like this:
 
 .. code-block:: bash
 

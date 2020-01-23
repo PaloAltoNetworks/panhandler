@@ -63,6 +63,7 @@ deploying.
 
     snippets:
       - name: log_settings
+        cmd: set
         xpath: /config/shared/log-settings
         file: log_settings.xml
 
