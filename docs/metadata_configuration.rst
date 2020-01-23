@@ -1,5 +1,5 @@
-Panhandler Metadata Files
-=========================
+Skillets
+========
 
 The heart of Panhandler is the `.meta-cnc.yaml` file. This allows a set of configuration snippets, known as a skillet,
 to be shared and consumed as a single unit. For example, to configure a default security profile you may need to
