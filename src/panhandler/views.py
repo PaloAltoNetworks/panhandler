@@ -747,11 +747,26 @@ class ViewValidationResultsView(EditTargetView):
     title = 'Validation - Step 2'
     template_name = 'pan_cnc/dynamic_form.html'
 
+    def get_header(self) -> str:
+        workflow_name = self.request.session.get('workflow_name', None)
+        next_step = self.request.session.get('workflow_ui_step', None)
+
+        header = self.header
+        if workflow_name is not None:
+            workflow_skillet_dict = snippet_utils.load_snippet_with_name(workflow_name, self.app_dir)
+            if workflow_skillet_dict is not None:
+                header = workflow_skillet_dict.get('label', self.header)
+
+        if next_step is None:
+            return header
+        else:
+            return f"Step {next_step}: {header}"
+
     def get(self, request, *args, **kwargs) -> Any:
         """
         """
         mode = self.get_value_from_workflow('mode', 'online')
-        workflow_name = self.get_value_from_workflow('workflow_name', False)
+        workflow_name = self.request.session.get('workflow_name', False)
 
         if mode == 'online' and workflow_name:
 
@@ -851,6 +866,7 @@ class ViewValidationResultsView(EditTargetView):
         context['title'] = meta['label']
         context['base_html'] = self.base_html
         context['app_dir'] = self.app_dir
+        context['view'] = self
 
         # Always grab all the default values, then update them based on user input in the workflow
         jinja_context = dict()
@@ -864,7 +880,7 @@ class ViewValidationResultsView(EditTargetView):
         if mode == 'online':
             # if we are in a workflow, then the input form was skipped and we are using the
             # values previously saved!
-            workflow_name = self.get_value_from_workflow('workflow_name', False)
+            workflow_name = self.request.session.get('workflow_name', False)
 
             if workflow_name:
                 target_ip = self.get_value_from_workflow('TARGET_IP', '')
