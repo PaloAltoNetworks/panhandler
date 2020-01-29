@@ -16,6 +16,7 @@ Panhandler
    switching_dev_latest
    importing_skillets
    metadata_configuration
+   variable_type_hints
    example_skillet
    environments
    updating
