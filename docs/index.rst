@@ -18,12 +18,15 @@ Panhandler
    metadata_configuration
    variable_type_hints
    example_skillet
+   validation_skillets
    environments
    updating
    debugging
    examples/panos_set
    examples/rest_skillet
    examples/rest_skillet_with_output_capture
+   examples/validation_skillet
+   examples/when_conditionals
 
 
 
