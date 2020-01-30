@@ -5,7 +5,7 @@ Variables
 
 Variables in a Skillet determine what a user can modify or customize before deployment. In Panhandler, these get
 generated into a web form that a user can fill out. Each variable can have it's own 'type' determined by the 'type_hint'
-attribute in the variable declaration. This page lists all the type hints for reference.
+attribute in the variable declaration. This page lists all the available type hints for reference.
 
 Variable Types:
 ^^^^^^^^^^^^^^^
@@ -248,3 +248,98 @@ Variable Types:
     description: from previous skillet in workflow
     default: some_value
     type_hint: hidden
+
+
+
+Panhandler Generated UI
+-----------------------
+
+Because Skillets are essentially tooling agnostic, it's up to the tool to implement the UI presented to the user.
+Some tools may prefer a different approach, or may not even need a UI at all. For example, in a CI/CD pipeline, the
+value of the variables may be obtained via the OS environment. A script may use command line arguments, etc.
+
+Panhandler generates a fully customized UI for each Skillet that is configured via the types of 'type_hint' supplied
+with each variable. By default, this is a static web form with a single input form control for each
+variable.
+
+Dynamic UI Elements
+--------------------
+
+In some cases, it may be desirable for the UI to be more dynamic. Each variable can include 'hints' about how the UI
+should behave, but these, of course, are not guaranteed to be implemented in all tooling. Panhandler will produce
+dynamic UI elements in the following cases:
+
+* source
+
+  The optional source attribute on dropdown, radio, and checkbox type_hints will use the value of the 'source'
+  attribute as a variable. If this variable is found in the context and it is a list,
+  it's value will be used to populate the form control. If the variable is not found, the form control reverts
+  to a standard 'text' input as a fallback.
+
+.. code-block:: yaml
+
+  - name: selected_interface
+    description: Interface
+    default: not-saved
+    type_hint: dropdown
+    source: interface_names
+
+
+  If the 'type_hint' is 'text' and the 'source' variable is a list, then multiple text input controls will be shown
+  to the user, one for each item in the list. The resulting variable captured after the form is POSTed will be a
+  'dict' with a key for each item in the list, and it's value from the user. This is useful to capture things like
+  an ip address for each interface in a list.
+
+.. code-block:: yaml
+
+      - name: interface_ips
+        description: Interface IP Address For
+        default: 10.10.10.10
+        type_hint: text
+        source: interface_names
+
+
+  In this example, a text input control will be generated for each of the items found in the 'interface_names' list.
+  Assume the 'interface_names' variable contained the following:
+
+.. code-block:: json
+
+      "interface_names": [
+        "ethernet1/1",
+        "ethernet1/2",
+        "ethernet1/3",
+        "ethernet1/4",
+      ]
+
+
+The resulting UI form will include 4 Text inputs. The item in the list will be appended to the description
+  and used as the text input label. After the user fills in the information in all 4 text inputs, the
+  interface_ips variable in the jinja context will have the following structure:
+
+
+.. code-block:: json
+
+      "interface_ips": {
+        "ethernet1/1": "10.10.10.11",
+        "ethernet1/2": "10.10.10.12",
+        "ethernet1/3": "10.10.10.13",
+        "ethernet1/4": "10.10.10.14",
+      }
+
+
+* toggle_hint
+
+  The optional 'toggle_hint' attribute will show a field only when the 'source' variable's value matches the
+  configured 'value'. If the 'source' is not found, or it's current value does not match 'value', this form
+  control will be hidden. This is especially useful when paired with a 'dropdown' select control.
+
+.. code-block:: yaml
+
+      - name: bgp_asn
+        description: Only Required when BGP is enabled
+        default: 64000
+        type_hint: text
+        toggle_hint:
+          source: bgp_type
+          value: enable
+
