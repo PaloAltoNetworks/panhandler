@@ -110,21 +110,30 @@ Required fields for each metadata type is listed below:
 
 * panos, panorama, panorama-gpcs
     * name - name of this snippet
-    * cmd - operation to perform. Default is 'set'. Any valid PAN-OS API Command is accepted
-        (set, edit, override, get, show, etc)
+    * cmd - operation to perform. Default is 'set'. Any valid PAN-OS API Command is accepted (set, edit, override, get, show, etc)
     * xpath - XPath where this fragment belongs
     * file - path to the XML fragment to load and parse
     * element - inline XML fragment to load and parse. Can be used in leu of a separate 'file' field
+
+    See Example here: :ref:`example_panos`
+
 * pan_validation
     * name - name of the validation test to perform
     * cmd - validate, validate_xml, noop, or parse. Default is validate
     * test - Boolean test to perform using jinja expressions
+
+    See Example here: :ref:`example_validation`
+
 * template
     * name - name of this snippet
     * file - path to the jinja2 template to load and parse
     * template_title - Optional title to include in rendered output
+
 * terraform
     * None - snippets are not used for terraform
+
+    See Example here: :ref:`example_terraform`
+
 * rest
     * name - unique name for this rest operation
     * path - REST URL path component `path: http://host/api/?type=keygen&user={{ username }}&password={{ password }}`
@@ -133,6 +142,9 @@ Required fields for each metadata type is listed below:
         .. note:: For x-www-form-urlencded this must be a json dictionary
     * headers - a dict of key value pairs to add to the http headers
         .. note:: for example: `Content-Type: application/json`
+
+    See Example here: :ref:`example_rest` and here: :ref:`example_rest_with_output`
+
 * python3
     * name - name of the script to execute
     * file - relative path to the python script to execute
@@ -143,6 +155,7 @@ Required fields for each metadata type is listed below:
       `user_input` is the value entered for that variable from the user. The other option, 'env' use cause all
       defined variables to be set in the environment of the python process.
 
+    See Example here: :ref:`example_python`
 
 Defining Variables for User input
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
