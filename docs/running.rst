@@ -16,14 +16,29 @@ with the latest released version.
     curl -s -k -L http://bit.ly/2xui5gM | bash
 
 
-This command will bring up
+This command will install and or update Panhandler to the latest version using the default values.
+
 If you need special requirements, such as custom volume mounts, non-default username and password, or
-non-standard ports, you should use one of the following `docker run` commands:
+non-standard ports, you set the following environment variables prior to launching the 'curl' command:
+
+* CNC_USERNAME - Set the default username to login to the application (default paloalto)
+* CNC_PASSWORD - Set the default password to login to the application (default panhandler)
+* IMAGE_TAG - Set the tag you want to download and install. Possible values: (dev, latest) (default latest)
+* DEFAULT_PORT - Set the port the application will listen on for web requests (default 8080)
+* FORCE_DEFAULT_PORT- Ensure your desired port will be used regardless of any previously set ports. Possible values are 'true' or 'false'
+
+
+.. note::
+
+    You must set 'FORCE_DEFAULT_PORT' to 'false' if you change the 'DEFAULT_PORT' to some value other than what was
+    previously set!
+
+
 
 Running the Panhandler Docker Container
 ---------------------------------------
 
-To get the latest version of panhandler as a docker container, run one of the following commands:
+If you need to manage the Panhandler container manually for some reason, following these steps:
 
 Using a standard web port
 ~~~~~~~~~~~~~~~~~~~~~~~~~
