@@ -11,20 +11,21 @@
 #
 ########################################################################################################################
 
-export IMAGE_TAG=latest
-export DEFAULT_PORT=8080
+export "${IMAGE_TAG:=latest}"
+export "${DEFAULT_PORT:=8080}"
+export "${FORCE_DEFAULT_PORT:=false}"
+
 export RESET_REPOSITORIES=false
 export NEEDS_UPDATE=false
-export FORCE_DEFAULT_PORT=false
 export CNC_VOLUME=pan_cnc_volume
 
 # used for filtering containers
 export DEV_EXPOSED_PORT=8080
 export LATEST_EXPOSED_PORT=8080
 
-# default panhandler auth
-export CNC_USERNAME=paloalto
-export CNC_PASSWORD=panhandler
+# default panhandler auth if not set from the environment
+export "${CNC_USERNAME:=paloalto}"
+export "${CNC_PASSWORD:-panhandler}"
 
 function ensure_docker_volume {
   if [[ ! $(docker volume ls -q -f name=$CNC_VOLUME) ]];
