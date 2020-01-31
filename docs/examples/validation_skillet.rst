@@ -1,3 +1,5 @@
+.. _`example_validation`:
+
 Example Validation Skillet
 ==========================
 

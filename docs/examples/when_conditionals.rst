@@ -1,13 +1,15 @@
+.. _`example_when`:
+
 Example Skillet with When Conditionals
 =======================================
 
-This is a very basic example showing how to 'set' a templatized portion of the configuration. The user will be
-prompted two input values. Each one will be interpolated into the 'element' and 'set' into the NGFW configuration.
+This is a basic 'validation' Skillet example that uses 'when' conditionals to 'skip' certain snippets. This can be
+useful to perhaps skip validation tests that are not relevant. For example, there is not need to test a sub-element's
+value if the parent element does not exist.
 
 
 .meta-cnc.yaml
 --------------
-
 
 .. code-block:: yaml
 
@@ -29,10 +31,10 @@ prompted two input values. Each one will be interpolated into the 'element' and 
       present and defined.
 
     type: pan_validation
+
     labels:
       collection:
         - Example Skillets
-        - Validation
 
     variables:
       - name: SOME_VARIABLE

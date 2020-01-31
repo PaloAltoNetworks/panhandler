@@ -1,3 +1,5 @@
+.. _`example_complex_validation`:
+
 Example Complex Validation Skillet
 ===================================
 

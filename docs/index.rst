@@ -22,11 +22,8 @@ Panhandler
    environments
    updating
    debugging
-   examples/panos_set
-   examples/rest_skillet
-   examples/rest_skillet_with_output_capture
-   examples/validation_skillet
-   examples/when_conditionals
+   examples/example_skillets
+
 
 
 

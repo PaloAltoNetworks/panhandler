@@ -1,3 +1,5 @@
+.. _`example_rest`:
+
 Example REST Skillet
 ====================
 
@@ -59,7 +61,7 @@ Here are the contents of the payload.j2 file
     }
 
 
-Section Details
+Snippet Details
 ----------------
 
 The 'snippets' section contains all the type specific configuration. Here are the details of each attribute:
