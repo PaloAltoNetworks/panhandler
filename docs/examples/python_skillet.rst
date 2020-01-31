@@ -1,13 +1,13 @@
 .. _`example_python`:
 
-.. _`jsonpath_ng`: https://github.com/h2non/jsonpath-ng#jsonpath-syntax
-
 Example Python Skillet
 ======================
 
 This Skillet will launch a python script and capture variables from it's output. This python script requires it's
 input form the user to be included in the OS Environment rather than on the CLI, so the 'input_type' attribute has
 been set to 'env' rather than the default 'cli'.
+
+.. _`jsonpath_ng`: https://github.com/h2non/jsonpath-ng#jsonpath-syntax
 
 This script also returns JSON encoded structured data. We can use `jsonpath_ng`_ expressions to query and capture
 specific variables from the output. For more inforation on JSON Path expression, see the `jsonpath_ng`_ library.

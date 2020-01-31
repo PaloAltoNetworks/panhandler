@@ -13,16 +13,16 @@ Panhandler
    overview
    running
    using
-   switching_dev_latest
    importing_skillets
-   metadata_configuration
-   variable_type_hints
-   example_skillet
-   validation_skillets
    environments
+   skillets
+   variables
+   validation_skillets
+   example_skillet
+   examples/example_skillets
    updating
    debugging
-   examples/example_skillets
+   switching_dev_latest
 
 
 

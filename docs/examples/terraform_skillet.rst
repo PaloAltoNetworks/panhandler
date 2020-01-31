@@ -1,7 +1,5 @@
 .. _`example_terraform`:
 
-.. _`jsonpath_ng`: https://github.com/h2non/jsonpath-ng#jsonpath-syntax
-
 Example Terraform Skillet
 =========================
 

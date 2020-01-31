@@ -1,5 +1,5 @@
-Example Skillets
-=================
+More Example Skillets
+=====================
 
 
 Example Skillets by Type:
