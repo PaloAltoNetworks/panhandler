@@ -2,8 +2,14 @@ PAN-OS Validation Skillets
 ==========================
 
 
-PAN-OS Validation skillets are used to check the configuration compliance of a PAN-OS device. They are comprised
-of a series of 'tests' that each check a specific portion of the configuration.
+PAN-OS Validation skillets are used to check the compliance of a PAN-OS device configuration. They are comprised
+of a series of 'tests' that each check a specific portion of the configuration. Validation tests can be executed
+in both 'online' as well as 'offline' mode.
+
+Online mode will query the running configuration of a running NGFW via it's API.
+
+Offline node will execute the tests against an uploaded configuration file. This is especially useful to checking
+things like configuration backups, or devices where direct API access is not possible. 
 
 
 .. _jinja: https://jinja.palletsprojects.com/en/2.10.x/templates/

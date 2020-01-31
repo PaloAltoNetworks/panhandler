@@ -16,8 +16,9 @@ with the latest released version.
     curl -s -k -L http://bit.ly/2xui5gM | bash
 
 
-If you need special requirements, such as custom volume mounts or non-standard ports, you may use one of the
-following `docker run` commandsL:
+This command will bring up
+If you need special requirements, such as custom volume mounts, non-default username and password, or
+non-standard ports, you should use one of the following `docker run` commands:
 
 Running the Panhandler Docker Container
 ---------------------------------------
@@ -62,7 +63,7 @@ To persist any environments and secrets, you can mount a volume on the `/home/cn
 
 .. code-block:: bash
 
-    docker run -t -p 9999:80 -v ~:/home/cnc_user paloaltonetworks/panhandler
+    docker run -t -p 9999:8080 -v ~:/home/cnc_user paloaltonetworks/panhandler
 
 .. Note::
     The -t option for `terminal` allows you to view panhandler output data in the terminal window.
