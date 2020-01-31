@@ -9,6 +9,18 @@ and share them among different devices as a single unit. Often times these confi
 file provides a means to templatize these configurations and present a list of customization points, or variables,
 to the end user or consumer.
 
+
+IronSkillet
+------------
+
+The very first, and most well known, Skillet is `IronSkillet <https://github.com/PaloAltoNetworks/iron-skillet>`_. This
+was developed as a way to share best practice Day One configurations in an easy to deploy manner without requiring
+'a million clicks'.
+
+Much more information about IronSkilet can be found on
+`Readthedocs <https://iron-skillet.readthedocs.io/en/docs_master/>`_.
+
+
 Basic concepts
 --------------
 
