@@ -121,6 +121,7 @@ function create_panhandler_container {
   if [[ ${IMAGE_TAG} == latest ]];
    then
       # shellcheck disable=SC2086
+      ensure_docker_volume
       docker run -p ${DEFAULT_PORT}:${LATEST_EXPOSED_PORT} -t -d -v "$CNC_VOLUME":/home/cnc_user/.pan_cnc \
               -v "$HOME/.azure:/home/cnc_user/.azure" \
               -v "$HOME/.config:/home/cnc_user/.config" \
