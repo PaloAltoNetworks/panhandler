@@ -25,7 +25,7 @@ export LATEST_EXPOSED_PORT=8080
 
 # default panhandler auth if not set from the environment
 export "${CNC_USERNAME:=paloalto}"
-export "${CNC_PASSWORD:-panhandler}"
+export "${CNC_PASSWORD:=panhandler}"
 
 function ensure_docker_volume {
   if [[ ! $(docker volume ls -q -f name=$CNC_VOLUME) ]];
