@@ -2,7 +2,7 @@ More Example Skillets
 =====================
 
 
-Example Skillets by Type:
+Example Skillets by Type
 -------------------------
 
 :ref:`example_panos`
@@ -18,8 +18,8 @@ Example Skillets by Type:
 :ref:`example_validation`
 
 
-Example Skillets by Feature:
------------------------------
+Example Skillets by Feature
+---------------------------
 
 :ref:`example_complex_validation`
 

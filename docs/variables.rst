@@ -7,7 +7,7 @@ Variables in a Skillet determine what a user can modify or customize before depl
 generated into a web form that a user can fill out. Each variable can have it's own 'type' determined by the 'type_hint'
 attribute in the variable declaration. This page lists all the available type hints for reference.
 
-Variable Types:
+Variable Types
 ^^^^^^^^^^^^^^^
 
 * text
