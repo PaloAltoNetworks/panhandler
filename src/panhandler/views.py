@@ -307,15 +307,20 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             return f'/panhandler/repo_detail/{repo_name}'
 
         msg = git_utils.update_repo(repo_dir, branch)
+
         if 'Error' in msg:
             level = messages.ERROR
             cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
-        # msg updated will catch both switching branches as well as new commits
+
         elif 'updated' in msg or 'Checked out new' in msg:
+            # msg updated will catch both switching branches as well as new commits
             # since this repoo has been updated, we need to ensure the caches are all in sync
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
             git_utils.update_repo_in_cache(repo_name, repo_dir, self.app_dir)
+
+            # remove all python3 init touch files if there is an update
+            task_utils.python3_reset_init(repo_dir)
 
             level = messages.INFO
         else:
@@ -352,6 +357,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
                                          f' repository: {url} with branch: {branch}')
 
         debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
+
         if debug_errors:
             messages.add_message(self.request, messages.ERROR, 'Found Skillets with errors! Please open an issue on '
                                                                'this repository to help resolve this issue')
@@ -360,6 +366,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
                     for e in d['err_list']:
                         if d['severity'] == 'warn':
                             level = messages.WARNING
+
                         else:
                             level = messages.ERROR
 
@@ -377,10 +384,12 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
 
         try:
             base_path.stat()
+
         except PermissionError:
             messages.add_message(self.request, messages.ERROR,
                                  'Could not update, Permission Denied')
             return '/panhandler/repos'
+
         except OSError:
             messages.add_message(self.request, messages.ERROR,
                                  'Could not update, Access Error for repository directory')
@@ -393,19 +402,26 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
 
         err_condition = False
         updates = list()
+
         for d in base_path.iterdir():
             git_dir = d.joinpath('.git')
+
             if git_dir.exists() and git_dir.is_dir():
-                msg = git_utils.update_repo(d)
+                msg = git_utils.update_repo(str(d))
+
                 if 'Error' in msg:
                     print(f'Error updating Repository: {d.name}')
                     print(msg)
                     messages.add_message(self.request, messages.ERROR, f'Could not update repository {d.name}')
                     err_condition = True
+
                 elif 'updated' in msg or 'Checked out new' in msg:
                     print(f'Updated Repository: {d.name}')
                     updates.append(d.name)
                     cnc_utils.set_long_term_cached_value(self.app_dir, f'{d.name}_detail', None, 0, 'git_repo_details')
+
+                    # remove all python3 init touch files if there is an update
+                    task_utils.python3_reset_init(str(d))
 
         if not err_condition:
             repos = ", ".join(updates)
