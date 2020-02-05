@@ -49,7 +49,7 @@ will be evaluated as a jinja boolean expression. True values are considered to h
           # This example uses a complex XPATH query to find a list of all file-blocking profile entries that have
           # either the desired file-type as a member or 'any'
           - name: fb_profiles
-            capture_object: |
+            capture_list: |
               /config/devices/entry[@name='localhost.localdomain']/vsys/entry[@name='vsys1']/profiles/file-blocking//
               entry/rules/entry/file-type/member[text()="{{ file_type }}" or text()="any"]/../..
             # This further filters the list to *only* include those items that have an action of 'block'

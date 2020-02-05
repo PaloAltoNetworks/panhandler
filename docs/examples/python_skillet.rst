@@ -48,11 +48,9 @@ specific variables from the output. For more inforation on JSON Path expression,
         output_type: json
         outputs:
           - name: captured_username
-            capture_pattern: 'output_example.captured_username'
+            capture_value: 'output_example.captured_username'
           - name: captured_secret
-            capture_pattern: 'output_example.captured_secret'
-
-
+            capture_value: 'output_example.captured_secret'
 
 Snippet Details
 ----------------
