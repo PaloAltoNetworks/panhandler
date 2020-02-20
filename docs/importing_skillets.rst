@@ -21,6 +21,11 @@ shown.
 .. image:: images/ph-github-clone-url.png
 
 
+.. warning::
+
+    Private Repositories and SSH based URLs are currently not supported
+
+
 Also, note which branch you want to import. The list of available branches can be found in Github by clicking
 the 'Branch: master' button on the main page of the repository.
 

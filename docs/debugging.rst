@@ -75,7 +75,7 @@ Update to the latest docker image and create a new container
 .. code::
 
     docker pull paloaltonetworks/panhandler:latest
-    docker run -t -v $HOME:/root -p 8080:80 paloaltonetworks/panhandler:latest
+    docker run -t -v $HOME:/home/cnc_user -p 8080:8080 paloaltonetworks/panhandler:latest
 
 
 File a bug

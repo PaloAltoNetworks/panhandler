@@ -11,20 +11,21 @@
 #
 ########################################################################################################################
 
-export IMAGE_TAG=latest
-export DEFAULT_PORT=8080
+export IMAGE_TAG="${IMAGE_TAG:=latest}"
+export DEFAULT_PORT="${DEFAULT_PORT:=8080}"
+export FORCE_DEFAULT_PORT="${FORCE_DEFAULT_PORT:=false}"
+
 export RESET_REPOSITORIES=false
 export NEEDS_UPDATE=false
-export FORCE_DEFAULT_PORT=false
 export CNC_VOLUME=pan_cnc_volume
 
 # used for filtering containers
 export DEV_EXPOSED_PORT=8080
 export LATEST_EXPOSED_PORT=8080
 
-# default panhandler auth
-export CNC_USERNAME=paloalto
-export CNC_PASSWORD=panhandler
+# default panhandler auth if not set from the environment
+export CNC_USERNAME="${CNC_USERNAME:=paloalto}"
+export CNC_PASSWORD="${CNC_PASSWORD:=panhandler}"
 
 function ensure_docker_volume {
   if [[ ! $(docker volume ls -q -f name=$CNC_VOLUME) ]];
@@ -120,15 +121,20 @@ function create_panhandler_container {
   if [[ ${IMAGE_TAG} == latest ]];
    then
       # shellcheck disable=SC2086
+      ensure_docker_volume
       docker run -p ${DEFAULT_PORT}:${LATEST_EXPOSED_PORT} -t -d -v "$CNC_VOLUME":/home/cnc_user/.pan_cnc \
-      -e CNC_USERNAME \
-      -e CNC_PASSWORD \
-      --name panhandler ${PANHANDLER_IMAGE}
+              -v "$HOME/.azure:/home/cnc_user/.azure" \
+              -v "$HOME/.config:/home/cnc_user/.config" \
+              -e CNC_USERNAME \
+              -e CNC_PASSWORD \
+              --name panhandler ${PANHANDLER_IMAGE}
   else
       # this is only necessary while 2.3 is in development
       # shellcheck disable=SC2086
       ensure_docker_volume
       docker run -p "${DEFAULT_PORT}":${DEV_EXPOSED_PORT} -t -d -v "$CNC_VOLUME":/home/cnc_user/.pan_cnc \
+              -v "$HOME/.azure:/home/cnc_user/.azure" \
+              -v "$HOME/.config:/home/cnc_user/.config" \
               -e CNC_USERNAME \
               -e CNC_PASSWORD \
               --name "panhandler_${IMAGE_TAG}" "${PANHANDLER_IMAGE}"

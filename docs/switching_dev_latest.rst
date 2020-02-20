@@ -28,7 +28,7 @@ and run again. The example uses port 9999 for web access.
     docker stop $PANHANDLER_ID
     docker rm -f $PANHANDLER_ID
     docker pull $PANHANDLER_IMAGE
-    docker run -t -p 9999:80 -t -v $HOME/.pan_cnc:/root/.pan_cnc $PANHANDLER_IMAGE
+    docker run -t -p 9999:80 -t -v $HOME/.pan_cnc:/home/cnc_user/.pan_cnc $PANHANDLER_IMAGE
 
 
 Updating the Running Develop Version
@@ -78,7 +78,7 @@ The develop version container will be deleted.
     docker stop $PANHANDLER_ID
     docker rm -f $PANHANDLER_ID
     docker pull $PANHANDLER_IMAGE_M
-    docker run -t -p 9999:80 -t -v $HOME/.pan_cnc:/root/.pan_cnc $PANHANDLER_IMAGE_M
+    docker run -t -p 9999:80 -t -v $HOME/.pan_cnc:/home/cnc_user/.pan_cnc $PANHANDLER_IMAGE_M
 
 
 When switching between dev and latest clear the cache with:

@@ -6,10 +6,6 @@ repositories:
     url: https://github.com/PaloAltoNetworks/iron-skillet.git
     branch: panos_v9.0
     destination_directory: Iron-Skillet
-  - name: Default Skillets
-    url: https://github.com/PaloAltoNetworks/Skillets.git
-    branch: master
-    destination_directory: Default Skillets
 
 application_data:
   recommended_repos_link: http://bit.ly/2XmZ7Il

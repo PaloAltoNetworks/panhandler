@@ -1,5 +1,5 @@
-Panhandler Metadata Files
-=========================
+Skillets
+========
 
 The heart of Panhandler is the `.meta-cnc.yaml` file. This allows a set of configuration snippets, known as a skillet,
 to be shared and consumed as a single unit. For example, to configure a default security profile you may need to
@@ -8,6 +8,18 @@ and share them among different devices as a single unit. Often times these confi
 (affectionately called 'skillets') need slight customization before deployment to a new device. The `.meta-cnc.yaml`
 file provides a means to templatize these configurations and present a list of customization points, or variables,
 to the end user or consumer.
+
+
+IronSkillet
+------------
+
+The very first, and most well known, Skillet is `IronSkillet <https://github.com/PaloAltoNetworks/iron-skillet>`_. This
+was developed as a way to share best practice Day One configurations in an easy to deploy manner without requiring
+'a million clicks'.
+
+Much more information about IronSkilet can be found on
+`Readthedocs <https://iron-skillet.readthedocs.io/en/docs_master/>`_.
+
 
 Basic concepts
 --------------
@@ -110,21 +122,30 @@ Required fields for each metadata type is listed below:
 
 * panos, panorama, panorama-gpcs
     * name - name of this snippet
-    * cmd - operation to perform. Default is 'set'. Any valid PAN-OS API Command is accepted
-        (set, edit, override, get, show, etc)
+    * cmd - operation to perform. Default is 'set'. Any valid PAN-OS API Command is accepted (set, edit, override, get, show, etc)
     * xpath - XPath where this fragment belongs
     * file - path to the XML fragment to load and parse
     * element - inline XML fragment to load and parse. Can be used in leu of a separate 'file' field
+
+    See Example here: :ref:`example_panos`
+
 * pan_validation
     * name - name of the validation test to perform
     * cmd - validate, validate_xml, noop, or parse. Default is validate
     * test - Boolean test to perform using jinja expressions
+
+    See Example here: :ref:`example_validation`
+
 * template
     * name - name of this snippet
     * file - path to the jinja2 template to load and parse
     * template_title - Optional title to include in rendered output
+
 * terraform
     * None - snippets are not used for terraform
+
+    See Example here: :ref:`example_terraform`
+
 * rest
     * name - unique name for this rest operation
     * path - REST URL path component `path: http://host/api/?type=keygen&user={{ username }}&password={{ password }}`
@@ -133,6 +154,9 @@ Required fields for each metadata type is listed below:
         .. note:: For x-www-form-urlencded this must be a json dictionary
     * headers - a dict of key value pairs to add to the http headers
         .. note:: for example: `Content-Type: application/json`
+
+    See Example here: :ref:`example_rest` and here: :ref:`example_rest_with_output`
+
 * python3
     * name - name of the script to execute
     * file - relative path to the python script to execute
@@ -143,6 +167,7 @@ Required fields for each metadata type is listed below:
       `user_input` is the value entered for that variable from the user. The other option, 'env' use cause all
       defined variables to be set in the environment of the python process.
 
+    See Example here: :ref:`example_python`
 
 Defining Variables for User input
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -180,12 +205,7 @@ variable defined in the `variables` list should define the following:
 Variable Examples:
 ^^^^^^^^^^^^^^^^^^
 
-* text
-
-  Default input type for user input. Optional `allow_special_characters` if false will ensure only
-  letters, digits, underscore, hyphens, and spaces are allowed in the input. Set to True to allow all special
-  characters. Default is to allow special characters. Optional `attributes` allows forcing a minimum and/or
-  maximum length of the entered value.
+Here is an example variable declaration.
 
 .. code-block:: yaml
 
@@ -200,224 +220,7 @@ Variable Examples:
       max: 256
 
 
-* password
-
-  This type will mask user input by rendering a password type input box.
-
-.. code-block:: yaml
-
-  - name: user_password
-    description: Firewall Password
-    default:
-    type_hint: password
-
-
-* ip_address
-
-  This type will ensure the entered value matches an IPv4 or IPv6 pattern without a subnet mask.
-
-.. code-block:: yaml
-
-  - name: ip_address
-    description: IP Address
-    default: 0.0.0.0
-    type_hint: ip_address
-
-* fqdn_or_ip
-
-  This type will ensure the entered value matches an IPv4, IPv6, or a valid hostname pattern. This is the most
-  flexible option for hostname, FQDNs, ip addresses or CIDRs.
-
-.. code-block:: yaml
-
-  - name: host
-    description: Target Host
-    default: 0.pool.ntp.org
-    type_hint: fqdn_or_ip
-
-* url
-
-  This type will ensure the entered value matches a valid URL scheme.
-
-.. code-block:: yaml
-
-  - name: clone_url
-    description: Git Repo Clone URL
-    default: https://github.com/PaloAltoNetworks/Skillets.git
-    type_hint: url
-
-* cidr
-
-  This type will ensure the entered value matches an IPv4 or IPv6 CIDR.
-
-.. code-block:: yaml
-
-  - name: ip_address
-    description: IP Address
-    default: 192.168.122.2/24
-    type_hint: cidr
-
-* email
-
-  This type will ensure the entered value matches an email pattern.
-
-.. code-block:: yaml
-
-  - name: email
-    description: Email
-    default: support@noway.com
-    type_hint: email
-    help_text: Enter your email address here to receive lots of spam
-
-* number
-
-  This type will ensure the entered value is an integer. You may optionally supply the `min` and `max`
-  attributes to ensure the entered value do not exceed or fall below those values.
-
-.. code-block:: yaml
-
-  - name: vlan_id
-    description: VLAN ID
-    default: 1001
-    type_hint: number
-    attributes:
-      min: 1000
-      max: 2000
-
-
-* float
-
-  This type will ensure the entered value is a float. You may optionally supply the `min` and `max`
-  attributes to ensure the entered value do not exceed or fall below those values.
-
-.. code-block:: yaml
-
-  - name: price_per_mbps
-    description: Price Per Mbps
-    default: 1.50
-    type_hint: float
-    attributes:
-      min: 1.00
-      max: 500.00
-
-* dropdown
-
-  This type will render a `select` input control. This ensures the user can only select one of the options
-  given in the `dd_list`.
-
-.. code-block:: yaml
-
-  - name: yes_no
-    description: Yes No
-    default: 'no'
-    type_hint: dropdown
-    dd_list:
-      - key: 'Yes I do'
-        value: 'yes'
-      - key: 'No I dont'
-        value: 'no'
-
-.. note::
-
-    The `default` parameter should match the `value` and not the `key`. The `key` is what will be shown to the user
-    and the `value` is what will be used as the value of the variable identified by `name`.
-
-.. warning::
-
-    Some values such as `yes`, `no`, `true`, `false`, `on`, `off`, etc are treated differently in YAML. To ensure these values are
-    not converted to a `boolean` type, ensure to put single quotes `'` around both the `key` and the `value` as in
-    the example above. Refer to the YAML specification for more details: https://yaml.org/type/bool.html
-
-* text_area
-
-  This type renders a `TextArea` input control. This allows the user to enter multiple lines of input. The optional
-  `attributes` attribute allows you to customize the size of the text area control.
-
-.. code-block:: yaml
-
-  - name: text_area
-    description: Multi-Line Input
-    default: |
-      This is some very long input with lots of
-      newlines and white    space
-      and stuff. The optional attributes key can also be specified
-      to control now the text_area is rendered in panhandler and other cnc apps.
-    type_hint: text_area
-    attributes:
-      rows: 5
-      cols: 10
-
-* json
-
-  This type renders a `TextArea` input control and ensures the input is properly formatted JSON data
-
-.. code-block:: yaml
-
-  - name: json_string
-    description: JSON Input
-    default: |
-        {
-            "key_test": "value_test",
-            "key2_test": "value2_test",
-        }
-    type_hint: json
-
-* disabled
-
-  This type will show the default value in an input control, but the user cannot change it. This is useful to
-  show values but not allow then to be changed.
-
-.. code-block:: yaml
-
-  - name: DISABLED
-    description: No Bueno
-    default: panos-01
-    type_hint: disabled
-
-* radio
-
-  This type allows the user to select one option out of the `rad_list`.
-
-.. code-block:: yaml
-
-  - name: radio_box_example
-    description: radios
-    default: maybe
-    type_hint: radio
-    rad_list:
-      - key: 'Yes'
-        value: 'yes'
-      - key: 'No'
-        value: 'no'
-      - key: 'Maybe'
-        value: 'maybe'
-
-* list
-
-  This type will allow the user to input multiple entries. The values of the multiple
-  entries will be converted to an appropriate type for the Skillet type being used. For
-  python, the entries will be converted to a comma separated list. For Terraform, the
-  values will be converted to a terraform appropriate string representation.
-
-.. code-block:: yaml
-
-  - name: list_input
-    description: IP Subnets
-    default: 10.10.10.1/24
-    type_hint: list
-
-* hidden
-
-  This type will NOT show an input form control to the user, but the default value will be passed to the
-  skillet. This is useful is you want to 'capture' an input from another skillet and pass it into the input
-  of this skillet without having to include it in the input form.
-
-.. code-block:: yaml
-
-  - name: previous_value
-    description: from previous skillet in workflow
-    default: some_value
-    type_hint: hidden
+See :ref:`Variables` for a complete reference of all available type_hints.
 
 
 Hints

@@ -134,15 +134,41 @@ class ImportRepoView(CNCBaseFormView):
                                                  'imported_git_repos')
 
             debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
+
+            # check each snippet found for dependencies
+            loaded_skillets = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
+            for skillet in loaded_skillets:
+                for depends in skillet['depends']:
+                    url = depends.get('url', None)
+                    name = depends.get('name', None)
+                    branch = depends.get('branch', 'master')
+
+                    # now check each repo to see if we already have it, add an error if not
+                    found = False
+
+                    for repo in repos:
+                        if repo['url'] == url and repo['branch'] == branch:
+                            found = True
+                            break
+
+                    if not found:
+                        messages.add_message(self.request, messages.ERROR,
+                                             f'Unresolved Dependency found!! Please ensure you import the following'
+                                             f'repository: {url} with branch: {branch}')
+
             if debug_errors:
                 messages.add_message(self.request, messages.ERROR,
                                      'Found Skillets with errors! Please open an issue on '
                                      'this repository to help resolve this issue')
+
                 for d in debug_errors:
                     if 'err_list' in d and 'path' in d and 'severity' in d:
+
                         for e in d['err_list']:
+
                             if d['severity'] == 'warn':
                                 level = messages.WARNING
+
                             else:
                                 level = messages.ERROR
 
@@ -171,24 +197,30 @@ class ListReposView(CNCView):
                                      'Could not load repositories from directory as it does not exists')
                 context['repos'] = list()
                 return context
+
         except PermissionError as pe:
             print(pe)
             context['repos'] = list()
             return context
+
         except OSError as oe:
             print(oe)
             context['repos'] = list()
             return context
 
         repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
+
         if repos is not None:
             print(f'Returning cached repos')
             context['repos'] = repos
+
         else:
             repos = list()
+
             for d in snippets_dir.iterdir():
                 # git_dir = os.path.join(d, '.git')
                 git_dir = d.joinpath('.git')
+
                 if git_dir.exists() and git_dir.is_dir():
                     repo_detail = git_utils.get_repo_details(d.name, d, self.app_dir)
                     repos.append(repo_detail)
@@ -226,12 +258,14 @@ class RepoDetailsView(CNCView):
 
         if os.path.exists(repo_dir):
             repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+
         else:
             repo_detail = dict()
             repo_detail['name'] = 'Repository directory not found'
 
         try:
             snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
+
         except CCFParserError:
             messages.add_message(self.request, messages.ERROR, 'Could not read all snippets from repo. Parser error')
             snippets_from_repo = list()
@@ -241,9 +275,11 @@ class RepoDetailsView(CNCView):
         for skillet in snippets_from_repo:
             if 'labels' in skillet and 'collection' in skillet['labels']:
                 collection = skillet['labels']['collection']
+
                 if type(collection) is str:
                     if collection not in collections:
                         collections.append(collection)
+
                 elif type(collection) is list:
                     for collection_member in collection:
                         if collection_member not in collections:
@@ -271,15 +307,20 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             return f'/panhandler/repo_detail/{repo_name}'
 
         msg = git_utils.update_repo(repo_dir, branch)
+
         if 'Error' in msg:
             level = messages.ERROR
             cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
-        # msg updated will catch both switching branches as well as new commits
+
         elif 'updated' in msg or 'Checked out new' in msg:
+            # msg updated will catch both switching branches as well as new commits
             # since this repoo has been updated, we need to ensure the caches are all in sync
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
             git_utils.update_repo_in_cache(repo_name, repo_dir, self.app_dir)
+
+            # remove all python3 init touch files if there is an update
+            task_utils.python3_reset_init(repo_dir)
 
             level = messages.INFO
         else:
@@ -294,7 +335,29 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             messages.add_message(self.request, messages.INFO, 'New Branches are available')
             git_utils.update_repo_in_cache(repo_name, repo_dir, self.app_dir)
 
+        # check each snippet found for dependencies
+        repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
+        loaded_skillets = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
+        for skillet in loaded_skillets:
+            for depends in skillet['depends']:
+                url = depends.get('url', None)
+                branch = depends.get('branch', 'master')
+
+                # now check each repo to see if we already have it, add an error if not
+                found = False
+
+                for repo in repos:
+                    if repo['url'] == url and repo['branch'] == branch:
+                        found = True
+                        break
+
+                if not found:
+                    messages.add_message(self.request, messages.ERROR,
+                                         f'Unresolved Dependency found!! Please ensure you import the following'
+                                         f' repository: {url} with branch: {branch}')
+
         debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
+
         if debug_errors:
             messages.add_message(self.request, messages.ERROR, 'Found Skillets with errors! Please open an issue on '
                                                                'this repository to help resolve this issue')
@@ -303,6 +366,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
                     for e in d['err_list']:
                         if d['severity'] == 'warn':
                             level = messages.WARNING
+
                         else:
                             level = messages.ERROR
 
@@ -320,10 +384,12 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
 
         try:
             base_path.stat()
+
         except PermissionError:
             messages.add_message(self.request, messages.ERROR,
                                  'Could not update, Permission Denied')
             return '/panhandler/repos'
+
         except OSError:
             messages.add_message(self.request, messages.ERROR,
                                  'Could not update, Access Error for repository directory')
@@ -336,19 +402,26 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
 
         err_condition = False
         updates = list()
+
         for d in base_path.iterdir():
             git_dir = d.joinpath('.git')
+
             if git_dir.exists() and git_dir.is_dir():
-                msg = git_utils.update_repo(d)
+                msg = git_utils.update_repo(str(d))
+
                 if 'Error' in msg:
                     print(f'Error updating Repository: {d.name}')
                     print(msg)
                     messages.add_message(self.request, messages.ERROR, f'Could not update repository {d.name}')
                     err_condition = True
+
                 elif 'updated' in msg or 'Checked out new' in msg:
                     print(f'Updated Repository: {d.name}')
                     updates.append(d.name)
                     cnc_utils.set_long_term_cached_value(self.app_dir, f'{d.name}_detail', None, 0, 'git_repo_details')
+
+                    # remove all python3 init touch files if there is an update
+                    task_utils.python3_reset_init(str(d))
 
         if not err_condition:
             repos = ", ".join(updates)
@@ -690,6 +763,46 @@ class ViewValidationResultsView(EditTargetView):
     title = 'Validation - Step 2'
     template_name = 'pan_cnc/dynamic_form.html'
 
+    def get_header(self) -> str:
+        workflow_name = self.request.session.get('workflow_name', None)
+        next_step = self.request.session.get('workflow_ui_step', None)
+
+        header = self.header
+        if workflow_name is not None:
+            workflow_skillet_dict = snippet_utils.load_snippet_with_name(workflow_name, self.app_dir)
+            if workflow_skillet_dict is not None:
+                header = workflow_skillet_dict.get('label', self.header)
+
+        if next_step is None:
+            return header
+        else:
+            return f"Step {next_step}: {header}"
+
+    def get(self, request, *args, **kwargs) -> Any:
+        """
+        """
+        mode = self.get_value_from_workflow('mode', 'online')
+        workflow_name = self.request.session.get('workflow_name', False)
+
+        if mode == 'online' and workflow_name:
+
+            if {'TARGET_IP', 'TARGET_USERNAME', 'TARGET_PASSWORD'}.issubset(self.get_workflow().keys()):
+                print('Skipping validation input as we already have this information cached')
+                snippet = self.get_value_from_workflow('snippet_name', None)
+                self.meta = snippet_utils.load_snippet_with_name(snippet, self.app_dir)
+
+                target_ip = self.get_value_from_workflow('TARGET_IP', '')
+                # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
+                target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
+                target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
+                data = {'TARGET_IP': target_ip, 'TARGET_USERNAME': target_username, 'TARGET_PASSWORD': target_password}
+                form = self.generate_dynamic_form(data=data)
+
+                # this is part of a workflow, and we already have this information in the context
+                return self.form_valid(form)
+
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs) -> dict:
         context = super().get_context_data(**kwargs)
         context['title'] = self.title
@@ -769,6 +882,7 @@ class ViewValidationResultsView(EditTargetView):
         context['title'] = meta['label']
         context['base_html'] = self.base_html
         context['app_dir'] = self.app_dir
+        context['view'] = self
 
         # Always grab all the default values, then update them based on user input in the workflow
         jinja_context = dict()
@@ -780,17 +894,29 @@ class ViewValidationResultsView(EditTargetView):
         jinja_context.update(self.get_workflow())
 
         if mode == 'online':
-            # Grab the values from the form, this is always hard-coded in this class
-            target_ip = self.request.POST.get('TARGET_IP', None)
-            # target_port = self.request.POST.get('TARGET_IP', 443)
-            target_username = self.request.POST.get('TARGET_USERNAME', None)
-            target_password = self.request.POST.get('TARGET_PASSWORD', None)
+            # if we are in a workflow, then the input form was skipped and we are using the
+            # values previously saved!
+            workflow_name = self.request.session.get('workflow_name', False)
 
-            self.save_value_to_workflow('TARGET_IP', target_ip)
-            # self.save_value_to_workflow('TARGET_PORT', target_port)
-            self.save_value_to_workflow('TARGET_USERNAME', target_username)
+            if workflow_name:
+                target_ip = self.get_value_from_workflow('TARGET_IP', '')
+                # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
+                target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
+                target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
+
+            else:
+                # Grab the values from the form, this is always hard-coded in this class
+                target_ip = self.request.POST.get('TARGET_IP', None)
+                # target_port = self.request.POST.get('TARGET_IP', 443)
+                target_username = self.request.POST.get('TARGET_USERNAME', None)
+                target_password = self.request.POST.get('TARGET_PASSWORD', None)
+
+                self.save_value_to_workflow('TARGET_IP', target_ip)
+                # self.save_value_to_workflow('TARGET_PORT', target_port)
+                self.save_value_to_workflow('TARGET_USERNAME', target_username)
 
             err_condition = False
+
             if target_ip is None or target_ip == '':
                 form.add_error('TARGET_IP', 'Host entry cannot be blank')
                 err_condition = True

@@ -17,7 +17,7 @@
 {% block content %}
     <div class="card border-primary mb-5 shadow-lg">
         <div class="card-header">
-            {{ header }}
+            {{ view.get_header|default:header }}
         </div>
         <div class="card-body">
             <h4 class="card-title">

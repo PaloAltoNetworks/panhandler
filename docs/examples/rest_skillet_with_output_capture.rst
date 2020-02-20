@@ -1,3 +1,5 @@
+.. _`example_rest_with_output`:
+
 Example REST Skillet with Output Capturing
 ==========================================
 
