@@ -128,6 +128,11 @@ class ImportRepoView(CNCBaseFormView):
             # no need to evict all these items, just grab the new repo details and append it to list and re-cache
             # cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
             repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
+
+            # FIX for #148
+            if repos is None:
+                repos = list()
+
             repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
             repos.append(repo_detail)
             cnc_utils.set_long_term_cached_value(self.app_dir, 'imported_repositories', repos, 604800,
