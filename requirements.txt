@@ -4,6 +4,7 @@ azure-cli
 celery
 django
 django-widget-tweaks
+docker
 jinja2
 jsonpath-ng
 netaddr
