@@ -18,4 +18,5 @@ urllib3
 virtualenv
 xmldiff
 xmltodict
-skilletlib
+git+git://github.com/paloaltonetworks/skilletlib.git@develop#egg=skilletlib
+
