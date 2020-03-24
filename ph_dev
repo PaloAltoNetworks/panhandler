@@ -18,6 +18,7 @@ export FORCE_DEFAULT_PORT="${FORCE_DEFAULT_PORT:=false}"
 export RESET_REPOSITORIES=false
 export NEEDS_UPDATE=false
 export CNC_VOLUME=pan_cnc_volume
+export PANHANDLER_VOLUME=panhandler_volume
 
 # used for filtering containers
 export DEV_EXPOSED_PORT=8080
@@ -32,6 +33,12 @@ function ensure_docker_volume {
   then
     echo "Creating data volume"
     docker volume create $CNC_VOLUME
+  fi
+
+  if [[ ! $(docker volume ls -q -f name=$PANHANDLER_VOLUME) ]];
+  then
+    echo "Creating home volume"
+    docker volume create $PANHANDLER_VOLUME
   fi
 }
 
@@ -77,7 +84,7 @@ function find_panhandler_container_id {
   PANHANDLER_ID=$(docker ps -a -q -l -f name=panhandler -f expose="${EXPOSED_PORT}")
   if validate_container_id "${PANHANDLER_ID}";
   then
-    # since the acenstor is incorrect, we know we're gonna need to stop, rm, and recreate
+    # since the ancestor is incorrect, we know we're gonna need to stop, rm, and recreate
     NEEDS_UPDATE=true
     export NEEDS_UPDATE
     echo "${PANHANDLER_ID}"
@@ -94,7 +101,7 @@ function find_panhandler_container_id {
                   )
   if validate_container_id "${PANHANDLER_ID}";
   then
-    # since the acenstor is incorrect, we know we're gonna need to stop, rm, and recreate
+    # since the ancestor is incorrect, we know we're gonna need to stop, rm, and recreate
     NEEDS_UPDATE=true
     export NEEDS_UPDATE
     echo "${PANHANDLER_ID}"
@@ -120,7 +127,9 @@ function create_panhandler_container {
   echo " "
   # shellcheck disable=SC2086
   ensure_docker_volume
-  docker run -p ${DEFAULT_PORT}:${LATEST_EXPOSED_PORT} -t -d -v "$CNC_VOLUME":/home/cnc_user/.pan_cnc \
+  docker run -p ${DEFAULT_PORT}:${LATEST_EXPOSED_PORT} -t -d \
+          -v "$PANHANDLER_VOLUME":/home/cnc_user \
+          -v "$CNC_VOLUME":/home/cnc_user/.pan_cnc \
           -v "/var/run/docker.sock:/var/run/docker.sock" \
           -e CNC_USERNAME \
           -e CNC_PASSWORD \
@@ -264,7 +273,7 @@ if [[ -z "${PANHANDLER_ID}" ]];
 else
   echo " "
   echo "  Found container id of ${PANHANDLER_ID}"
-  # we have a valid conatiner id from a previous run, let's ensure it has the correct image as it's ancestor
+  # we have a valid container id from a previous run, let's ensure it has the correct image as it's ancestor
   if container_has_correct_image;
   then
     echo " "
