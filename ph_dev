@@ -153,13 +153,23 @@ function get_existing_published_port {
 
 function create_panhandler_docker_group {
 
+    # check if on a mac - this is only needed on Linux
+    uname -a | grep -i darwin >/dev/null
+    if [ $? -eq 0 ];
+     then
+            echo "No need on mac"
+       return 0
+    fi
+
     echo "Checking Docker groups"
-    sleep 5
+    # allow time for container to spin up
+    sleep 2
+    # get the ID of the new container
     CONTAINER_ID=$(find_panhandler_container_id)
     DOCKER_SOCKET=/var/run/docker.sock
 
     if [ -S ${DOCKER_SOCKET} ]; then
-        DOCKER_GID=$(stat -f '%g' ${DOCKER_SOCKET})
+        DOCKER_GID=$(stat -c '%g' ${DOCKER_SOCKET})
         if [ ${DOCKER_GID} -ne 1 ];
         then
             echo "Creating Docker group"
