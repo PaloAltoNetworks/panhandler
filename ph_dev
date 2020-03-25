@@ -152,7 +152,9 @@ function get_existing_published_port {
 }
 
 function create_panhandler_docker_group {
-    
+
+    echo "Checking Docker groups"
+    sleep 5
     CONTAINER_ID=$(find_panhandler_container_id)
     DOCKER_SOCKET=/var/run/docker.sock
 
@@ -162,6 +164,8 @@ function create_panhandler_docker_group {
         then
             echo "Creating Docker group"
             docker exec ${CONTAINER_ID} sh -c "addgroup -g ${DOCKER_GID} panhandler && addgroup cnc_user panhandler"
+            sleep 3
+            docker restart ${CONTAINER_ID}
         fi
     fi
 }
