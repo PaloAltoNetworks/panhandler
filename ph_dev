@@ -299,6 +299,7 @@ if [[ -z "${PANHANDLER_ID}" ]];
     echo " "
     echo "  ${PANHANDLER_IMAGE} has not been started..."
     create_panhandler_container
+    create_panhandler_docker_group
 else
   echo " "
   echo "  Found container id of ${PANHANDLER_ID}"
