@@ -151,6 +151,21 @@ function get_existing_published_port {
     fi
 }
 
+function create_panhandler_docker_group {
+    
+    CONTAINER_ID=$(find_panhandler_container_id)
+    DOCKER_SOCKET=/var/run/docker.sock
+
+    if [ -S ${DOCKER_SOCKET} ]; then
+        DOCKER_GID=$(stat -f '%g' ${DOCKER_SOCKET})
+        if [ ${DOCKER_GID} -ne 1 ];
+        then
+            echo "Creating Docker group"
+            docker exec ${CONTAINER_ID} sh -c "addgroup -g ${DOCKER_GID} panhandler && addgroup cnc_user panhandler"
+        fi
+    fi
+}
+
 while getopts ":t:r:p:w:u:h" opt; do
   case ${opt} in
     t)
@@ -308,6 +323,7 @@ else
       docker rm -f "${PANHANDLER_ID}"
 
       create_panhandler_container
+      create_panhandler_docker_group
   else
       DEFAULT_PORT=$(get_existing_published_port)
       echo " "
