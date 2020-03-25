@@ -173,7 +173,7 @@ function create_panhandler_docker_group {
         if [ ${DOCKER_GID} -ne 1 ];
         then
             echo "Creating Docker group"
-            docker exec ${CONTAINER_ID} sh -c "addgroup -g ${DOCKER_GID} panhandler && addgroup cnc_user panhandler"
+            docker exec -u root ${CONTAINER_ID} sh -c "addgroup -g ${DOCKER_GID} panhandler && addgroup cnc_user panhandler"
             sleep 3
             docker restart ${CONTAINER_ID}
         fi
