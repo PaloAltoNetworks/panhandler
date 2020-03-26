@@ -647,9 +647,8 @@ class ListSkilletsInCollectionView(CNCView):
         context = super().get_context_data(**kwargs)
         collection = self.kwargs.get('collection', 'Kitchen Sink')
         print(f'Getting all snippets with collection label {collection}')
-        if collection == 'Kitchen Sink':
-            skillets = snippet_utils.load_all_snippets_without_label_key(self.app_dir, 'collection')
-        elif collection == 'All Skillets':
+
+        if collection == 'All Skillets':
             skillets = snippet_utils.load_all_snippets(self.app_dir)
         else:
             skillets = snippet_utils.load_snippets_by_label('collection', collection, self.app_dir)

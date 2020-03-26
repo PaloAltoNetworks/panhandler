@@ -5,6 +5,7 @@ celery
 django
 django-widget-tweaks
 docker
+cryptography
 jinja2
 jsonpath-ng
 netaddr

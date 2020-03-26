@@ -33,6 +33,7 @@ RUN apk add --update --no-cache git curl build-base musl-dev python3-dev libffi-
     rm -rf /var/cache/apk/* && \
     if [ -f /app/cnc/db.sqlite3 ]; then rm /app/cnc/db.sqlite3; fi && \
     addgroup -S cnc_group && adduser -S cnc_user -G cnc_group -u 9001 && \
+    addgroup cnc_user root && \
     mkdir /home/cnc_user/.pan_cnc && \
     chown cnc_user:cnc_group /home/cnc_user/.pan_cnc && \
     chgrp cnc_group /app/cnc && \
