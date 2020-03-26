@@ -125,7 +125,7 @@ function create_panhandler_container() {
     -v "/var/run/docker.sock:/var/run/docker.sock" \
     -e CNC_USERNAME \
     -e CNC_PASSWORD \
-    --name panhandler ${PANHANDLER_IMAGE}
+    --name panhandler "${PANHANDLER_IMAGE}"
 
   sleep 3
   echo "  Checking Docker Permissions"
