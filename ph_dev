@@ -135,7 +135,7 @@ function create_panhandler_container() {
   sleep 3
   echo "  Checking Docker Permissions"
   echo " "
-  OUT=$(docker exec -u root panhandler /app/cnc/tools/create_docker_group.sh)
+  OUT=$(docker exec -u root panhandler sh /app/cnc/tools/create_docker_group.sh)
   if [ -z "$OUT" ]; then
     docker restart panhandler
   fi
