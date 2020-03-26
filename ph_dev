@@ -127,10 +127,15 @@ function create_panhandler_container() {
     -e CNC_PASSWORD \
     --name panhandler "${PANHANDLER_IMAGE}"
 
+  # check if on a mac - this is only needed on Linux
+  if uname -a | grep -q -i darwin; then
+    return 0
+  fi
+
   sleep 3
   echo "  Checking Docker Permissions"
   echo " "
-  OUT=$(docker exec -u root -it panhandler /app/cnc/tools/create_docker_group.sh)
+  OUT=$(docker exec -u root panhandler /app/cnc/tools/create_docker_group.sh)
   if [ -z "$OUT" ]; then
     docker restart panhandler
   fi
