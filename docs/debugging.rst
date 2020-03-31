@@ -5,6 +5,18 @@ Sometimes you may hit bugs or other unexpected behaviours. This page should give
 about how to recover your environment in the event something goes sideways.
 
 
+Ensuring you have the latest
+----------------------------
+
+New releases almost always feature mostly bugfixes. As such, if you encounter a problem, you
+should first update Panhandler to the latest version. The recommended way to do that is to
+run the installer script:
+
+.. code::
+
+    curl -s -k -L http://bit.ly/2xui5gM | bash
+
+
 Restarting the docker container
 --------------------------------
 
@@ -52,10 +64,45 @@ manually remove a repository, open a shell and navidate to $HOME/.pan_cnc/panhan
 command to remove it completely. You will then need to clear the cache as noted above.
 
 
+Troubleshooting Docker Skillets
+-------------------------------
+
+Docker Skillets require communication with the docker daemon on your host machine via a
+special bind mount. First, ensure you have the proper bind mount configured on your Panhandler
+container:
+
+.. code-block::
+
+    docker inspect panhandler -f "{{ .HostConfig.Binds }}"
+
+Ensure you see the `/var/run/docker.sock:/var/run/docker.sock` in the returned list. If you
+do not have the docker.sock listed in the output, ensure you the docker run command you are using
+includes the parameter: `-v /var/run/docker.sock:/var/run/docker.sock`.
+
+
+If you find that the volume is properly mounted, but you still cannot execute docker Skillets,
+you may need to adjust the permissions and group mappings inside the container. Panhandler includes
+tool to simplify this for you:
+
+.. code-block::
+
+    docker exec -u root -it panhandler /app/cnc/tools/create_docker_group.sh
+
+
+
 The hammer approach
 -------------------
 
-If none of the above things work, you may need to remove everything and start over. First, stop the container
+If none of the above things work, you may need to remove everything and start over. The installer
+script can be used to do this and should be your first option:
+
+
+.. code::
+
+    curl -s -k -L http://bit.ly/2xui5gM | bash
+
+
+Or, you may perform these steps manually. First, stop the container
 
 
 .. code::
@@ -81,5 +128,5 @@ Update to the latest docker image and create a new container
 File a bug
 ----------
 
-If you need to perform any of the above steps, then this is bug. Please file a bug repot with as much detail as
+If you need to perform any of the above steps, then this is bug. Please file a bug report with as much detail as
 possible here: https://github.com/paloaltonetworks/panhandler/issues
