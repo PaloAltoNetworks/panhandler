@@ -31,23 +31,22 @@ RUN apk add --update --no-cache git curl build-base musl-dev python3-dev libffi-
     rm -f terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
     apk del build-base linux-headers openssl-dev python3-dev libffi-dev musl-dev && \
     rm -rf /var/cache/apk/* && \
-    if [ -f /app/cnc/db.sqlite3 ]; then rm /app/cnc/db.sqlite3; fi && \
-    addgroup -S cnc_group && adduser -S cnc_user -G cnc_group -u 9001 && \
+    if [ -f /app/cnc/db.sqlite3 ]; then rm /app/cnc/db.sqlite3; fi
+
+RUN delgroup ping && \
+    addgroup -g 999 docker && \
+    addgroup -g 998 cnc_group && \
+    adduser -S cnc_user -G cnc_group -u 9001 -s /bin/sh && \
     addgroup cnc_user root && \
+    addgroup cnc_user docker && \
     mkdir /home/cnc_user/.pan_cnc && \
     chown cnc_user:cnc_group /home/cnc_user/.pan_cnc && \
     chgrp cnc_group /app/cnc && \
     chgrp cnc_group /app/src/panhandler/snippets && \
     chmod g+w /app/cnc && \
-    chmod g+w /app/src/panhandler/snippets
+    chmod g+w /app/src/panhandler/snippets && \
+    chmod +x -R /app/cnc/tools
 
-# Run  Prisma Public Cloud Vulnerability Scan API
-# add -k option for SSL decrypt scenarios
-#RUN curl -i -s -k -X POST https://scanapi.redlock.io/v1/vuln/os \
-# -F "fileName=/etc/alpine-release" -F "file=@/etc/alpine-release" \
-# -F "fileName=/lib/apk/db/installed" -F "file=@/lib/apk/db/installed" \
-# -F "rl_args=report=detail" | grep -i "x-redlock-scancode: pass"
-
-USER cnc_user
+#USER cnc_user
 EXPOSE 8080
-CMD ["/app/cnc/start_app.sh"]
+CMD ["/app/cnc/tools/ph.sh"]

@@ -131,15 +131,6 @@ function create_panhandler_container() {
   if uname -a | grep -q -i darwin; then
     return 0
   fi
-
-  sleep 3
-  echo "  Checking Docker Permissions"
-  echo " "
-  OUT=$(docker exec -u root panhandler sh /app/cnc/tools/create_docker_group.sh)
-  if [ -z "$OUT" ]; then
-    docker restart panhandler
-  fi
-  return 0
 }
 
 function get_existing_published_port() {
