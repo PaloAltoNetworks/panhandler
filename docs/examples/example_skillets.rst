@@ -25,6 +25,8 @@ Example Skillets by Feature
 
 :ref:`example_when`
 
+:ref:`example_panos_get`
+
 
 External Skillet Repositories
 ------------------------------
