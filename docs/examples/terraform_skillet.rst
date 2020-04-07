@@ -51,7 +51,7 @@ Terraform Variables
 In this case, our variables from the skillet definition file match the variables that terraform expects. Here is a
 `variables.tf` file from this project:
 
-.. code-block::
+.. code-block:: terraform
 
     variable "admin_username" {
       description = "PAN-OS NGFW Admin Username"
@@ -82,7 +82,7 @@ Terraform Output Capturing
 
 All terraform 'outputs' are automatically captured into the context. Here is a sample 'outputs.tf' file:
 
-.. code-block::
+.. code-block:: terraform
 
     data "azurerm_public_ip" "pavm_public_ip_address_data" {
       name                = "${azurerm_public_ip.pavm_public_ip.name}"
