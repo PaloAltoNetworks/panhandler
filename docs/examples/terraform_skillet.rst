@@ -102,3 +102,32 @@ Snippet Details
 
 The 'snippets' section contains all the type specific configuration. Terraform does not require a 'snippet' section
 as the skillet definition file is expected to live in the project root of the terraform project.
+
+
+Terraform State Files
+---------------------
+
+Terraform keeps its state in a special file on disk called the `terraform.tfstate` file. Panhandler
+by default will store the terraform state in a file on the local filesystem in the same directory as the
+skillet meta-data file. This allows you to destroy or refresh a previously deployed project from the
+Panhandler GUI.
+
+Deploying Multiple Projects with Panhandler
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, terraform will only deploy exactly what is proscribed in the various terraform files. That
+means that if you want to deploy two instances of the same project, you must 'trick' terraform into
+thinking this is a new deployment and not a modification to a previous one. Panhandler allows you to do
+this via the 'Override' option. When deploying a terraform project, if an existing `terraform.tfstate`
+file is found, Panhandler will give you the option to 'override' the existing state. This will cause
+Panhandler to backup the existing state and create a new state for this deployment.
+
+.. warning::
+
+    This is a potentially dangerous operation as Terraform can create many resources in your cloud
+    environment that are only tied together via a state file. You must be sure you can destroy all the
+    necessary resources before you continue with the 'override' option.
+
+
+
+
