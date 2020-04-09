@@ -266,7 +266,11 @@ class RepoDetailsView(CNCView):
 
         else:
             repo_detail = dict()
-            repo_detail['name'] = 'Repository directory not found'
+            repo_detail['name'] = 'repo_name'
+            repo_detail['error'] = 'Repository directory not found'
+
+        if 'error' in repo_detail:
+            messages.add_message(self.request, messages.ERROR, repo_detail['error'])
 
         try:
             snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
