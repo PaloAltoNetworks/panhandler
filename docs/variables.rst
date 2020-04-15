@@ -188,7 +188,7 @@ Variable Types
     default: |
         {
             "key_test": "value_test",
-            "key2_test": "value2_test",
+            "key2_test": "value2_test"
         }
     type_hint: json
 
@@ -248,6 +248,18 @@ Variable Types
     description: from previous skillet in workflow
     default: some_value
     type_hint: hidden
+
+* file
+
+  This type will upload a file to a temporary directory and set the variable value to the full path to the file. This
+  is useful for python Skillets to take the file path as an input and open and handle the file contents itself.
+
+.. code-block:: yaml
+
+  - name: uploaded_file_path
+    description: Upload a File
+    default:
+    type_hint: file
 
 
 
