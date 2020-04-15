@@ -89,7 +89,8 @@ Optional top level attributes:
 
 
 * depends: List of dicts containing repository urls and branches that this skillet depends on
-* labels: YAML dict of optional Skillet configuration information. For example - collection labels
+* labels: Extensible list of key/value pairs that offers additional, optional, functionality. See here for a
+ complete list :ref:`Labels`.
 
 .. note::
 
@@ -113,6 +114,8 @@ To configure one or more collections for your Skillet, add a `collection` attrib
         - Another Collection
         - Yet another Collection
 
+
+See :ref:`Labels` for a complete list of all labels supported by Panhandler.
 
 
 Snippet details per Metadata type
