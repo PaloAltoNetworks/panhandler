@@ -39,10 +39,11 @@
                 </tr>
                 </thead>
                 <tbody>
+                {% with c="0" %}
                 {% for r in results %}
                     {% if r.results.label %}
                         <tr>
-                            <th scope="row">{{ forloop.counter }}</th>
+                            <th scope="row">{{ c|add:"1" }}</th>
                             <td>
                                 <a href="#{{ r.name }}_div" data-toggle="collapse">
                                     {{ r.results.label }}
@@ -83,6 +84,7 @@
                     </tr>
                     {% endif %}
                 {% endfor %}
+                {% endwith %}
                 </tbody>
             </table>
             </p>
