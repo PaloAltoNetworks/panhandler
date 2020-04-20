@@ -31,6 +31,8 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import yaml
+from yaml.parser import ScannerError
 from django.contrib import messages
 from django.forms import forms
 from django.http import HttpResponseRedirect
@@ -495,6 +497,76 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
 
         messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
         return f'/panhandler/repos'
+
+
+class UpdateSkilletView(CNCBaseFormView):
+    snippet = 'edit_skillet'
+    next_url = '/provision'
+    app_dir = 'panhandler'
+
+    def get_snippet(self):
+        return self.snippet
+
+    def get_context_data(self, **kwargs):
+        skillet_name = self.kwargs.get('skillet', None)
+        repo_name = self.kwargs.get('repo_name', None)
+        skillet_contents = snippet_utils.get_snippet_metadata(skillet_name, self.app_dir)
+
+        skillet = snippet_utils.load_snippet_with_name(skillet_name, self.app_dir)
+        if skillet is None:
+            raise SnippetRequiredException('Could not find skillet to edit')
+
+        skillet_path = skillet.get('snippet_path')
+
+        # save these values to the user session for later use on form_submit
+        self.request.session['edit_skillet_repo_name'] = repo_name
+        self.request.session['edit_skillet_skillet_path'] = skillet_path
+
+        self.save_value_to_workflow('skillet_contents', skillet_contents)
+
+        context = super().get_context_data(**kwargs)
+        context['skillet_contents'] = skillet_contents
+        context['title'] = 'Edit Skillet Metadata'
+        context['header'] = 'Panhandler Skillet'
+        return context
+
+    def form_valid(self, form):
+
+        try:
+            skillet_path = self.request.session['edit_skillet_skillet_path']
+            repo_name = self.request.session['edit_skillet_repo_name']
+        except KeyError:
+            messages.add_message(self.request, messages.ERROR, 'Could not edit Skillet, malformed environment')
+            return HttpResponseRedirect('/panhandler/repos')
+
+        workflow = self.get_workflow()
+        local_branch = workflow.get('local_branch_name', None)
+        skillet_content = workflow.get('skillet_contents', None)
+        commit_message = workflow.get('commit_message', None)
+
+        try:
+            yaml.safe_load(skillet_content)
+        except ScannerError:
+            messages.add_message(self.request, messages.ERROR,
+                                 'YAML Syntax Error! Refusing to overwrite Skillet metadata file.')
+            return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+
+        user_dir = os.path.expanduser('~')
+        snippets_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories')
+        repo_dir = os.path.join(snippets_dir, repo_name)
+
+        git_utils.checkout_local_branch(repo_dir, local_branch)
+
+        skillet_file_path = os.path.join(skillet_path, '.meta-cnc.yaml')
+
+        with open(skillet_file_path, 'w') as skillet_file:
+            skillet_file.write(skillet_content)
+
+        git_utils.commit_local_changes(repo_dir, commit_message, skillet_file_path)
+
+        snippet_utils.invalidate_snippet_caches(self.app_dir)
+        cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
+        return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
 
 
 class ListSnippetTypesView(CNCView):

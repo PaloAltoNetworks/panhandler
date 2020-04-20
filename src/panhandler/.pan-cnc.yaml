@@ -43,6 +43,12 @@ views:
 #    menu: Panhandler
 #    menu_option: Template Library
 
+  - name: edit_skillet
+    class: UpdateSkilletView
+    parameters:
+      - repo_name
+      - skillet
+
   - name: collections
     class: ListSkilletCollectionsView
     menu: Panhandler

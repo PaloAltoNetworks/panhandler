@@ -102,9 +102,13 @@
                                 <a href="/panhandler/skillet/{{ s.name }}">{{ s.label }}</a>
                             {% endif %}
                         </td>
-                        <td>
-                            <a href="/debug/{{ app_dir }}/{{ s.name }}">
+                        <td class="nowrap text-nowrap">
+                            <a href="/debug/{{ app_dir }}/{{ s.name }}" class="d-inline">
                                 <i class="fas fa-cog text-muted"></i>
+                            </a>
+                            &nbsp;
+                            <a href="/panhandler/edit_skillet/{{ repo_detail.name }}/{{ s.name }}" class="d-inline">
+                                <i class="fas fa-edit text-muted"></i>
                             </a>
                         </td>
                         <td>{{ s.description }}</td>

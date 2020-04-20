@@ -1,0 +1,35 @@
+name: edit_skillet
+label: Simple Skillet Editor
+description: |
+  Allows a quick edit to a Skillet .meta-cnc file. This will create a new local branch in the git repository
+  using the 'Branch' option.
+
+type: app
+
+variables:
+  - name: local_branch_name
+    description: Branch
+    default: local
+    type_hint: text
+    allow_special_characters: false
+    help_text: Name of the branch in which to save these local changes
+  - name: commit_message
+    description: Commit Message
+    default: Update .meta-cnc from Panhandler
+    type_hint: text
+    allow_special_characters: false
+    help_text: Message to add to commit log for this edit
+  - name: skillet_contents
+    description: Skillet Contents
+    default:
+    type_hint: text_area
+    attributes:
+      rows: 20
+      cols: 50
+  - name: repo_name
+    description: name of the repo
+    type_hint: hidden
+    default:
+
+snippets:
+
