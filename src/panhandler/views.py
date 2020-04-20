@@ -390,6 +390,13 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
                         messages.add_message(self.request, level, f'Skillet: {d["path"]}\n\nError: {e}')
 
+        # Remove temp files as part of fix for #187
+        path = Path(repo_dir)
+        touch_files = path.rglob('.cnc_tmp_*')
+        for tf in touch_files:
+            print(f'Removing temp file: {tf}')
+            tf.unlink()
+
         return f'/panhandler/repo_detail/{repo_name}'
 
 
@@ -440,6 +447,12 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
 
                     # remove all python3 init touch files if there is an update
                     task_utils.python3_reset_init(str(d))
+
+                    # Remove temp files as part of fix for #187
+                    touch_files = d.rglob('.cnc_tmp_*')
+                    for tf in touch_files:
+                        print(f'Removing temp file: {tf}')
+                        tf.unlink()
 
         if not err_condition:
             repos = ", ".join(updates)
