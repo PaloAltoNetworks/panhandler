@@ -71,7 +71,7 @@ Docker Skillets require communication with the docker daemon on your host machin
 special bind mount. First, ensure you have the proper bind mount configured on your Panhandler
 container:
 
-.. code-block::
+.. code-block:: bash
 
     docker inspect panhandler -f "{{ .HostConfig.Binds }}"
 
@@ -84,7 +84,7 @@ If you find that the volume is properly mounted, but you still cannot execute do
 you may need to adjust the permissions and group mappings inside the container. Panhandler includes
 tool to simplify this for you:
 
-.. code-block::
+.. code-block:: bash
 
     docker exec -u root -it panhandler /app/cnc/tools/create_docker_group.sh
 
