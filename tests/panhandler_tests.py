@@ -25,6 +25,9 @@ This software is provided without support, warranty, or guarantee.
 Use at your own risk.
 """
 
+import urllib3
+urllib3.disable_warnings()
+
 
 def test_with_client(client):
     response = client.get('/')

@@ -24,16 +24,37 @@ Please see http://panhandler.readthedocs.io for more information
 This software is provided without support, warranty, or guarantee.
 Use at your own risk.
 """
+import json
+import os
+import re
 import shutil
 from pathlib import Path
+from typing import Any
 
-from django.conf import settings
+from django.contrib import messages
+from django.forms import forms
+from django.http import HttpResponseRedirect
+from django.shortcuts import render
+from django.views.generic import RedirectView
+from skilletlib import Panos
+from skilletlib.exceptions import LoginException
+from skilletlib.exceptions import PanoplyException
 from skilletlib.exceptions import SkilletLoaderException
 from skilletlib.skillet.pan_validation import PanValidationSkillet
 
+from pan_cnc.lib import cnc_utils
 from pan_cnc.lib import git_utils
+from pan_cnc.lib import snippet_utils
+from pan_cnc.lib import task_utils
+from pan_cnc.lib.exceptions import CCFParserError
 from pan_cnc.lib.exceptions import ImportRepositoryException
-from pan_cnc.views import *
+from pan_cnc.lib.exceptions import SnippetRequiredException
+from pan_cnc.lib.validators import FqdnOrIp
+from pan_cnc.views import CNCBaseAuth
+from pan_cnc.views import CNCBaseFormView
+from pan_cnc.views import CNCView
+from pan_cnc.views import EditTargetView
+from pan_cnc.views import ProvisionSnippetView
 from panhandler.lib import app_utils
 
 
@@ -100,11 +121,11 @@ class ImportRepoView(CNCBaseFormView):
             try:
                 os.makedirs(repo_dir, mode=0o700)
 
-            except PermissionError as pe:
+            except PermissionError:
                 messages.add_message(self.request, messages.ERROR,
                                      'Could not create repository directory, Permission Denied')
                 return HttpResponseRedirect('repos')
-            except OSError as ose:
+            except OSError:
                 messages.add_message(self.request, messages.ERROR,
                                      'Could not create repository directory')
                 return HttpResponseRedirect('repos')
@@ -145,7 +166,6 @@ class ImportRepoView(CNCBaseFormView):
             for skillet in loaded_skillets:
                 for depends in skillet['depends']:
                     url = depends.get('url', None)
-                    name = depends.get('name', None)
                     branch = depends.get('branch', 'master')
 
                     # now check each repo to see if we already have it, add an error if not
@@ -248,16 +268,6 @@ class RepoDetailsView(CNCView):
 
     def get_context_data(self, **kwargs):
         repo_name = self.kwargs['repo_name']
-
-        # we are going to keep the snippets in the snippets dir in the panhandler app
-        # get the dir where all apps are installed
-        src_dir = settings.SRC_PATH
-        # get the panhandler app dir
-        panhandler_dir = os.path.join(src_dir, 'panhandler')
-        # get the snippets dir under that
-        # snippets_dir = os.path.join(panhandler_dir, 'snippets')
-        # repo_dir = os.path.join(snippets_dir, repo_name)
-
         user_dir = os.path.expanduser('~')
         repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
@@ -290,7 +300,6 @@ class RepoDetailsView(CNCView):
                         if collection_member not in collections:
                             collections.append(collection_member)
 
-        # create our docker command to pass to git
         context = super().get_context_data(**kwargs)
         context['repo_detail'] = repo_detail
         context['repo_name'] = repo_name
@@ -830,7 +839,6 @@ class ViewValidationResultsView(EditTargetView):
                              'validation.'
 
             target_ip_label = 'Target IP'
-            target_port_label = 'Target Port'
             target_username_label = 'Target Username'
             target_password_label = 'Target Password'
 
@@ -946,7 +954,7 @@ class ViewValidationResultsView(EditTargetView):
                 form.add_error('TARGET_USERNAME', 'Invalid Credentials, ensure your username and password are correct')
                 form.add_error('TARGET_PASSWORD', 'Invalid Credentials, ensure your username and password are correct')
                 return self.form_invalid(form)
-            except PanoplyException as pe:
+            except PanoplyException:
                 form.add_error('TARGET_IP', 'Connection Refused Error, check the IP and try again')
                 return self.form_invalid(form)
 
