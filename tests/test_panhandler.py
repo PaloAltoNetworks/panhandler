@@ -26,6 +26,7 @@ Use at your own risk.
 """
 
 import urllib3
+
 urllib3.disable_warnings()
 
 
@@ -56,5 +57,3 @@ def test_with_authenticated_client(client, django_user_model):
 
     response = client.get('/unlock_envs')
     assert response.status_code == 200
-
-

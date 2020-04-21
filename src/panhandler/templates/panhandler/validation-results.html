@@ -2,16 +2,16 @@
 {% load static %}
 {% block head %}
     <script type="text/javascript">
-    function show_modal(url) {
-        console.log('setting url to ' + url);
-        let m = $('#test_modal');
-        let b = $('#modal_container');
-        b.empty();
-        let i = $('<iframe class="embed-responsive-item" allowfullscreen></iframe>');
-        b.append(i);
-        i.attr('src', url);
-        m.modal('toggle');
-    }
+        function show_modal(url) {
+            console.log('setting url to ' + url);
+            let m = $('#test_modal');
+            let b = $('#modal_container');
+            b.empty();
+            let i = $('<iframe class="embed-responsive-item" allowfullscreen></iframe>');
+            b.append(i);
+            i.attr('src', url);
+            m.modal('toggle');
+        }
     </script>
 {% endblock %}
 {% block content %}
@@ -40,69 +40,69 @@
                 </thead>
                 <tbody>
                 {% with c="0" %}
-                {% for r in results %}
-                    {% if r.results.label %}
-                        <tr>
-                            <th scope="row">{{ c|add:"1" }}</th>
-                            <td>
-                                <a href="#{{ r.name }}_div" data-toggle="collapse">
-                                    {{ r.results.label }}
-                                </a>
-                                <div id="{{ r.name }}_div" class="collapse text-secondary p-3">
-                                    {{ r.results.output_message | linebreaksbr }}
-                                </div>
-                            </td>
-                        <td>
-                            {% if r.results.results is True %}
-                                <a class="text-success" href="#"
-                                   onclick="show_modal('{{ r.results.documentation_link }}')">
-                                    Passed
-                                </a>
-                            {% else %}
-                                 <a class="text-danger" href="#"
-                                   onclick="show_modal('{{ r.results.documentation_link }}')">
-                                 Failed
-                                </a>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if r.results.severity == 'high' %}
-                                <div class="text-danger">
-                            {% elif r.results.severity == 'medium' %}
-                                <div class="text-warning">
-                            {% else %}
-                                <div class="text-info">
-                            {% endif %}
-                            {{ r.results.severity }}
-                            </div>
-                        </td>
-                        <td>
-                            <a href="{{ r.results.documentation_link }}" target="_blank">
-                                Documentation
-                            </a>
-                        </td>
-                    </tr>
-                    {% endif %}
-                {% endfor %}
+                    {% for r in results %}
+                        {% if r.results.label %}
+                            <tr>
+                                <th scope="row">{{ c|add:"1" }}</th>
+                                <td>
+                                    <a href="#{{ r.name }}_div" data-toggle="collapse">
+                                        {{ r.results.label }}
+                                    </a>
+                                    <div id="{{ r.name }}_div" class="collapse text-secondary p-3">
+                                        {{ r.results.output_message | linebreaksbr }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if r.results.results is True %}
+                                        <a class="text-success" href="#"
+                                           onclick="show_modal('{{ r.results.documentation_link }}')">
+                                            Passed
+                                        </a>
+                                    {% else %}
+                                        <a class="text-danger" href="#"
+                                           onclick="show_modal('{{ r.results.documentation_link }}')">
+                                            Failed
+                                        </a>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if r.results.severity == 'high' %}
+                                        <div class="text-danger">
+                                    {% elif r.results.severity == 'medium' %}
+                                        <div class="text-warning">
+                                    {% else %}
+                                        <div class="text-info">
+                                    {% endif %}
+                                    {{ r.results.severity }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <a href="{{ r.results.documentation_link }}" target="_blank">
+                                        Documentation
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    {% endfor %}
                 {% endwith %}
                 </tbody>
             </table>
             </p>
 
         </div>
-                <div class="card-footer text-right">
-                <p class="card-text">
-                    {% if request.session.next_step %}
-                        {% if request.session.last_step %}
-                            <a href="/workflow/{{ request.session.next_step }}" class="btn btn-primary">Complete</a>
-                        {% else %}
-                            <a href="/workflow/{{ request.session.next_step }}" class="btn btn-primary">Continue</a>
-                        {% endif %}
+        <div class="card-footer text-right">
+            <p class="card-text">
+                {% if request.session.next_step %}
+                    {% if request.session.last_step %}
+                        <a href="/workflow/{{ request.session.next_step }}" class="btn btn-primary">Complete</a>
                     {% else %}
-                        <a href="{{ request.session.last_page|urlencode }}" class="btn btn-primary">Continue</a>
+                        <a href="/workflow/{{ request.session.next_step }}" class="btn btn-primary">Continue</a>
                     {% endif %}
-                </p>
-            </div>
+                {% else %}
+                    <a href="{{ request.session.last_page|urlencode }}" class="btn btn-primary">Continue</a>
+                {% endif %}
+            </p>
+        </div>
     </div>
     <div class="modal fade" id="test_modal" tabinex="-1" role="dialog"
          aria-labelledby="{{ r.results.label }}" aria-hidden="true">
@@ -116,7 +116,7 @@
             </div>
         </div>
     </div>
-{#    <div class="text-white mt-5">{{ results }}</div>#}
+    {#    <div class="text-white mt-5">{{ results }}</div>#}
 {% endblock %}
 
 

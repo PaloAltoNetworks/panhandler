@@ -32,7 +32,6 @@ from pathlib import Path
 from typing import Any
 
 import yaml
-from yaml.parser import ScannerError
 from django.contrib import messages
 from django.forms import forms
 from django.http import HttpResponseRedirect
@@ -43,6 +42,7 @@ from skilletlib.exceptions import LoginException
 from skilletlib.exceptions import PanoplyException
 from skilletlib.exceptions import SkilletLoaderException
 from skilletlib.skillet.pan_validation import PanValidationSkillet
+from yaml.parser import ScannerError
 
 from pan_cnc.lib import cnc_utils
 from pan_cnc.lib import git_utils
@@ -506,6 +506,17 @@ class UpdateSkilletView(CNCBaseFormView):
 
     def get_snippet(self):
         return self.snippet
+
+    def get_header(self) -> str:
+        """
+        override default get_header method on CNCBaseAuth
+
+        :return: str containing name of the skillet we are editting
+        """
+        if self.service:
+            return self.service.get('label', 'Edit Skillet')
+
+        return 'Edit Skillet'
 
     def get_context_data(self, **kwargs):
         skillet_name = self.kwargs.get('skillet', None)

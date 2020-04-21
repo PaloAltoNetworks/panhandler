@@ -38,10 +38,10 @@ views:
       help_link_title: Import Skillets Documentation
       help_link: https://panhandler.readthedocs.io/en/master/importing_skillets.html
 
-#  - name: snippet_types
-#    class: ListSnippetTypesView
-#    menu: Panhandler
-#    menu_option: Template Library
+  #  - name: snippet_types
+  #    class: ListSnippetTypesView
+  #    menu: Panhandler
+  #    menu_option: Template Library
 
   - name: edit_skillet
     class: UpdateSkilletView
@@ -93,13 +93,13 @@ views:
     class: ViewSkilletView
     parameter: skillet
 
-#  - name: provision
-#    class: ProvisionSnippetView
+  #  - name: provision
+  #    class: ProvisionSnippetView
 
   - name: check_update
     class: CheckAppUpdateView
 
-# Test validation views below
+  # Test validation views below
   - name: validate
     class: ExecuteValidationSkilletView
     parameter: skillet
