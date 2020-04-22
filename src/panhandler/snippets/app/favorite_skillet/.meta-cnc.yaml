@@ -1,0 +1,33 @@
+name: create_favorite
+label: Create a New Collection
+description: Creates a user definable collection
+type: app
+
+variables:
+  - name: collection_name
+    description: Name
+    default: Favorites
+    type_hint: text
+    allow_special_characters: false
+    help_text: The name of the local collection to create. You can add skillets to this collecion later.
+  - name: collection_description
+    description: Description
+    default: This is a group of my favorite skillets.
+    type_hint: text_area
+  - name: collection_categories
+    description: Categories
+    default:
+    type_hint: checkbox
+    cbx_list:
+      - key: Deploy
+        value: Deploy
+      - key: Configure
+        value: Configure
+      - key: Assess
+        value: Assess
+      - key: Respond
+        value: Respond
+      - key: Demonstrate
+        value: Demonstrate
+
+snippets:
