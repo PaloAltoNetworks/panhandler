@@ -1,23 +1,36 @@
-name: import_repo
-label: Import Git Repository
-description: Imports a git repository
+name: create_favorite
+label: Create a New Collection
+description: Creates a user definable collection
 type: app
-extends:
-
-labels:
 
 variables:
-  - name: repo_name
-    description: Repository Name
-    default: Example_Skillets
+  - name: collection_name
+    description: Name
+    default: Favorites
     type_hint: text
     allow_special_characters: false
-    help_text: The arbitrary name of this Repository.
-  - name: url
-    description: Git Repository HTTPS URL
-    default: https://github.com/PaloAltoNetworks/Skillets.git
-    type_hint: text
-    help_text: The 'git' link to the repository you would like to import.
+    help_text: The name of the local collection to create. You can add skillets to this collecion later.
+  - name: collection_description
+    description: Description
+    default: This is a group of my favorite skillets.
+    type_hint: text_area
+    attributes:
+      cols: 50
+      rows: 3
+  - name: collection_categories
+    description: Categories
+    default:
+    type_hint: checkbox
+    cbx_list:
+      - key: Deploy
+        value: Deploy
+      - key: Configure
+        value: Configure
+      - key: Assess
+        value: Assess
+      - key: Respond
+        value: Respond
+      - key: Demonstrate
+        value: Demonstrate
 
 snippets:
-

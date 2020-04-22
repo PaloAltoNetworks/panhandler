@@ -38,11 +38,6 @@ views:
       help_link_title: Import Skillets Documentation
       help_link: https://panhandler.readthedocs.io/en/master/importing_skillets.html
 
-  #  - name: snippet_types
-  #    class: ListSnippetTypesView
-  #    menu: Panhandler
-  #    menu_option: Template Library
-
   - name: edit_skillet
     class: UpdateSkilletView
     parameters:
@@ -93,16 +88,32 @@ views:
     class: ViewSkilletView
     parameter: skillet
 
-  #  - name: provision
-  #    class: ProvisionSnippetView
-
   - name: check_update
     class: CheckAppUpdateView
 
-  # Test validation views below
   - name: validate
     class: ExecuteValidationSkilletView
     parameter: skillet
 
   - name: validate-results
     class: ViewValidationResultsView
+
+  - name: favorites
+    class: FavoritesView
+    menu: Panhandler
+    menu_option: Favorites
+
+  - name: add_favorite
+    class: AddFavoritesView
+
+  - name: delete_favorite
+    class: DeleteFavoriteView
+    parameter: favorite
+
+  - name: favorite
+    class: FavoriteCollectionView
+    parameter: favorite
+
+  - name: favorite_skillet
+    class: AddSkilletToFavoritesView
+    parameter: skillet_name

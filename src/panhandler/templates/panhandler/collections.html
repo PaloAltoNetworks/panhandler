@@ -124,11 +124,7 @@
                 let title_element = $(element).data('name');
                 let title_text = title_element.toLowerCase().trim();
 
-                if (title_text.includes(search_text)) {
-                    return true;
-                } else {
-                    return false;
-                }
+                return title_text.includes(search_text);
 
             });
         });

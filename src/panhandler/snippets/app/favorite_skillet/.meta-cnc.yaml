@@ -1,33 +1,15 @@
-name: create_favorite
-label: Create a New Collection
-description: Creates a user definable collection
+name: add_skillet_to_favorite
+label: Add Skillet to a Favorite Collection
+description: Adds the selected skillet to your Favorite Collections
 type: app
 
 variables:
-  - name: collection_name
-    description: Name
-    default: Favorites
-    type_hint: text
-    allow_special_characters: false
-    help_text: The name of the local collection to create. You can add skillets to this collecion later.
-  - name: collection_description
-    description: Description
-    default: This is a group of my favorite skillets.
-    type_hint: text_area
-  - name: collection_categories
-    description: Categories
+  - name: skillet_name
+    description: Skillet Name
+    default:
+    type_hint: hidden
+  - name: favorites
+    description: Favorites
     default:
     type_hint: checkbox
-    cbx_list:
-      - key: Deploy
-        value: Deploy
-      - key: Configure
-        value: Configure
-      - key: Assess
-        value: Assess
-      - key: Respond
-        value: Respond
-      - key: Demonstrate
-        value: Demonstrate
-
-snippets:
+    source: all_favorites

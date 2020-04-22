@@ -1,0 +1,142 @@
+{% extends base_html|default:'pan_cnc/base.html' %}
+{% load static %}
+{% block head %}
+    <script src="{% static 'js/shuffle.min.js' %}"></script>
+{% endblock %}
+{% block content %}
+
+    <h3 class="mb-4">Local Collections</h3>
+
+    <div class="d-flex justify-content-between mb-3">
+        <div>
+            <label for="filter_buttons" class="text-muted d-block">Filter Related Collections</label>
+            <div class="btn-group" role="group" id="filter_buttons">
+                <button type="button" class="btn btn-outline-secondary" id="filter_deploy">Deploy</button>
+                <button type="button" class="btn btn-outline-secondary" id="filter_configure">Configure</button>
+                <button type="button" class="btn btn-outline-secondary" id="filter_assess">Assess</button>
+                <button type="button" class="btn btn-outline-secondary" id="filter_respond">Respond</button>
+                <button type="button" class="btn btn-outline-secondary" id="filter_demonstrate">Demonstrate</button>
+            </div>
+        </div>
+        <div>
+            <label for="add_fav" class="text-muted d-block">Options</label>
+            <a href="/panhandler/add_favorite" id="add_fav" class="btn btn-outline-primary">Add Favorite</a>
+        </div>
+        <div>
+            <label for="search_collection" class="text-muted d-block">Search</label>
+            <input type="text" id="search_collection"/>
+        </div>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-sm-12">
+                <div id="collection_grid">
+                    {% for collection, info in collections.items %}
+                        <div class="grid__brick mb-3 col-sm-4" style="min-height: 225px"
+                             data-name="{{ collection }}"
+                             data-groups='{{ info.categories }}'>
+
+                            <div class="card shadow">
+                                <div class="card-header">
+                                    {{ collection }}
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text" style="min-height: 50px">
+                                        {{ info.description }}
+                                    </p>
+                                </div>
+                                <div class="card-footer text-right">
+                                    <a href="/panhandler/delete_favorite/{{ collection }}" class="btn btn-danger">
+                                        Delete
+                                    </a>
+                                    <a href="/panhandler/favorite/{{ collection }}" class="btn btn-primary">
+                                        Go
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="text/javascript">
+
+        function clear_filter_buttons() {
+            let selector = $("[id^=filter_]");
+            selector.removeClass('bg-primary text-white');
+        }
+
+        function clear_sort_buttons() {
+            let selector = $("[id^=sort_]");
+            selector.removeClass('bg-primary text-white');
+        }
+
+        function perform_filter(ele, filter_term) {
+            clear_filter_buttons();
+            $('#search_collection').val('');
+            if (shuffleInstance.group === filter_term) {
+                shuffleInstance.filter();
+                return;
+            }
+            $(ele).addClass('bg-primary text-white');
+            shuffleInstance.filter(filter_term);
+        }
+
+        $('#filter_deploy').on('click', function () {
+                perform_filter(this, 'Deploy');
+            }
+        );
+
+        $('#filter_configure').on('click', function () {
+                perform_filter(this, 'Configure');
+            }
+        );
+
+        $('#filter_assess').on('click', function () {
+                perform_filter(this, 'Assess');
+            }
+        );
+        $('#filter_respond').on('click', function () {
+                perform_filter(this, 'Respond');
+            }
+        );
+        $('#filter_demonstrate').on('click', function () {
+                perform_filter(this, 'Demonstrate');
+            }
+        );
+
+        function perform_sort(ele, sort_term) {
+            clear_sort_buttons();
+            $(ele).addClass('bg-primary text-white');
+            let sort_options = {
+                'by': function (element) {
+                    return $(element).data(sort_term)
+                }
+            };
+            shuffleInstance.sort(sort_options);
+        }
+
+        // var shuffleInstance;
+        $(document).ready(function () {
+            window.shuffleInstance = new Shuffle(document.getElementById('collection_grid'), {
+                itemSelector: '.grid__brick',
+                sizer: '.sizer-element'
+            });
+            perform_sort('#sort_name', 'name');
+        });
+
+        $('#search_collection').on('keyup', function () {
+            clear_filter_buttons();
+            clear_sort_buttons();
+            let search_text = $(this).val().toLowerCase().trim();
+            shuffleInstance.filter(function (element, shuffleInstance) {
+                let title_element = $(element).data('name');
+                let title_text = title_element.toLowerCase().trim();
+
+                return title_text.includes(search_text);
+
+            });
+        });
+    </script>
+{% endblock %}

@@ -36,13 +36,14 @@ from django.contrib import messages
 from django.forms import forms
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.utils.safestring import mark_safe
 from django.views.generic import RedirectView
 from skilletlib import Panos
 from skilletlib.exceptions import LoginException
 from skilletlib.exceptions import PanoplyException
 from skilletlib.exceptions import SkilletLoaderException
 from skilletlib.skillet.pan_validation import PanValidationSkillet
-from yaml.parser import ScannerError
+from yaml.scanner import ScannerError
 
 from pan_cnc.lib import cnc_utils
 from pan_cnc.lib import git_utils
@@ -58,6 +59,8 @@ from pan_cnc.views import CNCView
 from pan_cnc.views import EditTargetView
 from pan_cnc.views import ProvisionSnippetView
 from panhandler.lib import app_utils
+from .models import Collection
+from .models import Skillet
 
 
 class WelcomeView(CNCView):
@@ -1097,3 +1100,167 @@ class ViewValidationResultsView(EditTargetView):
             return render(self.request, 'pan_cnc/results.html', context)
 
         return render(self.request, 'panhandler/validation-results.html', context)
+
+
+class FavoritesView(CNCView):
+    template_name = "panhandler/favorites.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        favorites = Collection.objects.using('panhandler').all()
+        collections_info = dict()
+        for f in favorites:
+            collections_info[f.name] = dict()
+            collections_info[f.name]['categories'] = json.dumps(f.categories)
+            collections_info[f.name]['description'] = f.description
+
+        context['collections'] = collections_info
+        return context
+
+
+class DeleteFavoriteView(CNCBaseAuth, RedirectView):
+
+    def get_redirect_url(self, *args, **kwargs):
+        collection_name = kwargs['favorite']
+        collection = Collection.objects.using('panhandler').get(name=collection_name)
+        collection.delete(using='panhandler')
+        return '/panhandler/favorites'
+
+
+class AddFavoritesView(CNCBaseFormView):
+    snippet = 'create_favorite'
+    next_url = '/panhandler/favorites'
+    app_dir = 'panhandler'
+    header = "Favorites"
+    title = "Add a new Collection"
+
+    def get_snippet(self):
+        return self.snippet
+
+    # once the form has been submitted and we have all the values placed in the workflow, execute this
+    def form_valid(self, form):
+        workflow = self.get_workflow()
+
+        try:
+
+            collection_name = workflow['collection_name']
+            collection_description = workflow['collection_description']
+            categories = workflow.get('collection_categories', '[]')
+
+            c = Collection.objects.using('panhandler').create(
+                name=collection_name,
+                description=collection_description,
+                categories=categories
+            )
+            print(f'created new collection with id {c.id}')
+
+            self.pop_value_from_workflow('collection_categories')
+            self.pop_value_from_workflow('snippet_name')
+
+        except KeyError:
+            return self.form_invalid(form)
+
+        return super().form_valid(form)
+
+
+class FavoriteCollectionView(CNCView):
+    template_name = "panhandler/favorite.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        collection = self.kwargs.get('favorite', '')
+
+        skillet_ids = Skillet.objects.using('panhandler').filter(collection__name=collection)
+
+        skillets = list()
+        for s in skillet_ids:
+            skillet_dict = snippet_utils.load_snippet_with_name(s.skillet_id, self.app_dir)
+            skillets.append(skillet_dict)
+
+        if not skillets:
+            messages.add_message(self.request, messages.INFO,
+                                 mark_safe('No Skillets have been added to this Favorite yet. '
+                                           'Click on the <a href="/panhandler/collection/All Skillets" '
+                                           'class="btn btn-outline-primary">'
+                                           '<li class="fa fa-heart"></li></a> to add a Skillet.'))
+
+        context['skillets'] = skillets
+        context['collection'] = collection
+
+        return context
+
+
+class AddSkilletToFavoritesView(CNCBaseFormView):
+    snippet = 'add_skillet_to_favorite'
+    next_url = '/panhandler/favorites'
+    app_dir = 'panhandler'
+    header = "Favorites"
+    title = "Add a new Collection"
+
+    def get_snippet(self):
+        return self.snippet
+
+    def get_context_data(self, **kwargs) -> dict:
+
+        skillet_name = self.kwargs.get('skillet_name', '')
+        all_favorites = Collection.objects.using('panhandler').all()
+
+        skillet = snippet_utils.load_snippet_with_name(skillet_name, self.app_dir)
+
+        if skillet is None:
+            raise SnippetRequiredException('Could not find that skillet!')
+
+        skillet_label = skillet.get('label', '')
+
+        favorite_names = list()
+        for favorite in all_favorites:
+            favorite_names.append(favorite.name)
+
+        if not favorite_names:
+            messages.add_message(self.request, messages.WARNING,
+                                 mark_safe("You have not yet added any favorites. Click "
+                                           "<a href='/panhandler/add_favorite'>Add Favorite Now</a>"
+                                           " to get started."))
+
+        self.save_value_to_workflow('all_favorites', favorite_names)
+        self.save_value_to_workflow('skillet_name', skillet_name)
+
+        context = super().get_context_data(**kwargs)
+        context['title'] = f'Add {skillet_label} to Favorites '
+        context['header'] = 'Configure Favorites'
+
+        return context
+
+    # once the form has been submitted and we have all the values placed in the workflow, execute this
+    def form_valid(self, form):
+        workflow = self.get_workflow()
+
+        try:
+            skillet_name = workflow['skillet_name']
+            favorites = workflow['favorites']
+
+            if not favorites:
+                if Skillet.objects.using('panhandler').filter(skillet_id=skillet_name).exists():
+                    skillet = Skillet.objects.using('panhandler')
+                    skillet.delete(using='panhandler')
+
+                return super().form_valid(form)
+
+            (skillet, created) = Skillet.objects.using('panhandler').get_or_create(
+                skillet_id=skillet_name
+            )
+
+            if not created:
+                skillet.collection_set.clear()
+
+            for f in favorites:
+                c = Collection.objects.using('panhandler').get(name=f)
+                skillet.collection_set.add(c)
+
+            self.pop_value_from_workflow('favorites')
+            self.pop_value_from_workflow('skillet_name')
+
+        except KeyError:
+            return self.form_invalid(form)
+
+        return super().form_valid(form)

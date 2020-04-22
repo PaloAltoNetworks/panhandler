@@ -41,6 +41,11 @@
                  data-groups=["{{ skillet.type }}"] data-skillet_type="{{ skillet.type }}">
                 <div class="card shadow" style="height: 400px">
                     <div class="card-header">
+
+                            <a href="/panhandler/favorite_skillet/{{ skillet.name }}"
+                               class="float-right btn btn-outline-danger">
+                                <li class="fa fa-heart"></li>
+                            </a>
                         {{ skillet.label }}
                     </div>
                     <div class="card-body" style="height: 85%; overflow-y: auto">
@@ -54,11 +59,13 @@
                             {% endfor %}
                             <a href="/panhandler/collections">All</a>
                         </p>
+
                     </div>
                     <div class="card-footer text-right">
-                        {%  if skillet.type == 'pan_validation' %}
+
+                        {% if skillet.type == 'pan_validation' %}
                             <a href="/panhandler/validate/{{ skillet.name }}" class="btn btn-primary">Go</a>
-                        {%  else %}
+                        {% else %}
                             <a href="/panhandler/skillet/{{ skillet.name }}" class="btn btn-primary">Go</a>
                         {% endif %}
 
@@ -110,9 +117,9 @@
                 sizer: '.sizer-element'
             });
             {% if default_sort == 'order' %}
-            perform_sort('#sort_order', 'order');
+                perform_sort('#sort_order', 'order');
             {% else %}
-            perform_sort('#sort_name', 'name');
+                perform_sort('#sort_name', 'name');
             {% endif %}
         });
 
