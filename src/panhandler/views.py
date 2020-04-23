@@ -32,7 +32,9 @@ from pathlib import Path
 from typing import Any
 
 from django.contrib import messages
-from django.forms import forms
+from django.forms import fields
+from django.forms import widgets
+from django.forms import Form
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.views.generic import RedirectView
@@ -568,7 +570,7 @@ class ListSnippetsByGroup(CNCBaseFormView):
         form = context['form']
 
         # we need to construct a new ChoiceField with the following basic format
-        # snippet_name = forms.ChoiceField(choices=(('gold', 'Gold'), ('silver', 'Silver'), ('bronze', 'Bronze')))
+        # snippet_name = fields.ChoiceField(choices=(('gold', 'Gold'), ('silver', 'Silver'), ('bronze', 'Bronze')))
         choices_list = list()
         # grab each service and construct a simple tuple with name and label, append to the list
         for service in services:
@@ -580,7 +582,7 @@ class ListSnippetsByGroup(CNCBaseFormView):
         # convert our list of tuples into a tuple itself
         choices_set = tuple(choices_list)
         # make our new field
-        new_choices_field = forms.ChoiceField(choices=choices_set, label='Choose Template:')
+        new_choices_field = fields.ChoiceField(choices=choices_set, label='Choose Template:')
         # set it on the original form, overwriting the hardcoded GSB version
 
         form.fields['snippet_name'] = new_choices_field
@@ -709,7 +711,7 @@ class CheckAppUpdateView(CNCBaseAuth, RedirectView):
 class ExecuteValidationSkilletView(ProvisionSnippetView):
     header = 'Configure Validation Skillet'
 
-    def generate_dynamic_form(self, data=None) -> forms.Form:
+    def generate_dynamic_form(self, data=None) -> Form:
         dynamic_form = super().generate_dynamic_form(data)
         choices_list = [('offline', 'Offline'), ('online', 'Online')]
         description = 'Validation Mode'
@@ -718,7 +720,7 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
         required = True
         help_text = 'Online mode will pull configuration directly from an accessible PAN-OS device. Offline ' \
                     'allows an XML configuration file to be uploaded.'
-        dynamic_form.fields['mode'] = forms.ChoiceField(choices=choices_list,
+        dynamic_form.fields['mode'] = fields.ChoiceField(choices=choices_list,
                                                         label=description, initial=default,
                                                         required=required, help_text=help_text)
 
@@ -728,7 +730,7 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
         # running = ('running', 'Running')
         # choices_list.append(candidate)
         # choices_list.append(running)
-        # dynamic_form.fields['config_source'] = forms.ChoiceField(widget=forms.Select, choices=tuple(choices_list),
+        # dynamic_form.fields['config_source'] = fields.ChoiceField(widget=forms.Select, choices=tuple(choices_list),
         #                                                          label='Configuration Source',
         #                                                          initial='running', required=True,
         #                                                          help_text='Which configuration file to use '
@@ -826,9 +828,9 @@ class ViewValidationResultsView(EditTargetView):
         context['header'] = self.header
         return context
 
-    def generate_dynamic_form(self, data=None) -> forms.Form:
+    def generate_dynamic_form(self, data=None) -> Form:
 
-        form = forms.Form(data=data)
+        form = Form(data=data)
 
         meta = self.meta
         if meta is None:
@@ -851,10 +853,10 @@ class ViewValidationResultsView(EditTargetView):
             target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
             target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
 
-            target_ip_field = forms.CharField(label=target_ip_label, initial=target_ip, required=True,
+            target_ip_field = fields.CharField(label=target_ip_label, initial=target_ip, required=True,
                                               validators=[FqdnOrIp])
-            target_username_field = forms.CharField(label=target_username_label, initial=target_username, required=True)
-            target_password_field = forms.CharField(widget=forms.PasswordInput(render_value=True), required=True,
+            target_username_field = fields.CharField(label=target_username_label, initial=target_username, required=True)
+            target_password_field = fields.CharField(widget=widgets.PasswordInput(render_value=True), required=True,
                                                     label=target_password_label,
                                                     initial=target_password)
 
@@ -868,9 +870,9 @@ class ViewValidationResultsView(EditTargetView):
             label = 'Configuration'
             initial = self.get_value_from_workflow('config', '<xml></xml>')
             help_text = 'Paste the full XML configuration file to validate here.'
-            config_field = forms.CharField(label=label, initial=initial, required=True,
+            config_field = fields.CharField(label=label, initial=initial, required=True,
                                            help_text=help_text,
-                                           widget=forms.Textarea(attrs={'cols': 40}))
+                                           widget=widgets.Textarea(attrs={'cols': 40}))
             form.fields['config'] = config_field
 
         return form
