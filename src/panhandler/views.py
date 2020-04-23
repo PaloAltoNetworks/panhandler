@@ -33,7 +33,9 @@ from typing import Any
 
 import yaml
 from django.contrib import messages
-from django.forms import forms
+from django.forms import fields
+from django.forms import widgets
+from django.forms import Form
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils.safestring import mark_safe
@@ -679,7 +681,7 @@ class ListSnippetsByGroup(CNCBaseFormView):
         # convert our list of tuples into a tuple itself
         choices_set = tuple(choices_list)
         # make our new field
-        new_choices_field = forms.ChoiceField(choices=choices_set, label='Choose Template:')
+        new_choices_field = fields.ChoiceField(choices=choices_set, label='Choose Template:')
         # set it on the original form, overwriting the hardcoded GSB version
 
         form.fields['snippet_name'] = new_choices_field
@@ -808,7 +810,7 @@ class CheckAppUpdateView(CNCBaseAuth, RedirectView):
 class ExecuteValidationSkilletView(ProvisionSnippetView):
     header = 'Configure Validation Skillet'
 
-    def generate_dynamic_form(self, data=None) -> forms.Form:
+    def generate_dynamic_form(self, data=None) -> Form:
         dynamic_form = super().generate_dynamic_form(data)
         choices_list = [('offline', 'Offline'), ('online', 'Online')]
         description = 'Validation Mode'
@@ -817,9 +819,9 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
         required = True
         help_text = 'Online mode will pull configuration directly from an accessible PAN-OS device. Offline ' \
                     'allows an XML configuration file to be uploaded.'
-        dynamic_form.fields['mode'] = forms.ChoiceField(choices=choices_list,
-                                                        label=description, initial=default,
-                                                        required=required, help_text=help_text)
+        dynamic_form.fields['mode'] = fields.ChoiceField(choices=choices_list,
+                                                         label=description, initial=default,
+                                                         required=required, help_text=help_text)
 
         # Uncomment when skilletlib can take a config_source
         # choices_list = list()
@@ -925,9 +927,9 @@ class ViewValidationResultsView(EditTargetView):
         context['header'] = self.header
         return context
 
-    def generate_dynamic_form(self, data=None) -> forms.Form:
+    def generate_dynamic_form(self, data=None) -> Form:
 
-        form = forms.Form(data=data)
+        form = Form(data=data)
 
         meta = self.meta
         if meta is None:
@@ -950,12 +952,13 @@ class ViewValidationResultsView(EditTargetView):
             target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
             target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
 
-            target_ip_field = forms.CharField(label=target_ip_label, initial=target_ip, required=True,
-                                              validators=[FqdnOrIp])
-            target_username_field = forms.CharField(label=target_username_label, initial=target_username, required=True)
-            target_password_field = forms.CharField(widget=forms.PasswordInput(render_value=True), required=True,
-                                                    label=target_password_label,
-                                                    initial=target_password)
+            target_ip_field = fields.CharField(label=target_ip_label, initial=target_ip, required=True,
+                                               validators=[FqdnOrIp])
+            target_username_field = fields.CharField(label=target_username_label, initial=target_username,
+                                                     required=True)
+            target_password_field = fields.CharField(widget=widgets.PasswordInput(render_value=True), required=True,
+                                                     label=target_password_label,
+                                                     initial=target_password)
 
             form.fields['TARGET_IP'] = target_ip_field
             form.fields['TARGET_USERNAME'] = target_username_field
@@ -967,9 +970,9 @@ class ViewValidationResultsView(EditTargetView):
             label = 'Configuration'
             initial = self.get_value_from_workflow('config', '<xml></xml>')
             help_text = 'Paste the full XML configuration file to validate here.'
-            config_field = forms.CharField(label=label, initial=initial, required=True,
-                                           help_text=help_text,
-                                           widget=forms.Textarea(attrs={'cols': 40}))
+            config_field = fields.CharField(label=label, initial=initial, required=True,
+                                            help_text=help_text,
+                                            widget=widgets.Textarea(attrs={'cols': 40}))
             form.fields['config'] = config_field
 
         return form
