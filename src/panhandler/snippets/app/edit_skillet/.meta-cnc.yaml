@@ -26,10 +26,6 @@ variables:
     attributes:
       rows: 20
       cols: 50
-  - name: repo_name
-    description: name of the repo
-    type_hint: hidden
-    default:
 
 snippets:
 
