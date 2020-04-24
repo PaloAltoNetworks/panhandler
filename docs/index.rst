@@ -11,7 +11,7 @@ Panhandler
    :caption: Contents:
 
    overview
-   releae_history
+   release_history
    running
    using
    switching_dev_latest
