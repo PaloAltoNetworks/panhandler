@@ -4,8 +4,8 @@ Running Panhandler
 The recommended way to run Panhandler is to pull and run the docker container.
 
 
-Quickstart
-----------
+Quick Start
+-----------
 
 The following command will ensure you have the most up to date version of panhandler and will set
 up all the required ports and volume mounts. This command will also update existing Panhandler containers
@@ -43,40 +43,35 @@ Using a standard web port
 
 .. code-block:: bash
 
-    docker run -t -p 8080:8080 -v ~:/home/cnc_user paloaltonetworks/panhandler
+    docker volume create panhandler_volume
+    docker run -p 8080:8080 -t -d \
+        -v panhandler_volume:/home/cnc_user \
+        -v "/var/run/docker.sock:/var/run/docker.sock" \
+        -e CNC_USERNAME=paloalto \
+        -e CNC_PASSWORD=panhandler \
+        --name panhandler paloaltonetworks/panhandler
 
 Then access the UI via http://localhost:8080
 
-The default username and password is: `paloalto` and `panhandler`
-
-
-Setting the Default Username and Password
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-To set the default username and password, pass in the following environment variables:
-
-.. code-block:: bash
-
-   docker run -t -e CNC_USERNAME=myuser -e CNC_PASSWORD=mypass -p 80:8080 -v ~:/home/cnc_user paloaltonetworks/panhandler
-
+Changing the values of CNC_USERNAME and CNC_PASSWORD will set the default username and password respectively.
 
 
 Using an alternate TCP port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-If port 80 is unavailable, you can switch to a different port. This example uses port 9999.
+If port 8080 is unavailable, you can switch to a different port. This example uses port 9999.
 
 .. code-block:: bash
 
-    docker run -t -p 9999:8080 -v ~:/home/cnc_user paloaltonetworks/panhandler
+    docker run -t -p 9999:8080 \
+        -v panhandler_volume:/home/cnc_user \
+        -v "/var/run/docker.sock:/var/run/docker.sock" \
+        -e CNC_USERNAME=paloalto \
+        -e CNC_PASSWORD=panhandler \
+        --name panhandler paloaltonetworks/panhandler
+
 
 Then access the UI via http://localhost:9999
-
-To persist any environments and secrets, you can mount a volume on the `/home/cnc_user` folder like this:
-
-.. code-block:: bash
-
-    docker run -t -p 9999:8080 -v ~:/home/cnc_user paloaltonetworks/panhandler
 
 .. Note::
     The -t option for `terminal` allows you to view panhandler output data in the terminal window.
