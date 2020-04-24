@@ -274,6 +274,11 @@ class RepoDetailsView(CNCView):
     # define initial dynamic form from this snippet metadata
 
     def get_context_data(self, **kwargs):
+
+        # always ensure workflow related items are removed from session when we get here in case a user
+        # cancels their workflow in the middle of it without it completing properly
+        self.clean_up_workflow()
+
         repo_name = self.kwargs['repo_name']
         user_dir = os.path.expanduser('~')
         repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
