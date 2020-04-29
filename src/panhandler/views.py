@@ -41,6 +41,7 @@ from django.shortcuts import render
 from django.utils.safestring import mark_safe
 from django.views.generic import RedirectView
 from skilletlib import Panos
+from skilletlib import SkilletLoader
 from skilletlib.exceptions import LoginException
 from skilletlib.exceptions import PanoplyException
 from skilletlib.exceptions import SkilletLoaderException
@@ -513,6 +514,7 @@ class UpdateSkilletView(CNCBaseFormView):
     snippet = 'edit_skillet'
     next_url = '/provision'
     app_dir = 'panhandler'
+    template_name = 'panhandler/edit_skillet.html'
 
     def get_snippet(self):
         return self.snippet
@@ -532,21 +534,30 @@ class UpdateSkilletView(CNCBaseFormView):
         skillet_name = self.kwargs.get('skillet', None)
         repo_name = self.kwargs.get('repo_name', None)
         skillet_contents = snippet_utils.get_snippet_metadata(skillet_name, self.app_dir)
+        skillet_dict = snippet_utils.load_snippet_with_name(skillet_name, self.app_dir)
 
-        skillet = snippet_utils.load_snippet_with_name(skillet_name, self.app_dir)
+        skillet_loader = SkilletLoader()
+        skillet = skillet_loader.create_skillet(skillet_dict=skillet_dict)
+
+        skillet_json = json.dumps(skillet_dict)
+
         if skillet is None:
             raise SnippetRequiredException('Could not find skillet to edit')
 
-        skillet_path = skillet.get('snippet_path')
+        skillet_path = skillet_dict.get('snippet_path')
 
         # save these values to the user session for later use on form_submit
         self.request.session['edit_skillet_repo_name'] = repo_name
         self.request.session['edit_skillet_skillet_path'] = skillet_path
 
-        self.save_value_to_workflow('skillet_contents', skillet_contents)
+        self.prepopulated_form_values['skillet_contents'] = skillet_contents
+
+        # self.save_value_to_workflow('skillet_contents', skillet_contents)
 
         context = super().get_context_data(**kwargs)
         context['skillet_contents'] = skillet_contents
+        context['skillet_json'] = skillet_json
+        context['skillet'] = skillet
         context['title'] = 'Edit Skillet Metadata'
         context['header'] = 'Panhandler Skillet'
         return context
@@ -562,15 +573,42 @@ class UpdateSkilletView(CNCBaseFormView):
 
         workflow = self.get_workflow()
         local_branch = workflow.get('local_branch_name', None)
-        skillet_content = workflow.get('skillet_contents', None)
+        skillet_json = workflow.get('skillet_contents', {})
         commit_message = workflow.get('commit_message', None)
 
         try:
-            yaml.safe_load(skillet_content)
-        except ScannerError:
+            skillet_dict = json.loads(skillet_json)
+            skillet_content = yaml.safe_dump(skillet_dict)
+
+        except (ScannerError, ValueError):
             messages.add_message(self.request, messages.ERROR,
-                                 'YAML Syntax Error! Refusing to overwrite Skillet metadata file.')
+                                 'Syntax Error! Refusing to overwrite Skillet metadata file.')
             return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+
+        skillet_loader = SkilletLoader()
+        debug_errors = skillet_loader.debug_skillet_structure(skillet_dict)
+
+        # debug skillet structure
+        for d in debug_errors:
+            messages.add_message(self.request, messages.ERROR, f'Skillet Error: {d}')
+
+        skillet = skillet_loader.create_skillet(skillet_dict=skillet_dict)
+
+        if 'pan' in skillet.type:
+            # extra check to ensure all variables are defined
+            for snippet in skillet.get_snippets():
+                snippet_vars = list(snippet.get_variables_from_template(snippet.metadata['xpath']))
+                snippet_vars.extend(list(snippet.get_variables_from_template(snippet.metadata['element'])))
+                for var in snippet_vars:
+                    found = False
+                    for declared_var in skillet.variables:
+                        if var == declared_var['name']:
+                            found = True
+                            break
+
+                    if not found:
+                        messages.add_message(self.request, messages.WARNING, f'Found undeclared variable: {var} '
+                                                                             f'in snippet: {snippet.name}')
 
         user_dir = os.path.expanduser('~')
         snippets_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories')
@@ -585,6 +623,7 @@ class UpdateSkilletView(CNCBaseFormView):
 
         git_utils.commit_local_changes(repo_dir, commit_message, skillet_file_path)
 
+        messages.add_message(self.request, messages.SUCCESS, f'Skillet updated!')
         snippet_utils.invalidate_snippet_caches(self.app_dir)
         cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
         return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')

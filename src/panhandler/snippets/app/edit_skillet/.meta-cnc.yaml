@@ -1,8 +1,8 @@
 name: edit_skillet
-label: Simple Skillet Editor
+label: Skillet Editor
 description: |
-  Allows a quick edit to a Skillet .meta-cnc file. This will create a new local branch in the git repository
-  using the 'Branch' option.
+  Skillet Editor will create or update a Skillet. This saved Skillet is then saved into a local branch in the parent
+  repository.
 
 type: app
 
@@ -22,10 +22,7 @@ variables:
   - name: skillet_contents
     description: Skillet Contents
     default:
-    type_hint: text_area
-    attributes:
-      rows: 20
-      cols: 50
+    type_hint: hidden
 
 snippets:
 
