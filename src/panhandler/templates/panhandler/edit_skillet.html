@@ -52,6 +52,7 @@
         }
 
         function enlarge_text_area(target) {
+            event.preventDefault();
             let text_area_input = $('#text_area_input')
             let text_area_target_input = $('#text_area_target')
             text_area_target_input.val(target);
@@ -109,7 +110,7 @@
             snippet_def['output_type'] = $('#id_panos_snippet_output_type').val();
 
             snippet_def['outputs'] = [];
-            $('#all_output_options').find('[id^="output_"]').each(function (index, output_div) {
+            $('#all_panos_output_options').find('[id^="output_"]').each(function (index, output_div) {
                 let output_div_obj = $(output_div);
                 let name_span = output_div_obj.find('[data-output_attribute_type="name"]');
                 let capture_type_span = output_div_obj.find('[data-output_attribute_type="key"]');
@@ -135,7 +136,7 @@
             // old_snippet_def = snippet_def;
             console.log('updated panos snippet');
 
-            $('#snippet_outputs_add').removeClass('show');
+            $('#panos_outputs_add').removeClass('show');
         }
 
         function add_update_variable() {
@@ -195,6 +196,35 @@
 
             // add the variable to the UI
             add_variable(var_name, var_description);
+        }
+
+        function update_all_labels() {
+            /**
+             * Grab all the currently display labels and update the skillet variable appropriately
+             */
+
+            let new_labels = {};
+
+            let labels_div = $('#all_labels');
+            labels_div.find('.input-group').each(function (index, obj) {
+                let label_group = $(obj);
+                let label_key = label_group.find('[data-label_type="key"]').val();
+                let label_value = label_group.find('[data-label_type="value"]').val();
+
+                if (typeof new_labels[label_key] === 'undefined') {
+                    new_labels[label_key] = label_value;
+                } else if (typeof new_labels[label_key] === 'string') {
+                    let orig_value = new_labels[label_key];
+                    let label_key_list = [];
+                    label_key_list.push(orig_value);
+                    label_key_list.push(label_value);
+                    new_labels[label_key] = label_key_list;
+                } else if ($.isArray(new_labels[label_key])) {
+                    new_labels[label_key].push(label_value);
+                }
+            });
+
+            skillet['labels'] = new_labels;
         }
 
         function get_variable_type_hint_options(variable_definition) {
@@ -406,7 +436,7 @@
 
         function show_edit_variable(variable_object) {
             /**
-             * Set up and show the Edit Variable Modal diaglog
+             * Set up and show the Edit Variable Modal dialog
              */
             event.preventDefault();
             let variable_edit_link = $(variable_object);
@@ -442,21 +472,102 @@
 
         }
 
+        function setup_snippet_modal(snippet_def, skillet_type) {
+            // blank out all pre-existing options
+            $('#edit_' + skillet_type + '_snippet_modal').find('.form-control').val('');
+
+            // set output capture type to list by default
+            $('#id_' + skillet_type + '_output_key').val('capture_list');
+
+            // remove all existing output options, if any
+            $('#all_' + skillet_type + '_output_options').empty();
+
+            // set the snippet name
+            $('#id_' + skillet_type + '_snippet_name').val(snippet_def['name']);
+
+            // show output definitions
+            $(snippet_def['outputs']).each(function (index, output_object) {
+                let capture_type = 'capture_list';
+                if ('capture_pattern' in output_object) {
+                    capture_type = 'capture_pattern';
+                } else if ('capture_value' in output_object) {
+                    capture_type = 'capture_value';
+                } else if ('capture_object' in output_object) {
+                    capture_type = 'capture_object';
+                }
+                add_output(output_object['name'], capture_type, output_object[capture_type], skillet_type);
+            });
+
+            for (let attribute_name in snippet_def) {
+                let z = $('#id_' + skillet_type + '_snippet_' + attribute_name);
+                if (z.length) {
+                    z.val(snippet_def[attribute_name]);
+                }
+            }
+        }
+
+        function setup_rest_snippet(snippet_def) {
+            setup_snippet_modal(snippet_def, 'rest');
+        }
+
+        function update_snippet(snippet_type) {
+            let snippet_name_input = $('#id_' + snippet_type + '_snippet_name');
+            let snippet_name = snippet_name_input.val();
+
+            let snippet_def = get_snippet_definition(snippet_name);
+
+            for (let attribute_name in snippet_def) {
+                let z = $('#id_' + snippet_type + '_snippet_' + attribute_name);
+                if (z.length) {
+                    snippet_def[attribute_name] = z.val();
+                }
+            }
+
+            snippet_def['outputs'] = [];
+            $('#all_' + snippet_type + '_output_options').find('[id^="output_"]').each(function (index, output_div) {
+                let output_div_obj = $(output_div);
+                let name_span = output_div_obj.find('[data-output_attribute_type="name"]');
+                let capture_type_span = output_div_obj.find('[data-output_attribute_type="key"]');
+                let capture_value_span = output_div_obj.find('[data-output_attribute_type="value"]');
+                let name = name_span.html();
+                let capture_key = capture_type_span.html();
+                let capture_value = capture_value_span.html();
+
+                let output_def = {};
+                output_def['name'] = name;
+                output_def[capture_key] = capture_value;
+
+                snippet_def['outputs'].push(output_def);
+            });
+
+
+        }
+
+        function update_rest_snippet() {
+            update_snippet('rest');
+        }
+
         function setup_panos_snippet(snippet_def) {
             /**
              * Set all the fields for the panos snippet edit dialoge
              */
-
+            
             // blank out all pre-existing options
             $('#edit_panos_snippet_modal').find('.form-control').val('');
 
+            // set output capture type to list by default
+            $('#id_panos_output_key').val('capture_list');
+
             // remove all existing output options, if any
-            $('#all_output_options').empty();
+            $('#all_panos_output_options').empty();
 
             // set the snippet name
             $('#id_panos_snippet_name').val(snippet_def['name']);
 
             // set the snippet cmd
+            if (typeof snippet_def['cmd'] === 'undefined') {
+                snippet_def['cmd'] = 'set';
+            }
             $('#id_panos_snippet_cmd').val(snippet_def['cmd']);
 
             if (typeof snippet_def['output_type'] !== 'undefined') {
@@ -495,7 +606,7 @@
                 } else if ('capture_object' in output_object) {
                     capture_type = 'capture_object';
                 }
-                add_output(output_object['name'], capture_type, output_object[capture_type]);
+                add_output(output_object['name'], capture_type, output_object[capture_type], 'panos');
             });
         }
 
@@ -511,6 +622,9 @@
             if (skillet['type'] === 'panos') {
                 setup_panos_snippet(snippet_def);
                 $('#edit_panos_snippet_modal').modal();
+            } else if(skillet['type'] === 'rest') {
+                setup_rest_snippet(snippet_def);
+                $('#edit_rest_snippet_modal').modal();
             } else {
                 alert('Snippet type not yet implemented');
                 return;
@@ -618,9 +732,9 @@
             opt_key_field.focus();
         }
 
-        function add_output(output_name, output_key, output_value) {
+        function add_output(output_name, output_key, output_value, output_type) {
             let output_base = $('#output_base');
-            let all_outputs = $('#all_output_options');
+            let all_outputs = $('#all_' + output_type + '_output_options');
 
             let new_output = output_base.clone();
             let new_output_name = new_output.find('[data-output_attribute_type="name"]');
@@ -637,20 +751,20 @@
             new_output.css('display', '');
         }
 
-        function add_new_output() {
+        function add_new_output(output_type) {
             /**
              * Called from adding a new snippet output capture
              */
             event.preventDefault();
-            let opt_name_field = $('#id_output_name');
-            let opt_key_field = $('#id_output_key');
-            let opt_val_field = $('#id_output_value');
+            let opt_name_field = $('#id_' + output_type + '_output_name');
+            let opt_key_field = $('#id_' + output_type + '_output_key');
+            let opt_val_field = $('#id_' + output_type + '_output_value');
 
             let opt_key = opt_key_field.val();
             let opt_val = opt_val_field.val();
             let opt_name = opt_name_field.val();
 
-            add_output(opt_name, opt_key, opt_val);
+            add_output(opt_name, opt_key, opt_val, output_type);
 
             opt_name_field.val('');
             opt_key_field.val('');
@@ -689,6 +803,9 @@
 
             let json_output_control = $('#skillet_json_output');
 
+            // always grab latest labels
+            update_all_labels();
+
             skillet['variables'] = skillet_variables;
             skillet['snippets'] = skillet_snippets;
 
@@ -707,6 +824,9 @@
             skillet['snippets'] = skillet_snippets;
 
             json_output_control.val(JSON.stringify(skillet, null, '  '));
+
+            // grab any updated labels here
+            update_all_labels();
 
             let doc = $(document.documentElement);
             doc.css('cursor', 'progress');
@@ -841,7 +961,8 @@
             </div>
             <div class="text-right">
                 <button type="button" class="btn btn-outline-primary"
-                        onclick="update_preamble()">Update Preamble</button>
+                        onclick="update_preamble()">Update Preamble
+                </button>
             </div>
             <hr/>
             <div class="form-group mb-4">
@@ -1277,31 +1398,31 @@
 
                     <!-- Outputs -->
                     <div class="form-group">
-                        <label for="all_output_options">Output Items:</label>
-                        <div class="input-group" id="all_output_options"></div>
+                        <label for="all_panos_output_options">Outputs:</label>
+                        <div class="input-group" id="all_panos_output_options"></div>
                     </div>
-                    <a href="#snippet_outputs_add" data-toggle="collapse" data-target="#snippet_outputs_add"
-                       aria-expanded="true" aria-controls="snippet_outputs_add">
+                    <a href="#panos_outputs_add" data-toggle="collapse" data-target="#panos_outputs_add"
+                       aria-expanded="true" aria-controls="panos_outputs_add">
                         <i class="fa fa-plus"></i>Add Output
                     </a>
-                    <div id="snippet_outputs_add" class="form-group collapse">
-                        <label for="id_output_name">Variable Name:</label>
+                    <div id="panos_outputs_add" class="form-group collapse">
+                        <label for="id_panos_output_name">Variable Name:</label>
                         <input type="text" value="" placeholder="" class="form-control"
-                               id="id_output_name">
-                        <label for="id_output_key">Capture Type:</label>
-                        <select id="id_output_key" class="form-control">
+                               id="id_panos_output_name">
+                        <label for="id_panos_output_key">Capture Type:</label>
+                        <select id="id_panos_output_key" class="form-control">
                             <option value="capture_list" selected="selected">Capture List</option>
                             <option value="capture_pattern">Capture Pattern</option>
                             <option value="capture_value">Capture Value</option>
                             <option value="capture_object">Capture Object</option>
                         </select>
-                        <label for="id_output_value">XPath Query:</label>
+                        <label for="id_panos_output_value">XPath Query:</label>
                         <div class="input-group">
                             <input type="text" value="" placeholder="" class="form-control"
-                                   id="id_output_value">
+                                   id="id_panos_output_value">
                             <div class="input-group-append">
                                 <span class="input-group-text">
-                                    <a href="#" onclick="add_new_output();">
+                                    <a href="#" onclick="add_new_output('panos');">
                                         <i class="fa fa-plus"></i>
                                     </a>
                                 </span>
@@ -1313,6 +1434,93 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" onclick="update_panos_snippet()"
+                            data-dismiss="modal">Update
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit REST Snippet Modal -->
+    <div class="modal fade" id="edit_rest_snippet_modal" tabindex="-1" role="dialog"
+         aria-labelledby="edit_rest_snippet_label"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="edit_rest_snippet_modal_label">Edit REST Snippet</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto">
+                    <div class="form-group">
+                        <label for="id_rest_snippet_name">Name:</label>
+                        <input type="text" value="" class="form-control" id="id_rest_snippet_name" disabled>
+                        <label for="id_rest_snippet_path">Path:</label>
+                        <input type="text" value="" class="form-control" id="id_rest_snippet_path">
+                        <label for="id_rest_snippet_operation">Operation:</label>
+                        <select class="form-control" id="id_rest_snippet_operation">
+                            <option>get</option>
+                            <option>post</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_rest_snippet_payload">Payload:</label>
+                        <textarea class="form-control" id="id_rest_snippet_payload"
+                                  data-modal_source="id_rest_snippet_operation" data-modal_value="post"></textarea>
+                        <p class="small muted text-right m-0">
+                            <a href="#" onclick="enlarge_text_area('id_rest_snippet_payload')">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                        </p>
+                    </div>
+                    <hr/>
+                    <div class="form-group">
+                        <label for="id_rest_snippet_output_type">Output Type:</label>
+                        <select id="id_rest_snippet_output_type" class="form-control">
+                            <option selected>xml</option>
+                            <option>json</option>
+                            <option>text</option>
+                        </select>
+                    </div>
+
+                    <!-- Outputs -->
+                    <div class="form-group">
+                        <label for="all_rest_output_options">Outputs:</label>
+                        <div class="input-group" id="all_rest_output_options"></div>
+                    </div>
+                    <a href="#rest_outputs_add" data-toggle="collapse" data-target="#rest_outputs_add"
+                       aria-expanded="true" aria-controls="rest_outputs_add">
+                        <i class="fa fa-plus"></i>Add Output
+                    </a>
+                    <div id="rest_outputs_add" class="form-group collapse">
+                        <label for="id_rest_output_name">Variable Name:</label>
+                        <input type="text" value="" placeholder="" class="form-control"
+                               id="id_rest_output_name">
+                        <label for="id_rest_output_key">Capture Type:</label>
+                        <select id="id_rest_output_key" class="form-control">
+                            <option value="capture_pattern">Capture Pattern</option>
+                        </select>
+                        <label for="id_rest_output_value">Pattern:</label>
+                        <div class="input-group">
+                            <input type="text" value="" placeholder="" class="form-control"
+                                   id="id_rest_output_value">
+                            <div class="input-group-append">
+                                <span class="input-group-text">
+                                    <a href="#" onclick="add_new_output('rest');">
+                                        <i class="fa fa-plus"></i>
+                                    </a>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="update_rest_snippet()"
                             data-dismiss="modal">Update
                     </button>
 
@@ -1334,6 +1542,7 @@
                     </button>
                 </div>
                 <div class="modal-body" style="overflow-y: auto">
+                    <label for="text_area_input">Edit</label>
                     <textarea class="form-control text-monospace small"
                               style="width: 1200px; font-size: 80%" rows="20" id="text_area_input"></textarea>
                     <input type="hidden" id="text_area_target" value=""/>

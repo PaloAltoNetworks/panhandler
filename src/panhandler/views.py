@@ -539,6 +539,9 @@ class UpdateSkilletView(CNCBaseFormView):
         skillet_loader = SkilletLoader()
         skillet = skillet_loader.create_skillet(skillet_dict=skillet_dict)
 
+        # call get_snippets to ensure we load 'file' attributes into 'element'
+        skillet.get_snippets()
+
         skillet_json = json.dumps(skillet_dict)
 
         if skillet is None:
@@ -597,18 +600,20 @@ class UpdateSkilletView(CNCBaseFormView):
         if 'pan' in skillet.type:
             # extra check to ensure all variables are defined
             for snippet in skillet.get_snippets():
-                snippet_vars = list(snippet.get_variables_from_template(snippet.metadata['xpath']))
-                snippet_vars.extend(list(snippet.get_variables_from_template(snippet.metadata['element'])))
-                for var in snippet_vars:
-                    found = False
-                    for declared_var in skillet.variables:
-                        if var == declared_var['name']:
-                            found = True
-                            break
+                cmd = snippet.metadata.get('cmd', 'set')
+                if cmd == 'set':
+                    snippet_vars = list(snippet.get_variables_from_template(snippet.metadata.get('xpath', '')))
+                    snippet_vars.extend(list(snippet.get_variables_from_template(snippet.metadata.get('element', ''))))
+                    for var in snippet_vars:
+                        found = False
+                        for declared_var in skillet.variables:
+                            if var == declared_var['name']:
+                                found = True
+                                break
 
-                    if not found:
-                        messages.add_message(self.request, messages.WARNING, f'Found undeclared variable: {var} '
-                                                                             f'in snippet: {snippet.name}')
+                        if not found:
+                            messages.add_message(self.request, messages.WARNING, f'Found undeclared variable: {var} '
+                                                                                 f'in {skillet.label}: {snippet.name}')
 
         user_dir = os.path.expanduser('~')
         snippets_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories')
