@@ -20,6 +20,8 @@
 
         var skillet_variables = skillet['variables'];
 
+        var declared_variables = JSON.parse('{{ skillet.declared_variables | tojson | escapejs }}');
+
         var skillet_snippets = JSON.parse('{{ skillet.snippet_stack | tojson | escapejs }}');
 
         function add_label(key, value) {
@@ -342,6 +344,13 @@
             new_variable.css('display', '');
         }
 
+        function remove_variable(var_object) {
+            event.preventDefault();
+            let variable_to_remove_link = $(var_object);
+            let variable_to_remove = variable_to_remove_link.closest('.input-group');
+            variable_to_remove.remove();
+        }
+
         function add_snippet(key, value) {
             let snippet_base = $('#snippet_base');
             let all_snippets = $('#all_snippets');
@@ -551,7 +560,7 @@
             /**
              * Set all the fields for the panos snippet edit dialoge
              */
-            
+
             // blank out all pre-existing options
             $('#edit_panos_snippet_modal').find('.form-control').val('');
 
@@ -622,12 +631,22 @@
             if (skillet['type'] === 'panos') {
                 setup_panos_snippet(snippet_def);
                 $('#edit_panos_snippet_modal').modal();
-            } else if(skillet['type'] === 'rest') {
+            } else if (skillet['type'] === 'rest') {
                 setup_rest_snippet(snippet_def);
                 $('#edit_rest_snippet_modal').modal();
+            } else if (skillet['type'] === 'panorama-gpcs') {
+                // FIXME -
+                setup_snippet_modal(snippet_def, 'panos');
+                $('#edit_panos_snippet_modal').modal();
             } else {
-                alert('Snippet type not yet implemented');
-                return;
+                let m = $('#edit_' + skillet['type'] + '_snippet_modal');
+                if (m.length) {
+                    setup_snippet_modal(snippet_def, skillet['type']);
+                    m.modal();
+                } else {
+                    alert('Snippet type not yet implemented!');
+                    return;
+                }
             }
             setup_modal_options();
         }
@@ -662,10 +681,8 @@
                 let parent = $(e).closest('.form-group');
                 let data_value = this_object.attr('data-modal_value');
                 if (data_value !== source_value) {
-                    console.log(' need to hide this guy');
                     parent.hide();
                 } else {
-                    console.log(' need to show this guy');
                     parent.show();
                 }
             });
@@ -861,6 +878,20 @@
             let all_variables = $('#all_variables');
             let all_snippets = $('#all_snippets');
 
+            // each Skillet will collect all the variables that have been defined
+            // we can compare this with the variables the user has added to the skillet
+            // and add them if necessary
+            $.each(declared_variables, function (index, declared_variable) {
+                if (skillet_variables.findIndex(i => i.name === declared_variable) === -1) {
+                    let new_var = {};
+                    new_var['name'] = declared_variable;
+                    new_var['description'] = 'Undeclared Variable';
+                    new_var['type_hint'] = 'text';
+                    new_var['default'] = '';
+                    skillet_variables.push(new_var);
+                }
+            });
+
             $.each(skillet_variables, function (index, variable) {
 
                 let new_variable = variable_base.clone();
@@ -1036,9 +1067,9 @@
     <!-- Variable Clone -->
     <div class="input-group mb-3" id="variable_base" style="display: none">
         <div class="input-group-prepend">
-                <span class="input-group-text" title="Drag to Sort">
-                        <i class="fa fa-sort"></i>
-                </span>
+            <span class="input-group-text" title="Drag to Sort">
+                    <i class="fa fa-sort"></i>
+            </span>
         </div>
         <input type="text" value=""
                data-variable_attribute="name" class="form-control bg-light" disabled="disabled"/>
@@ -1046,11 +1077,16 @@
         <input type="text" value=""
                data-variable_attribute="type" class="form-control bg-light" disabled/>
         <div class="input-group-append">
-                <span class="input-group-text">
-                    <a href="#" onclick="show_edit_variable(this);">
-                        <i class="fa fa-edit"></i>
-                    </a>
-                </span>
+            <span class="input-group-text" title="Remove Variable">
+                <a href="#" onclick="remove_variable(this);">
+                    <i class="fa fa-minus"></i>
+                </a>
+            </span>
+            <span class="input-group-text" title="Edit Variable">
+                <a href="#" onclick="show_edit_variable(this);">
+                    <i class="fa fa-edit"></i>
+                </a>
+            </span>
         </div>
     </div>
 
@@ -1193,11 +1229,17 @@
                     <label for="id_variable_name">Name:</label>
                     <input type="text" value="" class="form-control" id="id_variable_name">
                     <label for="id_variable_description">Description:</label>
-                    <input type="text" value="" class="form-control" id="id_variable_description">
+                    <input type="text" value="" class="form-control" id="id_variable_description"
+                           title="Human friendly description for this variable.">
+                    <label for="id_variable_help_text">Help Text:</label>
+                    <input type="text" value="" class="form-control" id="id_variable_help_text"
+                           title="Contextual help information for this variable.">
                     <label for="id_variable_default">Default:</label>
-                    <input type="text" value="" class="form-control" id="id_variable_default">
+                    <input type="text" value="" class="form-control" id="id_variable_default"
+                           title="Default value that will be used if no input is supplied by the user.">
                     <label for="id_variable_type">Variable Type:</label>
-                    <select class="form-control" id="id_variable_type">
+                    <select class="form-control" id="id_variable_type"
+                            title="This controls how this variable will be displayed to the user.">
                         <option value="text">Text</option>
                         <option value="text_area">Text Area</option>
                         <option value="password">Password</option>
@@ -1218,9 +1260,11 @@
                         <div class="input-group" id="all_dropdown_options"></div>
                         <div class="input-group" id="dropdown_options_add_ui">
                             <input type="text" value="" placeholder="key" class="form-control" id="id_dropdown_key"
-                                   data-modal_source="id_variable_type" data-modal_value="dropdown">
+                                   data-modal_source="id_variable_type" data-modal_value="dropdown"
+                                   title="This key will be what is set in the snippet context and available for templates.">
                             <div class="input-group-append"><span class="input-group-text">:</span></div>
-                            <input type="text" value="" placeholder="value" class="form-control" id="id_dropdown_value">
+                            <input type="text" value="" placeholder="value" class="form-control" id="id_dropdown_value"
+                                   title="This value is what will be shown to the user in the dropdown menu.">
                             <div class="input-group-append">
                                 <span class="input-group-text">
                                     <a href="#" onclick="add_new_option('dropdown');">
@@ -1522,7 +1566,7 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="update_rest_snippet()"
+                    <button type="button" class="btn btn-primary" onclick="update_snippet('rest')"
                             data-dismiss="modal">Update
                     </button>
 
@@ -1531,6 +1575,82 @@
         </div>
     </div>
 
+    <!-- Edit Template Snippet Modal -->
+    <div class="modal fade" id="edit_template_snippet_modal" tabindex="-1" role="dialog"
+         aria-labelledby="edit_template_snippet_label"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="edit_template_snippet_modal_label">Edit Template Snippet</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto">
+                    <div class="form-group">
+                        <label for="id_template_snippet_name">Name:</label>
+                        <input type="text" value="" class="form-control" id="id_template_snippet_name" disabled>
+                        <label for="id_template_snippet_element">Template:</label>
+                        <textarea class="form-control" rows="7" id="id_template_snippet_element"></textarea>
+                        <p class="small muted text-right m-0">
+                            <a href="#" onclick="enlarge_text_area('id_template_snippet_element')">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                        </p>
+                    </div>
+                    <hr/>
+                    <div class="form-group">
+                        <label for="id_template_snippet_output_type">Output Type:</label>
+                        <select id="id_template_snippet_output_type" class="form-control">
+                            <option selected>xml</option>
+                            <option>json</option>
+                            <option>text</option>
+                        </select>
+                    </div>
+
+                    <!-- Outputs -->
+                    <div class="form-group">
+                        <label for="all_template_output_options">Outputs:</label>
+                        <div class="input-group" id="all_template_output_options"></div>
+                    </div>
+                    <a href="#template_outputs_add" data-toggle="collapse" data-target="#template_outputs_add"
+                       aria-expanded="true" aria-controls="template_outputs_add">
+                        <i class="fa fa-plus"></i>Add Output
+                    </a>
+                    <div id="template_outputs_add" class="form-group collapse">
+                        <label for="id_template_output_name">Variable Name:</label>
+                        <input type="text" value="" placeholder="" class="form-control"
+                               id="id_template_output_name">
+                        <label for="id_template_output_key">Capture Type:</label>
+                        <select id="id_template_output_key" class="form-control">
+                            <option value="capture_pattern">Capture Pattern</option>
+                        </select>
+                        <label for="id_template_output_value">Pattern:</label>
+                        <div class="input-group">
+                            <input type="text" value="" placeholder="" class="form-control"
+                                   id="id_template_output_value">
+                            <div class="input-group-append">
+                                <span class="input-group-text">
+                                    <a href="#" onclick="add_new_output('template');">
+                                        <i class="fa fa-plus"></i>
+                                    </a>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="update_snippet('template')"
+                            data-dismiss="modal">Update
+                    </button>
+
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Text Edit Modal -->
     <div class="modal fade" id="show_textarea_modal" tabindex="-1" role="dialog"
          aria-labelledby="show_textarea_modal"
@@ -1552,6 +1672,103 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" onclick="update_text_area_source()"
+                            data-dismiss="modal">Update
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit PAN-OS Validation Snippet Modal -->
+    <div class="modal fade" id="edit_pan_validation_snippet_modal" tabindex="-1" role="dialog"
+         aria-labelledby="edit_pan_validation_snippet_label"
+         aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="edit_pan_validation_snippet_modal_label">
+                        Edit PAN-OS Validation Snippet
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto">
+                    <div class="form-group">
+                        <label for="id_pan_validation_snippet_name">Name:</label>
+                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_name" disabled>
+                        <label for="id_pan_validation_snippet_label">Label:</label>
+                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_label">
+                        <label for="id_pan_validation_snippet_cmd">Cmd:</label>
+                        <select id="id_pan_validation_snippet_cmd" class="form-control">
+                            <option selected>validate</option>
+                            <option>validate_xml</option>
+                            <option>parse</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_pan_validation_snippet_severity">Severity:</label>
+                        <select id="id_pan_validation_snippet_severity" class="form-control">
+                            <option selected>low</option>
+                            <option>medium</option>
+                            <option>high</option>
+                        </select>
+                        <label for="id_pan_validation_snippet_fail_message">Fail Message:</label>
+                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_fail_message"
+                        <label for="id_pan_validation_snippet_pass_message">Pass Message:</label>
+                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_pass_message">
+                        <label for="id_pan_validation_snippet_documentation_link">Documentation Link:</label>
+                        <input type="text" value="" class="form-control"
+                               id="id_pan_validation_snippet_documentation_link">
+                        <label for="id_pan_validation_snippet_test">Test:</label>
+                        <textarea class="form-control" rows="3" id="id_pan_validation_snippet_test"
+                                  data-modal_source="id_pan_validation_snippet_cmd"
+                                  data-modal_value="validate"></textarea>
+                        <p class="small muted text-right m-0">
+                            <a href="#" onclick="enlarge_text_area('id_pan_validation_snippet_test')">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                        </p>
+                    </div>
+                    <!-- Outputs -->
+                    <div class="form-group">
+                        <label for="id_pan_validation_snippet_variable">Parsed Variable:</label>
+                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_variable"
+                               data-modal_source="id_pan_validation_snippet_cmd" data-modal_value="parse">
+                        <label for="all_pan_validation_output_options">Outputs:</label>
+                        <div class="input-group" id="all_pan_validation_output_options"></div>
+                        <a href="#pan_validation_outputs_add" data-toggle="collapse"
+                           data-target="#pan_validation_outputs_add"
+                           aria-expanded="true" aria-controls="pan_validation_outputs_add">
+                            <i class="fa fa-plus"></i>Add Output
+                        </a>
+                        <div id="pan_validation_outputs_add" class="collapse">
+                            <label for="id_pan_validation_output_name">Variable Name:</label>
+                            <input type="text" value="" placeholder="" class="form-control"
+                                   id="id_pan_validation_output_name">
+                            <label for="id_pan_validation_output_key">Capture Type:</label>
+                            <select id="id_pan_validation_output_key" class="form-control">
+                                <option value="capture_pattern">Capture Pattern</option>
+                            </select>
+                            <label for="id_pan_validation_output_value">Pattern:</label>
+                            <div class="input-group">
+                                <input type="text" value="" placeholder="" class="form-control"
+                                       id="id_pan_validation_output_value">
+                                <div class="input-group-append">
+                                    <span class="input-group-text">
+                                    <a href="#"
+                                       onclick="add_new_output('pan_validation');">
+                                    <i class="fa fa-plus"></i>
+                                    </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="update_snippet('pan_validation')"
                             data-dismiss="modal">Update
                     </button>
                 </div>
