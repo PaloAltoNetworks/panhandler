@@ -812,7 +812,10 @@ class ListSkilletsInCollectionView(CNCView):
         print(f'Getting all snippets with collection label {collection}')
 
         if collection == 'All Skillets':
-            skillets = snippet_utils.load_all_snippets(self.app_dir)
+            all_skillets = snippet_utils.load_all_snippets(self.app_dir)
+
+            # remove app type skillets from this list for #196
+            skillets = list(s for s in all_skillets if s['type'] != 'app')
         else:
             skillets = snippet_utils.load_snippets_by_label('collection', collection, self.app_dir)
 
