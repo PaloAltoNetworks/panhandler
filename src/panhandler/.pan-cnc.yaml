@@ -44,6 +44,10 @@ views:
       - repo_name
       - skillet
 
+  - name: create_skillet
+    class: CreateSkilletView
+    parameter: repo_name
+
   - name: collections
     class: ListSkilletCollectionsView
     menu: Panhandler

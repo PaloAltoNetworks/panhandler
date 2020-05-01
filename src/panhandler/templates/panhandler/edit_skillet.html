@@ -34,6 +34,8 @@
             new_label_key.val(key);
             new_label_value.val(value);
 
+            new_label.prop('id', 'label_' + key + '_' + value)
+
             all_labels.append(new_label);
 
             new_label.css('display', '');
@@ -88,6 +90,14 @@
             // let snippet_def = {};
             // snippet_def['name'] = snippet_name;
             snippet_def['cmd'] = cmd;
+
+            // catch all
+            for (let attribute_name in snippet_def) {
+                let z = $('#id_panos_snippet_' + attribute_name);
+                if (z.length) {
+                    snippet_def[attribute_name] = z.val();
+                }
+            }
 
             // set options for the given cmd
             switch (cmd) {
@@ -351,7 +361,24 @@
             variable_to_remove.remove();
         }
 
-        function add_snippet(key, value) {
+        function add_new_snippet() {
+
+            let snippet_name = $('#id_new_snippet_name').val();
+            let snippet_def = {};
+            snippet_def['name'] = snippet_name;
+
+            if (skillet['type'] === 'panos') {
+                snippet_def['cmd'] = 'set';
+                snippet_def['xpath'] = '';
+                snippet_def['element'] = '';
+            }
+
+            skillet_snippets.push(snippet_def);
+
+            add_snippet(snippet_name);
+        }
+
+        function add_snippet(key) {
             let snippet_base = $('#snippet_base');
             let all_snippets = $('#all_snippets');
             let new_snippet = snippet_base.clone();
@@ -494,18 +521,28 @@
             // set the snippet name
             $('#id_' + skillet_type + '_snippet_name').val(snippet_def['name']);
 
-            // show output definitions
-            $(snippet_def['outputs']).each(function (index, output_object) {
-                let capture_type = 'capture_list';
-                if ('capture_pattern' in output_object) {
-                    capture_type = 'capture_pattern';
-                } else if ('capture_value' in output_object) {
-                    capture_type = 'capture_value';
-                } else if ('capture_object' in output_object) {
-                    capture_type = 'capture_object';
+            // output type of text can only have 1 output defined and capture_type does not matter, just fill in
+            // a default though it will be ignored anyway.
+            if (snippet_def['output_type'] === 'text') {
+                if ('outputs' in snippet_def) {
+                    let output_object = snippet_def['outputs'][0];
+                    add_output(output_object['name'], 'capture_pattern', '.', skillet_type);
                 }
-                add_output(output_object['name'], capture_type, output_object[capture_type], skillet_type);
-            });
+            } else {
+
+                // show output definitions
+                $(snippet_def['outputs']).each(function (index, output_object) {
+                    let capture_type = 'capture_list';
+                    if ('capture_pattern' in output_object) {
+                        capture_type = 'capture_pattern';
+                    } else if ('capture_value' in output_object) {
+                        capture_type = 'capture_value';
+                    } else if ('capture_object' in output_object) {
+                        capture_type = 'capture_object';
+                    }
+                    add_output(output_object['name'], capture_type, output_object[capture_type], skillet_type);
+                });
+            }
 
             for (let attribute_name in snippet_def) {
                 let z = $('#id_' + skillet_type + '_snippet_' + attribute_name);
@@ -557,6 +594,43 @@
         }
 
         function setup_panos_snippet(snippet_def) {
+            // set the snippet cmd
+            if (typeof snippet_def['cmd'] === 'undefined') {
+                snippet_def['cmd'] = 'set';
+            }
+
+            $('#id_panos_snippet_cmd').val(snippet_def['cmd']);
+
+            if (typeof snippet_def['output_type'] !== 'undefined') {
+                $('#id_panos_snippet_output_type').val(snippet_def['output_type']);
+            } else {
+                $('#id_panos_snippet_output_type').val('xml');
+            }
+
+            setup_snippet_modal(snippet_def, 'panos');
+
+                        // set options for the given cmd
+            switch (snippet_def['cmd']) {
+                case 'set':
+                    $('#id_panos_snippet_set_xpath').val(snippet_def['xpath']);
+                    $('#id_panos_snippet_set_element').val(snippet_def['element']);
+                    break;
+
+                case 'get':
+                    $('#id_panos_snippet_get_xpath').val(snippet_def['xpath']);
+                    break;
+
+                case 'cli':
+                    $('#id_panos_snippet_cmd_cmd_str').val(snippet_def['cmd_str']);
+                    break;
+
+                case 'op':
+                    $('#id_panos_snippet_cmd_op').val(snippet_def['cmd_str']);
+                    break;
+            }
+        }
+
+        function setup_panos_snippet_old(snippet_def) {
             /**
              * Set all the fields for the panos snippet edit dialoge
              */
@@ -943,7 +1017,7 @@
                 handle: '.input-group-prepend',
                 containment: 'parent',
                 tolerance: "pointer",
-                update: function (event, ui) {
+                update: function () {
                     let updated_snippets = [];
                     all_snippets.find('[data-snippet_attribute="name"]').each(function (index, object) {
                         let snippet_input = $(object);
@@ -1024,7 +1098,7 @@
                 </div>
                 <div id="new_snippet" class="text-right">
                     <button type="button" class="btn btn-outline-primary" data-toggle="modal"
-                            data-target="#add_snippet_modal">Add Snippet
+                            data-target="#show_new_snippet_modal">Add Snippet
                     </button>
                 </div>
             </div>
@@ -1051,10 +1125,10 @@
     <!-- Label Clone -->
     <div class="input-group mb-3" id="label_base" style="display: none">
         <input type="text" value=""
-               data-label_type="key" class="form-control"/>
+               data-label_type="key" class="form-control bg-light" disabled="disabled"/>
         <div class="input-group-append"><span class="input-group-text">:</span></div>
         <input type="text" value=""
-               data-label_type="value" class="form-control"/>
+               data-label_type="value" class="form-control bg-light" disabled="disabled"/>
         <div class="input-group-append">
                 <span class="input-group-text">
                     <a href="#" onclick="remove_option(this);">
@@ -1100,11 +1174,16 @@
         <input type="text" value=""
                data-snippet_attribute="name" class="form-control bg-light" disabled="disabled"/>
         <div class="input-group-append">
-                <span class="input-group-text">
-                    <a href="#" onclick="show_edit_snippet(this);">
-                        <i class="fa fa-edit"></i>
-                    </a>
-                </span>
+            <span class="input-group-text" title="Remove Snippet">
+                <a href="#" onclick="remove_option(this);">
+                    <i class="fa fa-minus"></i>
+                </a>
+            </span>
+            <span class="input-group-text">
+                <a href="#" onclick="show_edit_snippet(this);">
+                    <i class="fa fa-edit"></i>
+                </a>
+            </span>
         </div>
     </div>
 
@@ -1251,6 +1330,7 @@
                         <option value="fqdn_or_ip">FQDN</option>
                         <option value="ip_address">IP Address</option>
                         <option value="cidr">CIDR (IP with Netmask)</option>
+                        <option value="file">File Upload</option>
                         <option value="hidden">Hidden</option>
                         <option value="disabled">Disabled</option>
                     </select>
@@ -1385,7 +1465,7 @@
     <div class="modal fade" id="edit_panos_snippet_modal" tabindex="-1" role="dialog"
          aria-labelledby="edit_panos_snippet_label"
          aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="edit_panos_snippet_modal_label">Edit PAN-OS Snippet</h5>
@@ -1403,6 +1483,7 @@
                             <option>get</option>
                             <option>cli</option>
                             <option>op</option>
+                            <option>parse</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -1431,6 +1512,11 @@
                         <label for="id_panos_snippet_cmd_op">Operational Command XML:</label>
                         <input type="text" value="" class="form-control" id="id_panos_snippet_cmd_op"
                                data-modal_source="id_panos_snippet_cmd" data-modal_value="op">
+                    </div>
+                    <div class="form-group">
+                    <label for="id_panos_snippet_variable">Parsed Variable:</label>
+                        <input type="text" value="" class="form-control" id="id_panos_snippet_variable"
+                               data-modal_source="id_panos_snippet_cmd" data-modal_value="parse">
                     </div>
                     <hr/>
                     <div class="form-group">
@@ -1651,9 +1737,10 @@
             </div>
         </div>
     </div>
+
     <!-- Text Edit Modal -->
     <div class="modal fade" id="show_textarea_modal" tabindex="-1" role="dialog"
-         aria-labelledby="show_textarea_modal"
+         aria-labelledby="show_textarea_modal" style="z-index: 1051;"
          aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
@@ -1697,8 +1784,6 @@
                     <div class="form-group">
                         <label for="id_pan_validation_snippet_name">Name:</label>
                         <input type="text" value="" class="form-control" id="id_pan_validation_snippet_name" disabled>
-                        <label for="id_pan_validation_snippet_label">Label:</label>
-                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_label">
                         <label for="id_pan_validation_snippet_cmd">Cmd:</label>
                         <select id="id_pan_validation_snippet_cmd" class="form-control">
                             <option selected>validate</option>
@@ -1707,6 +1792,8 @@
                         </select>
                     </div>
                     <div class="form-group">
+                        <label for="id_pan_validation_snippet_label">Label:</label>
+                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_label">
                         <label for="id_pan_validation_snippet_severity">Severity:</label>
                         <select id="id_pan_validation_snippet_severity" class="form-control">
                             <option selected>low</option>
@@ -1714,7 +1801,7 @@
                             <option>high</option>
                         </select>
                         <label for="id_pan_validation_snippet_fail_message">Fail Message:</label>
-                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_fail_message"
+                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_fail_message">
                         <label for="id_pan_validation_snippet_pass_message">Pass Message:</label>
                         <input type="text" value="" class="form-control" id="id_pan_validation_snippet_pass_message">
                         <label for="id_pan_validation_snippet_documentation_link">Documentation Link:</label>
@@ -1770,6 +1857,32 @@
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" onclick="update_snippet('pan_validation')"
                             data-dismiss="modal">Update
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Snippet Modal -->
+    <div class="modal fade" id="show_new_snippet_modal" tabindex="-1" role="dialog"
+         aria-labelledby="show_new_snippet_modal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="show_skillet_label">New Snippet</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto">
+                    <label for="id_new_snippet_name">Name:</label>
+                        <input type="text" value="" class="form-control" id="id_new_snippet_name">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="add_new_snippet()"
+                            data-dismiss="modal">Create
                     </button>
                 </div>
             </div>

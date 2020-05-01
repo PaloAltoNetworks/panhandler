@@ -1,0 +1,64 @@
+name: create_skillet
+label: Skillet Generator Tool
+description: |
+  Skillet Generator will create a new Skillet.
+
+type: app
+
+variables:
+  - name: skillet_name
+    description: Skillet ID
+    default: new_skillet
+    type_hint: text
+    allow_special_characters: false
+    help_text: Identifier of the Skillet to create
+  - name: skillet_label
+    description: Skillet Label
+    default: New Skillet
+    type_hint: text
+    allow_special_characters: false
+    help_text: Human Friendly Name of this Skillet
+  - name: skillet_decription
+    description: Skillet Description
+    default: |
+      Long form description of the purpose and function of this Skillet.
+    type_hint: text_area
+    allow_special_characters: false
+    help_text: This should provide context for what this skillet will do
+    attributes:
+      rows: 3
+      cols: 50
+  - name: skillet_type
+    description: Skillet Type
+    default: panos
+    type_hint: dropdown
+    dd_list:
+      - value: panos
+        key: PAN-OS
+      - value: panorama
+        key: Panorama
+      - value: panorama-gpcs
+        key: Prisma Access
+      - value: template
+        key: Template
+      - value: rest
+        key: Rest
+      - value: docker
+        key: Docker
+      - value: terraform
+        key: Terraform
+  - name: local_branch_name
+    description: Branch
+    default: local
+    type_hint: text
+    allow_special_characters: false
+    help_text: Name of the branch in which to save these local changes
+  - name: commit_message
+    description: Commit Message
+    default: Create New Skillet
+    type_hint: text
+    allow_special_characters: false
+    help_text: Message to add to commit log for this edit
+
+snippets:
+

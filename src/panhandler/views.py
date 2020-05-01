@@ -510,6 +510,102 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
         return f'/panhandler/repos'
 
 
+class CreateSkilletView(CNCBaseFormView):
+    snippet = 'create_skillet'
+    app_dir = 'panhandler'
+    title = "Skillet Generator"
+    header = "Create a New Skillet"
+
+    def get_snippet(self):
+        return self.snippet
+
+    def get_context_data(self, **kwargs):
+        repo_name = self.kwargs.get('repo_name', None)
+        self.request.session['create_skillet_repo_name'] = repo_name
+        return super().get_context_data(**kwargs)
+
+    # once the form has been submitted and we have all the values placed in the workflow, execute this
+    def form_valid(self, form):
+        try:
+            repo_name = self.request.session.pop('create_skillet_repo_name')
+        except KeyError:
+            messages.add_message(self.request, messages.ERROR, 'Could not edit Skillet, malformed environment')
+            return HttpResponseRedirect('/panhandler/repos')
+
+        workflow = self.get_workflow()
+        local_branch = workflow.get('local_branch_name', None)
+        commit_message = workflow.get('commit_message', None)
+        skillet_name = workflow.get('skillet_name', None)
+        skillet_label = workflow.get('skillet_label', None)
+        skillet_type = workflow.get('skillet_type', None)
+        skillet_description = workflow.get('skillet_description', None)
+
+        new_skillet = dict()
+        new_skillet['name'] = skillet_name
+        new_skillet['label'] = skillet_label
+        new_skillet['description'] = skillet_description
+        new_skillet['type'] = skillet_type
+        new_skillet['labels'] = dict()
+        new_skillet['variables'] = list()
+        new_skillet['snippets'] = list()
+
+        user_dir = os.path.expanduser('~/.pan_cnc')
+        snippets_dir = os.path.join(user_dir, 'panhandler/repositories')
+        repo_dir = os.path.join(snippets_dir, repo_name)
+
+        skillet_path = os.path.join(repo_dir, skillet_name)
+
+        # ensure we can create the appropriate directory
+        if os.path.exists(skillet_path):
+            messages.add_message(self.request, messages.ERROR,
+                                 'Could not Create Skillet, Directory already exists in repo')
+            return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+
+        try:
+            os.makedirs(skillet_path)
+        except OSError:
+            messages.add_message(self.request, messages.ERROR,
+                                 'Could not Create Skillet, Could not create directory!')
+            return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+
+        # check to ensure no skillet exists in the repo root, this will prevent snippet_utils from indexing any
+        # child directories and this skillet will never been seen!
+        if os.path.exists(os.path.join(repo_dir, '.meta-cnc.yaml')):
+            messages.add_message(self.request, messages.ERROR,
+                                 'Could not Create Skillet, Found a Skillet file in the Repository Root!')
+            return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+
+        # ensure this skillet name does not already exist
+        existing_skillet = snippet_utils.load_snippet_with_name(skillet_name, app_dir='panhandler')
+        if existing_skillet:
+            messages.add_message(self.request, messages.ERROR,
+                                 'Could not create Skillet, Skillet with that name already exists')
+            return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+
+        try:
+            skillet_content = yaml.safe_dump(new_skillet)
+
+        except (ScannerError, ValueError):
+            messages.add_message(self.request, messages.ERROR,
+                                 'Syntax Error! Refusing to overwrite Skillet metadata file.')
+            return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+
+        git_utils.checkout_local_branch(repo_dir, local_branch)
+
+        skillet_file_path = os.path.join(skillet_path, '.meta-cnc.yaml')
+
+        with open(skillet_file_path, 'w') as skillet_file:
+            skillet_file.write(skillet_content)
+
+        git_utils.commit_local_changes(repo_dir, commit_message, skillet_file_path)
+
+        messages.add_message(self.request, messages.SUCCESS, f'Skillet Created!')
+
+        snippet_utils.invalidate_snippet_caches(self.app_dir)
+        cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
+        return HttpResponseRedirect(f'/panhandler/edit_skillet/{repo_name}/{ skillet_name }')
+
+
 class UpdateSkilletView(CNCBaseFormView):
     snippet = 'edit_skillet'
     next_url = '/provision'
@@ -629,6 +725,9 @@ class UpdateSkilletView(CNCBaseFormView):
         git_utils.commit_local_changes(repo_dir, commit_message, skillet_file_path)
 
         messages.add_message(self.request, messages.SUCCESS, f'Skillet updated!')
+
+        # fixme - instead of invalidating all snipets from all repos, we should make repos from each dir have it's
+        # own cache key, and track them seperately. Only invalidate snippet cache from that dir only...
         snippet_utils.invalidate_snippet_caches(self.app_dir)
         cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
         return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')

@@ -79,8 +79,9 @@
                 </tbody>
             </table>
 
-            <h5 class="card-title">Metadata files</h5>
+            <h5 class="card-title">Skillets</h5>
             <p class="card-text">
+
             <table class="table">
                 <caption>All Defined metadata files in repository: {{ repo_detail.name }}</caption>
                 <thead>
@@ -89,6 +90,7 @@
                     <th scope="col">Label</th>
                     <th scope="col">View</th>
                     <th scope="col">Description</th>
+                    <th scope="col">Type</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -116,10 +118,14 @@
                             </a>
                         </td>
                         <td>{{ s.description }}</td>
+                        <td>{{ s.type }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
             </table>
+            <div class="text-right w-100">
+                <a href="/panhandler/create_skillet/{{ repo_detail.name }}" class="btn btn-primary">Create Skillet</a>
+            </div>
             </p>
 
             <h5 class="card-title">Collections</h5>
