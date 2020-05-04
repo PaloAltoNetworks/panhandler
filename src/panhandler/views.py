@@ -504,6 +504,10 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
             print('Invalidating snippet cache')
             snippet_utils.invalidate_snippet_caches(self.app_dir)
             cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
+            # Fix for #197 - ensure we delete old repo details
+            cache_repo_name = repo_name.replace(' ', '_')
+            cnc_utils.set_long_term_cached_value(self.app_dir, f'git_utils_upstream_{cache_repo_name}', None, 0,
+                                                 'git_repo_details')
             cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
 
         messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
