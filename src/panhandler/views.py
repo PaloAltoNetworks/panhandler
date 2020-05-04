@@ -1239,24 +1239,8 @@ class ViewValidationResultsView(EditTargetView):
             results = list()
             skillet_output = skillet.execute(jinja_context)
             validation_output = skillet_output.get('pan_validation', dict())
-            for snippet in skillet.snippet_stack:
-                name = snippet.get('name', '')
-                cmd = snippet.get('cmd', '')
-                if cmd != 'validate':
-                    print('skipping non-validation snippet')
-                    continue
 
-                result_object = dict()
-                if snippet['name'] in validation_output:
-                    result_object['name'] = name
-                    result_object['results'] = validation_output[name]
-                else:
-                    result_object['name'] = name
-                    result_object['results'] = {}
-
-                results.append(result_object)
-
-            context['results'] = results
+            context['results'] = validation_output
 
         except SkilletLoaderException:
             print(f"Could not load it for some reason")

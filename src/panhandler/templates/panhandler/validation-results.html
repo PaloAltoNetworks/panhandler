@@ -39,52 +39,48 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% with c="0" %}
-                    {% for r in results %}
-                        {% if r.results.label %}
+                    {% for snippet_name, r in results.items %}
                             <tr>
-                                <th scope="row">{{ c|add:"1" }}</th>
+                                <th scope="row">{{ forloop.counter }}</th>
                                 <td>
-                                    <a href="#{{ r.name }}_div" data-toggle="collapse">
-                                        {{ r.results.label }}
+                                    <a href="#{{ snippet_name }}_div" data-toggle="collapse">
+                                        {{ r.label }}
                                     </a>
-                                    <div id="{{ r.name }}_div" class="collapse text-secondary p-3">
-                                        {{ r.results.output_message | linebreaksbr }}
+                                    <div id="{{ snippet_name }}_div" class="collapse show text-secondary p-3">
+                                        {{ r.output_message | linebreaksbr }}
                                     </div>
                                 </td>
                                 <td>
-                                    {% if r.results.results is True %}
+                                    {% if r.results is True %}
                                         <a class="text-success" href="#"
-                                           onclick="show_modal('{{ r.results.documentation_link }}')">
+                                           onclick="show_modal('{{ r.documentation_link }}')">
                                             Passed
                                         </a>
                                     {% else %}
                                         <a class="text-danger" href="#"
-                                           onclick="show_modal('{{ r.results.documentation_link }}')">
+                                           onclick="show_modal('{{ r.documentation_link }}')">
                                             Failed
                                         </a>
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if r.results.severity == 'high' %}
+                                    {% if r.severity == 'high' %}
                                         <div class="text-danger">
-                                    {% elif r.results.severity == 'medium' %}
+                                    {% elif r.severity == 'medium' %}
                                         <div class="text-warning">
                                     {% else %}
                                         <div class="text-info">
                                     {% endif %}
-                                    {{ r.results.severity }}
+                                    {{ r.severity }}
                                     </div>
                                 </td>
                                 <td>
-                                    <a href="{{ r.results.documentation_link }}" target="_blank">
+                                    <a href="{{ r.documentation_link }}" target="_blank">
                                         Documentation
                                     </a>
                                 </td>
                             </tr>
-                        {% endif %}
                     {% endfor %}
-                {% endwith %}
                 </tbody>
             </table>
             </p>
