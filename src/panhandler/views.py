@@ -33,13 +33,15 @@ from typing import Any
 
 import yaml
 from django.contrib import messages
+from django.forms import Form
 from django.forms import fields
 from django.forms import widgets
-from django.forms import Form
+from django.http import HttpResponse
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils.safestring import mark_safe
 from django.views.generic import RedirectView
+from django.views.generic import View
 from skilletlib import Panos
 from skilletlib import SkilletLoader
 from skilletlib.exceptions import LoginException
@@ -616,7 +618,7 @@ class CreateSkilletView(CNCBaseFormView):
 
         snippet_utils.invalidate_snippet_caches(self.app_dir)
         cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
-        return HttpResponseRedirect(f'/panhandler/edit_skillet/{repo_name}/{ skillet_name }')
+        return HttpResponseRedirect(f'/panhandler/edit_skillet/{repo_name}/{skillet_name}')
 
 
 class UpdateSkilletView(CNCBaseFormView):
@@ -1240,10 +1242,13 @@ class ViewValidationResultsView(EditTargetView):
 
         try:
             skillet = PanValidationSkillet(meta, panoply)
-            results = list()
             skillet_output = skillet.execute(jinja_context)
             validation_output = skillet_output.get('pan_validation', dict())
 
+            # fix for #169 - add validation output to the context
+            self.save_dict_to_workflow(validation_output)
+
+            context['skillet'] = skillet
             context['results'] = validation_output
 
         except SkilletLoaderException:
@@ -1251,6 +1256,30 @@ class ViewValidationResultsView(EditTargetView):
             return render(self.request, 'pan_cnc/results.html', context)
 
         return render(self.request, 'panhandler/validation-results.html', context)
+
+
+class ExportValidationResultsView(CNCBaseAuth, View):
+
+    def get(self, request, *args, **kwargs) -> Any:
+
+        validation_skillet = kwargs['skillet']
+        meta = snippet_utils.load_snippet_with_name(validation_skillet, self.app_dir)
+
+        filename = meta.get('name', 'Validation Output')
+        full_output = dict()
+
+        full_context = self.get_workflow()
+
+        for s in meta['snippets']:
+            snippet_name = s['name']
+            if snippet_name in full_context:
+                output = full_context[snippet_name]
+                full_output[snippet_name] = output
+
+        json_output = json.dumps(full_output, indent=' ')
+        response = HttpResponse(json_output, content_type="application/json")
+        response['Content-Disposition'] = 'attachment; filename=%s.json' % filename
+        return response
 
 
 class FavoritesView(CNCView):

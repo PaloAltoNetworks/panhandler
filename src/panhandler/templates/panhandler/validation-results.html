@@ -50,20 +50,20 @@
                                         {{ r.output_message | linebreaksbr }}
                                     </div>
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     {% if r.results is True %}
                                         <a class="text-success" href="#"
                                            onclick="show_modal('{{ r.documentation_link }}')">
-                                            Passed
+                                            <i class="fa fa-check-circle"></i>
                                         </a>
                                     {% else %}
                                         <a class="text-danger" href="#"
                                            onclick="show_modal('{{ r.documentation_link }}')">
-                                            Failed
+                                            <i class="fa fa-check-circle"></i>
                                         </a>
                                     {% endif %}
                                 </td>
-                                <td>
+                                <td class="text-center">
                                     {% if r.severity == 'high' %}
                                         <div class="text-danger">
                                     {% elif r.severity == 'medium' %}
@@ -75,8 +75,8 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <a href="{{ r.documentation_link }}" target="_blank">
-                                        Documentation
+                                    <a href="{{ r.documentation_link }}" target="_blank" title="Documentation">
+                                        <i class="fa fa-book"></i>
                                     </a>
                                 </td>
                             </tr>
@@ -88,6 +88,10 @@
         </div>
         <div class="card-footer text-right">
             <p class="card-text">
+                <a href="/panhandler/export_valiation_results/{{ skillet.name }}" class="btn btn-secondary"
+                title="Export and Download Results">
+                    <i class="fa fa-file-download" style="line-height: 1.5"></i>
+                </a>
                 {% if request.session.next_step %}
                     {% if request.session.last_step %}
                         <a href="/workflow/{{ request.session.next_step }}" class="btn btn-primary">Complete</a>
@@ -101,7 +105,7 @@
         </div>
     </div>
     <div class="modal fade" id="test_modal" tabinex="-1" role="dialog"
-         aria-labelledby="{{ r.results.label }}" aria-hidden="true">
+         aria-labelledby="{{ r.label }}" aria-hidden="true">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-body mb-0 p-0">

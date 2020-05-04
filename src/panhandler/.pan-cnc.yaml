@@ -102,6 +102,10 @@ views:
   - name: validate-results
     class: ViewValidationResultsView
 
+  - name: export_valiation_results
+    class: ExportValidationResultsView
+    parameter: skillet
+
   - name: favorites
     class: FavoritesView
     menu: Panhandler
