@@ -53,7 +53,7 @@
             new_label_key.val('');
             new_label_value.val('');
 
-            // go ahead and update our skillet object
+            // go ahead and update our skillet obje
             update_all_labels();
         }
 
@@ -1756,7 +1756,7 @@
     <div class="modal fade" id="show_textarea_modal" tabindex="-1" role="dialog"
          aria-labelledby="show_textarea_modal" style="z-index: 1051;"
          aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="show_skillet_label">Edit Text</h5>
@@ -1784,7 +1784,7 @@
     <div class="modal fade" id="edit_pan_validation_snippet_modal" tabindex="-1" role="dialog"
          aria-labelledby="edit_pan_validation_snippet_label"
          aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="edit_pan_validation_snippet_modal_label">
@@ -1804,6 +1804,13 @@
                             <option>validate_xml</option>
                             <option>parse</option>
                         </select>
+                        <label for="id_pan_validation_snippet_when">When:</label>
+                        <textarea class="form-control" rows="1" id="id_pan_validation_snippet_when"></textarea>
+                        <p class="small muted text-right m-0">
+                            <a href="#" onclick="enlarge_text_area('id_pan_validation_snippet_when')">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                        </p>
                     </div>
                     <div class="form-group">
                         <label for="id_pan_validation_snippet_label">Label:</label>
@@ -1822,7 +1829,7 @@
                         <input type="text" value="" class="form-control"
                                id="id_pan_validation_snippet_documentation_link">
                         <label for="id_pan_validation_snippet_test">Test:</label>
-                        <textarea class="form-control" rows="3" id="id_pan_validation_snippet_test"
+                        <textarea class="form-control" rows="2" id="id_pan_validation_snippet_test"
                                   data-modal_source="id_pan_validation_snippet_cmd"
                                   data-modal_value="validate"></textarea>
                         <p class="small muted text-right m-0">

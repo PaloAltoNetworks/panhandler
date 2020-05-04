@@ -1,7 +1,8 @@
 name: create_skillet
 label: Skillet Generator Tool
 description: |
-  Skillet Generator will create a new Skillet.
+  This tool will generate an empty skillet of the given type. You may then edit this skillet to add
+  variables and snippets.
 
 type: app
 
@@ -39,6 +40,8 @@ variables:
         key: Panorama
       - value: panorama-gpcs
         key: Prisma Access
+      - value: pan-validation
+        key: PAN Validation
       - value: template
         key: Template
       - value: rest
