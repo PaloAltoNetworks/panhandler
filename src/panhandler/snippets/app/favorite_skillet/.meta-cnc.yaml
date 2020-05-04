@@ -13,3 +13,4 @@ variables:
     default:
     type_hint: checkbox
     source: all_favorites
+    required: False

@@ -41,6 +41,10 @@
                  data-groups=["{{ skillet.type }}"] data-skillet_type="{{ skillet.type }}">
                 <div class="card shadow" style="height: 400px">
                     <div class="card-header">
+                        <a href="/panhandler/favorite_skillet/{{ skillet.name }}"
+                               class="float-right btn btn-outline-warning btn-sm">
+                                <li class="fa fa-heart"></li>
+                            </a>
                         {{ skillet.label }}
                     </div>
                     <div class="card-body" style="height: 85%; overflow-y: auto">

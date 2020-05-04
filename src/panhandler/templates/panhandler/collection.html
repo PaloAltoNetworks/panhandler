@@ -41,9 +41,8 @@
                  data-groups=["{{ skillet.type }}"] data-skillet_type="{{ skillet.type }}">
                 <div class="card shadow" style="height: 400px">
                     <div class="card-header">
-
                             <a href="/panhandler/favorite_skillet/{{ skillet.name }}"
-                               class="float-right btn btn-outline-danger btn-sm">
+                               class="float-right btn btn-outline-warning btn-sm">
                                 <li class="fa fa-heart"></li>
                             </a>
                         {{ skillet.label }}
@@ -62,7 +61,6 @@
 
                     </div>
                     <div class="card-footer text-right">
-
                         {% if skillet.type == 'pan_validation' %}
                             <a href="/panhandler/validate/{{ skillet.name }}" class="btn btn-primary">Go</a>
                         {% else %}

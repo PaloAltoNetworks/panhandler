@@ -1376,6 +1376,15 @@ class AddSkilletToFavoritesView(CNCBaseFormView):
         self.save_value_to_workflow('all_favorites', favorite_names)
         self.save_value_to_workflow('skillet_name', skillet_name)
 
+        if Skillet.objects.using('panhandler').filter(skillet_id=skillet_name).exists():
+            skillet = Skillet.objects.using('panhandler').get(skillet_id=skillet_name)
+            current_favorites_qs = skillet.collection_set.all()
+            current_favorites = list()
+            for f in current_favorites_qs:
+                current_favorites.append(f.name)
+
+            self.prepopulated_form_values['favorites'] = current_favorites
+
         context = super().get_context_data(**kwargs)
         context['title'] = f'Add {skillet_label} to Favorites '
         context['header'] = 'Configure Favorites'
@@ -1392,8 +1401,10 @@ class AddSkilletToFavoritesView(CNCBaseFormView):
 
             if not favorites:
                 if Skillet.objects.using('panhandler').filter(skillet_id=skillet_name).exists():
-                    skillet = Skillet.objects.using('panhandler')
+                    skillet = Skillet.objects.using('panhandler').get(skillet_id=skillet_name)
                     skillet.delete(using='panhandler')
+                    messages.add_message(self.request, messages.INFO, 'Removed Skillet from All Favorites')
+                    self.next_url = self.request.session.get('last_page', '/')
 
                 return super().form_valid(form)
 
