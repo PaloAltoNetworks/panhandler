@@ -6,6 +6,10 @@ description: |
 
 type: app
 
+labels:
+  help_link: https://skilletbuilder.readthedocs.io
+  help_link_title: Skillet Builder Documentation
+
 variables:
   - name: local_branch_name
     description: Branch

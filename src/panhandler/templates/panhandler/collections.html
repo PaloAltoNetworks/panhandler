@@ -122,6 +122,10 @@
             let search_text = $(this).val().toLowerCase().trim();
             shuffleInstance.filter(function (element, shuffleInstance) {
                 let title_element = $(element).data('name');
+                if (typeof title_element !== 'string') {
+                    title_element = title_element.toString();
+                }
+
                 let title_text = title_element.toLowerCase().trim();
 
                 return title_text.includes(search_text);

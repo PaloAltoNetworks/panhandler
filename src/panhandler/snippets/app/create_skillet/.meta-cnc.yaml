@@ -18,7 +18,7 @@ variables:
     type_hint: text
     allow_special_characters: false
     help_text: Human Friendly Name of this Skillet
-  - name: skillet_decription
+  - name: skillet_description
     description: Skillet Description
     default: |
       Long form description of the purpose and function of this Skillet.

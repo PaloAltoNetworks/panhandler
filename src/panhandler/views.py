@@ -540,14 +540,23 @@ class CreateSkilletView(CNCBaseFormView):
         skillet_type = workflow.get('skillet_type', None)
         skillet_description = workflow.get('skillet_description', None)
 
+        # let's cheat and grab a snippets list from the context - Skillet Builder tools can populate this for us
+        skillet_snippets = workflow.get('snippets', list())
+
+        collection_name = workflow.get('collection_name', 'Unknown')
+
         new_skillet = dict()
         new_skillet['name'] = skillet_name
         new_skillet['label'] = skillet_label
         new_skillet['description'] = skillet_description
         new_skillet['type'] = skillet_type
-        new_skillet['labels'] = dict()
+
+        new_skillet['labels'] = {
+            'collection': collection_name
+        }
+
         new_skillet['variables'] = list()
-        new_skillet['snippets'] = list()
+        new_skillet['snippets'] = skillet_snippets
 
         user_dir = os.path.expanduser('~/.pan_cnc')
         snippets_dir = os.path.join(user_dir, 'panhandler/repositories')
