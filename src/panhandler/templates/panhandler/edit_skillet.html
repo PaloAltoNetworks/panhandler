@@ -106,18 +106,27 @@
                 case 'set':
                     snippet_def['xpath'] = $('#id_panos_snippet_set_xpath').val();
                     snippet_def['element'] = $('#id_panos_snippet_set_element').val();
+
+                    extract_variables(snippet_def['xpath']);
+                    extract_variables(snippet_def['element']);
                     break;
 
                 case 'get':
                     snippet_def['xpath'] = $('#id_panos_snippet_get_xpath').val();
+
+                    extract_variables(snippet_def['xpath']);
                     break;
 
                 case 'cli':
                     snippet_def['cmd_str'] = $('#id_panos_snippet_cmd_cmd_str').val();
+
+                    extract_variables(snippet_def['cmd_str']);
                     break;
 
                 case 'op':
                     snippet_def['cmd_str'] = $('#id_panos_snippet_cmd_op').val();
+
+                    extract_variables(snippet_def['cmd_str']);
                     break;
             }
 
@@ -241,6 +250,44 @@
             skillet['labels'] = new_labels;
         }
 
+        function update_all_variables() {
+            /**
+             * Update the skillet_variables global var to be reflective of the UI
+             */
+
+            let all_variables = [];
+            let vars_div = $('#all_variables');
+
+            vars_div.find('.input-group').each(function (index, obj) {
+                let variable_group = $(obj);
+                let variable_name = variable_group.find('[data-variable_attribute="name"]').val();
+                let variable_def = get_variable_definition(variable_name);
+                all_variables.push(variable_def);
+            });
+
+            skillet_variables = all_variables;
+
+        }
+        
+        function update_all_snippets() {
+            /**
+             * Update the skillet_snippets global var to be reflective of the UI
+             */
+
+            let all_snippets = [];
+            let vars_div = $('#all_snippets');
+
+            vars_div.find('.input-group').each(function (index, obj) {
+                let snippet_group = $(obj);
+                let snippet_name = snippet_group.find('[data-snippet_attribute="name"]').val();
+                let snippet_def = get_snippet_definition(snippet_name);
+                all_snippets.push(snippet_def);
+            });
+
+            skillet_snippets = all_snippets;
+
+        }
+
         function get_variable_type_hint_options(variable_definition) {
             /**
              * Get variable type_hint specific options
@@ -361,6 +408,7 @@
             let variable_to_remove_link = $(var_object);
             let variable_to_remove = variable_to_remove_link.closest('.input-group');
             variable_to_remove.remove();
+
         }
 
         function add_new_snippet() {
@@ -377,6 +425,8 @@
             if (skillet_snippets.findIndex(i => i.name === snippet_name) === -1) {
                 skillet_snippets.push(snippet_def);
                 add_snippet(snippet_name);
+                edit_snippet_by_name(snippet_name);
+
             } else {
                 alert('Snippet with that name already exists!');
             }
@@ -401,6 +451,11 @@
             let option_to_remove_link = $(option_object);
             let option_to_remove = option_to_remove_link.closest('.input-group');
             option_to_remove.remove();
+        }
+
+        function remove_snippet(option_object){
+            remove_option(option_object);
+            update_all_snippets();
         }
 
         function remove_output(output_object) {
@@ -517,8 +572,13 @@
             // blank out all pre-existing options
             $('#edit_' + skillet_type + '_snippet_modal').find('.form-control').val('');
 
-            // set output capture type to list by default
-            $('#id_' + skillet_type + '_output_key').val('capture_list');
+            // set output capture var name to full_output by default
+            $('#id_' + skillet_type + '_output_name').val('raw_output');
+            // set output capture type to pattern by default
+            $('#id_' + skillet_type + '_output_key').val('capture_pattern');
+            // set output capture pattern to pattern by default
+            $('#id_' + skillet_type + '_output_value').val('.');
+
 
             // remove all existing output options, if any
             $('#all_' + skillet_type + '_output_options').empty();
@@ -534,7 +594,6 @@
                     add_output(output_object['name'], 'capture_pattern', '.', skillet_type);
                 }
             } else {
-
                 // show output definitions
                 $(snippet_def['outputs']).each(function (index, output_object) {
                     let capture_type = 'capture_list';
@@ -571,6 +630,8 @@
                 let z = $('#id_' + snippet_type + '_snippet_' + attribute_name);
                 if (z.length) {
                     snippet_def[attribute_name] = z.val();
+
+                    extract_variables(snippet_def[attribute_name]);
                 }
             }
 
@@ -606,7 +667,7 @@
 
             $('#id_panos_snippet_cmd').val(snippet_def['cmd']);
 
-            if (typeof snippet_def['output_type'] !== 'undefined') {
+            if ((typeof snippet_def['output_type'] !== 'undefined') && (snippet_def['output_type'] !== '')) {
                 $('#id_panos_snippet_output_type').val(snippet_def['output_type']);
             } else {
                 $('#id_panos_snippet_output_type').val('xml');
@@ -614,55 +675,12 @@
 
             setup_snippet_modal(snippet_def, 'panos');
 
-                        // set options for the given cmd
-            switch (snippet_def['cmd']) {
-                case 'set':
-                    $('#id_panos_snippet_set_xpath').val(snippet_def['xpath']);
-                    $('#id_panos_snippet_set_element').val(snippet_def['element']);
-                    break;
-
-                case 'get':
-                    $('#id_panos_snippet_get_xpath').val(snippet_def['xpath']);
-                    break;
-
-                case 'cli':
-                    $('#id_panos_snippet_cmd_cmd_str').val(snippet_def['cmd_str']);
-                    break;
-
-                case 'op':
-                    $('#id_panos_snippet_cmd_op').val(snippet_def['cmd_str']);
-                    break;
-            }
-        }
-
-        function setup_panos_snippet_old(snippet_def) {
-            /**
-             * Set all the fields for the panos snippet edit dialoge
-             */
-
-            // blank out all pre-existing options
-            $('#edit_panos_snippet_modal').find('.form-control').val('');
-
             // set output capture type to list by default
-            $('#id_panos_output_key').val('capture_list');
-
-            // remove all existing output options, if any
-            $('#all_panos_output_options').empty();
-
-            // set the snippet name
-            $('#id_panos_snippet_name').val(snippet_def['name']);
-
-            // set the snippet cmd
-            if (typeof snippet_def['cmd'] === 'undefined') {
-                snippet_def['cmd'] = 'set';
-            }
-            $('#id_panos_snippet_cmd').val(snippet_def['cmd']);
-
-            if (typeof snippet_def['output_type'] !== 'undefined') {
-                $('#id_panos_snippet_output_type').val(snippet_def['output_type']);
-            } else {
-                $('#id_panos_snippet_output_type').val('xml');
-            }
+            $('#id_panos_output_key').val('capture_object');
+            // set output capture type to list by default
+            $('#id_panos_output_value').val('.');
+            // set output capture type to list by default
+            $('#id_panos_output_name').val('full_output_as_object');
 
             // set options for the given cmd
             switch (snippet_def['cmd']) {
@@ -683,19 +701,6 @@
                     $('#id_panos_snippet_cmd_op').val(snippet_def['cmd_str']);
                     break;
             }
-
-            // show output definitions
-            $(snippet_def['outputs']).each(function (index, output_object) {
-                let capture_type = 'capture_list';
-                if ('capture_pattern' in output_object) {
-                    capture_type = 'capture_pattern';
-                } else if ('capture_value' in output_object) {
-                    capture_type = 'capture_value';
-                } else if ('capture_object' in output_object) {
-                    capture_type = 'capture_object';
-                }
-                add_output(output_object['name'], capture_type, output_object[capture_type], 'panos');
-            });
         }
 
         function show_edit_snippet(snippet_object) {
@@ -705,8 +710,11 @@
             let snippet_name_field = snippet_group.find('[data-snippet_attribute="name"]');
 
             let snippet_name = snippet_name_field.val();
-            let snippet_def = get_snippet_definition(snippet_name);
+            edit_snippet_by_name(snippet_name);
+        }
 
+        function edit_snippet_by_name(snippet_name) {
+            let snippet_def = get_snippet_definition(snippet_name);
             if (skillet['type'] === 'panos') {
                 setup_panos_snippet(snippet_def);
                 $('#edit_panos_snippet_modal').modal();
@@ -729,7 +737,6 @@
             }
             setup_modal_options();
         }
-
         function update_text_variable() {
             event.preventDefault();
             let name = $('#id_text_variable_name').val();
@@ -910,19 +917,166 @@
             $('#show_skillet_modal').modal();
         }
 
+        function show_test_skillet() {
+
+            let context_object = $('#id_test_skillet_context');
+            let initial_context = {};
+
+            if (skillet['type'].startsWith('pan')) {
+                initial_context['ip_address'] = '10.10.10.10';
+                initial_context['username'] = 'admin';
+                initial_context['password'] = 'admin';
+            }
+
+            $.each(skillet_variables, function(index, v){
+                initial_context[v.name] = v.default;
+            });
+
+            if (context_object.val() === '') {
+                context_object.val(JSON.stringify(initial_context, null, '  '));
+            }
+
+            $('#show_test_skillet_modal').modal();
+
+        }
+
+        function extract_variables(template_str) {
+            /**
+             * Post the template_str to app server to extract any defined jinja2 variables. Any found variables
+             * will be checked if we already know about them and added to the UI and the skillet_variables list if
+             * not. Do not consider empty template strings or ones that do not include a jinja open variable syntax
+             */
+
+            // skip if blank
+            if (template_str === '') {
+                return;
+            }
+
+            // skip if no jinja variable syntax found
+            if (! template_str.includes('{% templatetag openvariable %}')) {
+                console.log('skipping ' + template_str);
+                return;
+            }
+
+            $.ajax({
+                method: "POST",
+                url: "/panhandler/extract_variables",
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                contentType: "application/json",
+                dataType: "json",
+                data: JSON.stringify({"template_str": template_str})
+            })
+            .fail(function(message) {
+                alert('error');
+                console.log(message)
+            })
+            .done(function(data) {
+                add_all_variables(data);
+            });
+        }
+
+        function test_skillet() {
+            /**
+             * Post the skillet to app server to execute and test the skillet. Only works on 'pan' type skillets
+             * for now.
+             */
+
+            let doc = $(document.documentElement);
+            doc.css('cursor', 'progress');
+
+            update_skillet_from_ui();
+
+            let context_input = $('#id_test_skillet_context');
+            let context = context_input.val();
+
+            let context_var = {};
+            try {
+                context_var = JSON.parse(context);
+            } catch (e) {
+                alert('Could not convert Context into proper JSON!');
+                return false;
+            }
+
+            let results_input = $('#id_test_skillet_results');
+
+            results_input.val('Contacting Device ... ');
+
+            $.ajax({
+                method: "POST",
+                url: "/panhandler/test_skillet",
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                contentType: "application/json",
+                dataType: "json",
+                data: JSON.stringify({"skillet": skillet, "context": context_var})
+            })
+            .fail(function(message) {
+                alert('error');
+                console.log(message);
+                doc.css('cursor', '');
+            })
+            .done(function(data) {
+                results_input.val(JSON.stringify(data, null, '  '));
+                doc.css('cursor', '');
+            });
+        }
+
+        function add_all_variables(variable_list) {
+            /**
+             * Iterate the list of variables and ensure we have them all in the skillet_variables list
+             * and add them to the UI if not. Also, check all other snippets to ensure a variable isn't
+             * just an output from another snippet, in which case we don't
+             */
+            $.each(variable_list, function (index, declared_variable) {
+                let found_as_output = false;
+                console.log('checking ' + declared_variable);
+                $.each(skillet_snippets, function(index, object){
+                    console.log('checking var ' + object.name);
+                    if ('outputs' in object) {
+                        console.log('we have outputs here');
+                        if (object['outputs'].findIndex(i => i.name === declared_variable) === -1) {
+                            console.log('not found in this output');
+                            return true;
+                        } else {
+                            console.log('found as an output');
+                            found_as_output = true;
+                            // stop iteration here
+                            return false;
+                        }
+                    } else {
+                        console.log('no outputs here');
+                        // continue iteration
+                        return true;
+                    }
+                });
+                console.log('was it found?')
+                console.log(found_as_output)
+                if (found_as_output === true) {
+
+                    // skip this variable
+                    console.log('found as output');
+                    return true;
+                }
+
+                if (skillet_variables.findIndex(i => i.name === declared_variable) === -1) {
+                    let new_var = {};
+                    new_var['name'] = declared_variable;
+                    new_var['description'] = 'New Variable';
+                    new_var['type_hint'] = 'text';
+                    new_var['default'] = '';
+                    skillet_variables.push(new_var);
+
+                    add_variable(declared_variable, 'text');
+                }
+            });
+        }
+
         function save_skillet() {
             /**
              * uploads the skillet json to Panhandler
              */
             let json_output_control = $('#id_skillet_contents');
 
-            update_preamble();
-
-            skillet['variables'] = skillet_variables;
-            skillet['snippets'] = skillet_snippets;
-
-            // grab any updated labels here
-            update_all_labels();
+            update_skillet_from_ui();
 
             json_output_control.val(JSON.stringify(skillet, null, '  '));
 
@@ -931,6 +1085,20 @@
 
             $('#submit_button').prop("disabled", true);
             $('#dynamic_form').submit();
+
+        }
+
+        function update_skillet_from_ui() {
+            /**
+             * Update the Skillet global variable from the UI elements
+             */
+            update_preamble();
+            update_all_variables();
+            update_all_snippets();
+            update_all_labels();
+
+            skillet['variables'] = skillet_variables;
+            skillet['snippets'] = skillet_snippets;
 
         }
 
@@ -982,7 +1150,7 @@
                 new_variable_key.val(variable["name"]);
                 new_variable_value.val(variable["description"]);
 
-                new_variable.attr('id', 'variable_' + new_variable_key);
+                new_variable.attr('id', 'variable_' + variable["name"]);
                 all_variables.append(new_variable);
 
                 new_variable.css('display', '');
@@ -994,7 +1162,7 @@
                 let new_snippet_key = new_snippet.find('[data-snippet_attribute="name"]')
 
                 new_snippet_key.val(snippet['name']);
-                new_snippet.attr('id', 'snippet_' + new_snippet_key);
+                new_snippet.attr('id', 'snippet_' + new_snippet_key.val());
 
                 all_snippets.append(new_snippet);
 
@@ -1125,7 +1293,7 @@
             </p>
         </div>
         <div class="card-footer text-right">
-            <button type="button" class="btn btn-success" onclick="show_skillet()">
+            <button type="button" class="btn btn-success" onclick="show_test_skillet()">
                 Debug
             </button>
             <a href="/cancel" class="btn btn-danger">Cancel</a>
@@ -1189,7 +1357,7 @@
                data-snippet_attribute="name" class="form-control bg-light" disabled="disabled"/>
         <div class="input-group-append">
             <span class="input-group-text" title="Remove Snippet">
-                <a href="#" onclick="remove_option(this);">
+                <a href="#" onclick="remove_snippet(this);">
                     <i class="fa fa-minus"></i>
                 </a>
             </span>
@@ -1537,8 +1705,8 @@
                         <label for="id_panos_snippet_output_type">Output Type:</label>
                         <select id="id_panos_snippet_output_type" class="form-control">
                             <option selected>xml</option>
-                            <option selected>json</option>
-                            <option selected>text</option>
+                            <option>json</option>
+                            <option>text</option>
                         </select>
                     </div>
 
@@ -1613,11 +1781,11 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label for="id_rest_snippet_payload">Payload:</label>
-                        <textarea class="form-control" id="id_rest_snippet_payload"
+                        <label for="id_rest_snippet_element">element:</label>
+                        <textarea class="form-control" id="id_rest_snippet_element"
                                   data-modal_source="id_rest_snippet_operation" data-modal_value="post"></textarea>
                         <p class="small muted text-right m-0">
-                            <a href="#" onclick="enlarge_text_area('id_rest_snippet_payload')">
+                            <a href="#" onclick="enlarge_text_area('id_rest_snippet_element')">
                                 <i class="fa fa-edit"></i>
                             </a>
                         </p>
@@ -1904,6 +2072,47 @@
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" onclick="add_new_snippet()"
                             data-dismiss="modal">Create
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Snippet Modal -->
+    <div class="modal fade" id="show_test_skillet_modal" tabindex="-1" role="dialog"
+         aria-labelledby="show_test_skillet_modal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="test_skillet_label">Test Skillet</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto">
+                    <p class="card-text">
+                        This will execute the skillet using the provided context. This is a great place to
+                        explore output capturing and other syntax options before saving your skillet.
+                    </p>
+                    <label for="id_test_skillet_context">Context:</label>
+                    <textarea class="form-control" rows="5" id="id_test_skillet_context"></textarea>
+                    <p class="small muted text-right m-0">
+                        <a href="#" onclick="enlarge_text_area('id_test_skillet_context')">
+                            <i class="fa fa-edit"></i>
+                        </a>
+                    </p>
+                    <label for="id_test_skillet_results">Results:</label>
+                    <textarea class="form-control" rows="5" id="id_test_skillet_results"></textarea>
+                    <p class="small muted text-right m-0">
+                        <a href="#" onclick="enlarge_text_area('id_test_skillet_results')">
+                            <i class="fa fa-edit"></i>
+                        </a>
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="test_skillet()">Test
                     </button>
                 </div>
             </div>

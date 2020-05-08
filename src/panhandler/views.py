@@ -44,6 +44,8 @@ from django.views.generic import RedirectView
 from django.views.generic import View
 from skilletlib import Panos
 from skilletlib import SkilletLoader
+from skilletlib.skillet.template import TemplateSkillet
+from skilletlib.skillet.panos import PanosSkillet
 from skilletlib.exceptions import LoginException
 from skilletlib.exceptions import PanoplyException
 from skilletlib.exceptions import SkilletLoaderException
@@ -1455,3 +1457,88 @@ class AddSkilletToFavoritesView(CNCBaseFormView):
             return self.form_invalid(form)
 
         return super().form_valid(form)
+
+
+class ExtractTemplateVariablesView(CNCBaseAuth, View):
+
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+
+        template_str = 'not found'
+
+        if self.request.is_ajax():
+            try:
+                json_str = self.request.body
+                json_obj = json.loads(json_str)
+                template_str = json_obj.get('template_str', 'not found')
+            except ValueError:
+                message = 'Could not parse input'
+                return HttpResponse(message, content_type="application/json")
+
+        sl = SkilletLoader()
+
+        snippet = dict()
+        snippet['name'] = 'template_snippet'
+        snippet['element'] = template_str
+
+        skillet_dict = dict()
+        skillet_dict['name'] = 'template_skillet'
+        skillet_dict['description'] = 'template'
+        skillet_dict['snippets'] = [snippet]
+
+        s = sl.normalize_skillet_dict(skillet_dict)
+
+        skillet = TemplateSkillet(s)
+
+        variables = skillet.get_declared_variables()
+        json_output = json.dumps(variables)
+        response = HttpResponse(json_output, content_type="application/json")
+        return response
+
+
+class SkilletTestView(CNCBaseAuth, View):
+
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+
+        if self.request.is_ajax():
+            try:
+                json_str = self.request.body
+                json_obj = json.loads(json_str)
+                skillet_dict = json_obj.get('skillet', {})
+                context = json_obj.get('context', {})
+
+            except ValueError:
+                message = 'Could not parse input'
+                return HttpResponse(message, content_type="application/json")
+        else:
+            messages.add_message(self.request, messages.ERROR, 'Invalid Request Type')
+            return HttpResponseRedirect('/panhandler')
+
+        sl = SkilletLoader()
+
+        skillet = sl.create_skillet(skillet_dict)
+
+        if not str(skillet.type).startswith('pan'):
+            response = HttpResponse(json.dumps({"error": "Invalid Skillet type"}), content_type="application/json")
+            return response
+
+        results = dict()
+
+        try:
+
+            output = skillet.execute(context)
+
+        except PanoplyException as pe:
+            print(pe)
+            output = str(pe)
+
+        results['output'] = output
+        results['context'] = dict()
+
+        # avoid putting full config var back into context
+        for i in skillet.context:
+            if i != 'config':
+                results['context'][i] = skillet.context[i]
+
+        json_output = json.dumps(results)
+        response = HttpResponse(json_output, content_type="application/json")
+        return response

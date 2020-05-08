@@ -125,3 +125,9 @@ views:
   - name: favorite_skillet
     class: AddSkilletToFavoritesView
     parameter: skillet_name
+
+  - name: extract_variables
+    class: ExtractTemplateVariablesView
+
+  - name: test_skillet
+    class: SkilletTestView
