@@ -1,6 +1,9 @@
 {% extends 'pan_cnc/base.html' %}
 {% load cnc_tags %}
+{% load static %}
 {% block head %}
+    <link href="{% static 'css/highlight-atom-one-light.css' %}" rel="stylesheet">
+    <script src="{% static 'js/highlight.pack.js' %}"></script>
     <style>
         .table td {
             border-top: 0px;
@@ -58,7 +61,12 @@
         }
 
         function enlarge_text_area(target) {
-            event.preventDefault();
+            try {
+                event.preventDefault();
+            } catch (e) {
+                console.log('no event to cancel');
+            }
+
             let text_area_input = $('#text_area_input')
             let text_area_target_input = $('#text_area_target')
             text_area_target_input.val(target);
@@ -268,7 +276,7 @@
             skillet_variables = all_variables;
 
         }
-        
+
         function update_all_snippets() {
             /**
              * Update the skillet_snippets global var to be reflective of the UI
@@ -453,7 +461,7 @@
             option_to_remove.remove();
         }
 
-        function remove_snippet(option_object){
+        function remove_snippet(option_object) {
             remove_option(option_object);
             update_all_snippets();
         }
@@ -737,6 +745,7 @@
             }
             setup_modal_options();
         }
+
         function update_text_variable() {
             event.preventDefault();
             let name = $('#id_text_variable_name').val();
@@ -928,7 +937,7 @@
                 initial_context['password'] = 'admin';
             }
 
-            $.each(skillet_variables, function(index, v){
+            $.each(skillet_variables, function (index, v) {
                 initial_context[v.name] = v.default;
             });
 
@@ -953,7 +962,7 @@
             }
 
             // skip if no jinja variable syntax found
-            if (! template_str.includes('{% templatetag openvariable %}')) {
+            if (!template_str.includes('{% templatetag openvariable %}')) {
                 console.log('skipping ' + template_str);
                 return;
             }
@@ -966,13 +975,13 @@
                 dataType: "json",
                 data: JSON.stringify({"template_str": template_str})
             })
-            .fail(function(message) {
-                alert('error');
-                console.log(message)
-            })
-            .done(function(data) {
-                add_all_variables(data);
-            });
+                .fail(function (message) {
+                    alert('error');
+                    console.log(message)
+                })
+                .done(function (data) {
+                    add_all_variables(data);
+                });
         }
 
         function test_skillet() {
@@ -1009,15 +1018,22 @@
                 dataType: "json",
                 data: JSON.stringify({"skillet": skillet, "context": context_var})
             })
-            .fail(function(message) {
-                alert('error');
-                console.log(message);
-                doc.css('cursor', '');
-            })
-            .done(function(data) {
-                results_input.val(JSON.stringify(data, null, '  '));
-                doc.css('cursor', '');
-            });
+                .fail(function (message) {
+                    alert('error');
+                    console.log(message);
+                    doc.css('cursor', '');
+                })
+                .done(function (data) {
+                    let results = JSON.stringify(data, null, '  ');
+                    doc.css('cursor', '');
+                    let results_code = $('#id_test_skillet_results_code');
+                    results_code.html(results);
+
+                    $('#show_test_skillet_results_modal').modal();
+
+                    hljs.highlightBlock(results_code[0]);
+
+                });
         }
 
         function add_all_variables(variable_list) {
@@ -1029,7 +1045,7 @@
             $.each(variable_list, function (index, declared_variable) {
                 let found_as_output = false;
                 console.log('checking ' + declared_variable);
-                $.each(skillet_snippets, function(index, object){
+                $.each(skillet_snippets, function (index, object) {
                     console.log('checking var ' + object.name);
                     if ('outputs' in object) {
                         console.log('we have outputs here');
@@ -1696,7 +1712,7 @@
                                data-modal_source="id_panos_snippet_cmd" data-modal_value="op">
                     </div>
                     <div class="form-group">
-                    <label for="id_panos_snippet_variable">Parsed Variable:</label>
+                        <label for="id_panos_snippet_variable">Parsed Variable:</label>
                         <input type="text" value="" class="form-control" id="id_panos_snippet_variable"
                                data-modal_source="id_panos_snippet_cmd" data-modal_value="parse">
                     </div>
@@ -2066,7 +2082,7 @@
                 </div>
                 <div class="modal-body" style="overflow-y: auto">
                     <label for="id_new_snippet_name">Name:</label>
-                        <input type="text" value="" class="form-control" id="id_new_snippet_name">
+                    <input type="text" value="" class="form-control" id="id_new_snippet_name">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
@@ -2082,7 +2098,7 @@
     <div class="modal fade" id="show_test_skillet_modal" tabindex="-1" role="dialog"
          aria-labelledby="show_test_skillet_modal"
          aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="test_skillet_label">Test Skillet</h5>
@@ -2102,18 +2118,41 @@
                             <i class="fa fa-edit"></i>
                         </a>
                     </p>
-                    <label for="id_test_skillet_results">Results:</label>
-                    <textarea class="form-control" rows="5" id="id_test_skillet_results"></textarea>
-                    <p class="small muted text-right m-0">
-                        <a href="#" onclick="enlarge_text_area('id_test_skillet_results')">
-                            <i class="fa fa-edit"></i>
-                        </a>
-                    </p>
+                    <input type="hidden" id="id_test_skillet_results"/>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-primary" onclick="test_skillet()">Test
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Skillet Results Modal -->
+    <div class="modal fade" id="show_test_skillet_results_modal" tabindex="-1" role="dialog"
+         aria-labelledby="show_test_skillet_results_modal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="test_skillet_results_label">Test Skillet Results</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto">
+                    <p class="card-text">
+                        Here are the results of the Skillet Test. There are two keys shown here: 'output' and 'context'.
+                        Output is the raw output from the Skillet itself, including any captured outputs. Context shows
+                        you the skillet context that was used during execution. This may include outputs and ephemeral
+                        computed values.
+                    </p>
+                    <label for="id_test_skillet_results_context">Skillet Output:</label>
+                    <pre><code class="json" id="id_test_skillet_results_code"></code></pre>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Done</button>
                 </div>
             </div>
         </div>
