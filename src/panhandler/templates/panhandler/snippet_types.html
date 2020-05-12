@@ -3,36 +3,36 @@
 
 {% block content %}
 
-{% for group, group_members in snippets.items %}
+    {% for group, group_members in snippets.items %}
 
-{% if forloop.counter0|divisibleby:2 %}
-{% if forloop.first %}
-<div class="row mb-4">
-    {% else %}
-</div>
-<div class="row mb-4">
-    {% endif %}
-    {% endif %}
-    <div class="col-sm-6">
-        <div class="card shadow-lg">
-            <div class="card-header">
-                {{ group }}
-            </div>
-            <div class="card-body">
-                <p class="card-text">
-                <ul>
-                    {% for member in group_members %}
-                    <li title="{{ member.description }}">{{ member.label }}</li>
-                    {% endfor %}
-                </ul>
-                </p>
+        {% if forloop.counter0|divisibleby:2 %}
+            {% if forloop.first %}
+                <div class="row mb-4">
+                    {% else %}
+                </div>
+                <div class="row mb-4">
+            {% endif %}
+        {% endif %}
+        <div class="col-sm-6">
+            <div class="card shadow-lg">
+                <div class="card-header">
+                    {{ group }}
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                    <ul>
+                        {% for member in group_members %}
+                            <li title="{{ member.description }}">{{ member.label }}</li>
+                        {% endfor %}
+                    </ul>
+                    </p>
 
-            </div>
-            <div class="card-footer">
-                <a href="/panhandler/snippets_by_type/{{ group }}" class="btn btn-primary">Go</a>
+                </div>
+                <div class="card-footer">
+                    <a href="/panhandler/snippets_by_type/{{ group }}" class="btn btn-primary">Go</a>
+                </div>
             </div>
         </div>
-    </div>
     {% endfor %}
 </div>
 

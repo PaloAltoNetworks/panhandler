@@ -2,43 +2,43 @@
 {% load static %}
 
 {% block content %}
-<div class="jumbotron mt-4 shadow-lg">
-    <h1 class="display-3">
-        {{ title }}
-    </h1>
-    <p class="lead">
-        Panhandler is a tool for sharing PAN-OS configurations and configuration sets called Skillets.
-        These configs are stored and shared via <a href="https://github.com/topics/skillets">Git repositories</a>.
-        In addition to PAN-OS, Panhandler can also manage other types of Skillets,
-        such as Terraform templates, REST APIs, or generic network device configuration templates.
+    <div class="jumbotron mt-4 shadow-lg">
+        <h1 class="display-3">
+            {{ title }}
+        </h1>
+        <p class="lead">
+            Panhandler is a tool for sharing PAN-OS configurations and configuration sets called Skillets.
+            These configs are stored and shared via <a href="https://github.com/topics/skillets">Git repositories</a>.
+            In addition to PAN-OS, Panhandler can also manage other types of Skillets,
+            such as Terraform templates, REST APIs, or generic network device configuration templates.
+        </p>
+        <p class="lead">
+            To find out more about Skillets or discover new Skillets, see the live community page
+            <a href="https://live.paloaltonetworks.com/t5/Skillets/ct-p/Skillets">here</a>.
+        </p>
+        <p class="lead">
+            {% if documentation_link %}
+                <a class="btn btn-primary btn-lg mr-2" href="{{ documentation_link }}" role="button">Learn more</a>
+            {% endif %}
+            {% if next %}
+                <a class="btn btn-secondary btn-lg" href="/{{ app_dir }}/{{ next }}" role="button">Get Started</a>
+            {% endif %}
+        </p>
+
+    </div>
+    <p class="small grey text-center mt-5 pt-5">
+        Version: {% include 'panhandler/version.html' %}
     </p>
-    <p class="lead">
-        To find out more about Skillets or discover new Skillets, see the live community page
-        <a href="https://live.paloaltonetworks.com/t5/Skillets/ct-p/Skillets">here</a>.
-    </p>
-    <p class="lead">
-        {% if documentation_link %}
-        <a class="btn btn-primary btn-lg mr-2" href="{{ documentation_link }}" role="button">Learn more</a>
+    <p class="small grey text-center">
+        {% if update_required == 'true' %}
+            A newer version of panhandler is available!
+            <a href="https://panhandler.readthedocs.io/en/master/updating.html">How to update Panhandler</a>
+        {% elif update_required == 'false' %}
+            This is the most recent version of Panhandler.
+        {% else %}
+            Unable to determine build status! Check your internet connection.
         {% endif %}
-        {% if next %}
-        <a class="btn btn-secondary btn-lg" href="/{{ app_dir }}/{{ next }}" role="button">Get Started</a>
-        {% endif %}
+        <a href="/panhandler/check_update">Check for Update</a>
     </p>
 
-</div>
-<p class="small grey text-center mt-5 pt-5">
-    Version: {% include 'panhandler/version.html' %}
-</p>
-<p class="small grey text-center">
-    {%  if update_required == 'true' %}
-        A newer version of panhandler is available!
-        <a href="https://panhandler.readthedocs.io/en/master/updating.html">How to update Panhandler</a>
-    {% elif update_required == 'false' %}
-        This is the most recent version of Panhandler.
-    {% else %}
-        Unable to determine build status! Check your internet connection.
-    {% endif %}
-    <a href="/panhandler/check_update">Check for Update</a>
-</p>
-
-{%  endblock %}
+{% endblock %}

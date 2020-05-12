@@ -39,48 +39,48 @@
                 </tr>
                 </thead>
                 <tbody>
-                    {% for snippet_name, r in results.items %}
-                            <tr>
-                                <th scope="row">{{ forloop.counter }}</th>
-                                <td>
-                                    <a href="#{{ snippet_name }}_div" data-toggle="collapse">
-                                        {{ r.label }}
-                                    </a>
-                                    <div id="{{ snippet_name }}_div" class="collapse show text-secondary p-3">
-                                        {{ r.output_message | linebreaksbr }}
-                                    </div>
-                                </td>
-                                <td class="text-center">
-                                    {% if r.results is True %}
-                                        <a class="text-success" href="#"
-                                           onclick="show_modal('{{ r.documentation_link }}')">
-                                            <i class="fa fa-check-circle"></i>
-                                        </a>
-                                    {% else %}
-                                        <a class="text-danger" href="#"
-                                           onclick="show_modal('{{ r.documentation_link }}')">
-                                            <i class="fa fa-check-circle"></i>
-                                        </a>
-                                    {% endif %}
-                                </td>
-                                <td class="text-center">
-                                    {% if r.severity == 'high' %}
-                                        <div class="text-danger">
-                                    {% elif r.severity == 'medium' %}
-                                        <div class="text-warning">
-                                    {% else %}
-                                        <div class="text-info">
-                                    {% endif %}
-                                    {{ r.severity }}
-                                    </div>
-                                </td>
-                                <td>
-                                    <a href="{{ r.documentation_link }}" target="_blank" title="Documentation">
-                                        <i class="fa fa-book"></i>
-                                    </a>
-                                </td>
-                            </tr>
-                    {% endfor %}
+                {% for snippet_name, r in results.items %}
+                    <tr>
+                        <th scope="row">{{ forloop.counter }}</th>
+                        <td>
+                            <a href="#{{ snippet_name }}_div" data-toggle="collapse">
+                                {{ r.label }}
+                            </a>
+                            <div id="{{ snippet_name }}_div" class="collapse show text-secondary p-3">
+                                {{ r.output_message | linebreaksbr }}
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            {% if r.results is True %}
+                                <a class="text-success" href="#"
+                                   onclick="show_modal('{{ r.documentation_link }}')">
+                                    <i class="fa fa-check-circle"></i>
+                                </a>
+                            {% else %}
+                                <a class="text-danger" href="#"
+                                   onclick="show_modal('{{ r.documentation_link }}')">
+                                    <i class="fa fa-check-circle"></i>
+                                </a>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            {% if r.severity == 'high' %}
+                                <div class="text-danger">
+                            {% elif r.severity == 'medium' %}
+                                <div class="text-warning">
+                            {% else %}
+                                <div class="text-info">
+                            {% endif %}
+                            {{ r.severity }}
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{{ r.documentation_link }}" target="_blank" title="Documentation">
+                                <i class="fa fa-book"></i>
+                            </a>
+                        </td>
+                    </tr>
+                {% endfor %}
                 </tbody>
             </table>
             </p>
@@ -89,7 +89,7 @@
         <div class="card-footer text-right">
             <p class="card-text">
                 <a href="/panhandler/export_valiation_results/{{ skillet.name }}" class="btn btn-secondary"
-                title="Export and Download Results">
+                   title="Export and Download Results">
                     <i class="fa fa-file-download" style="line-height: 1.5"></i>
                 </a>
                 {% if request.session.next_step %}

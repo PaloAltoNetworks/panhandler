@@ -25,15 +25,21 @@ This software is provided without support, warranty, or guarantee.
 Use at your own risk.
 """
 
+import json
 import os
 from collections import OrderedDict
 from datetime import datetime
 
 import oyaml
 import requests
-from requests import ConnectionError, Timeout
+from django.core.exceptions import ObjectDoesNotExist
+from requests import ConnectionError
+from requests import Timeout
+from skilletlib import SkilletLoader
 
 from pan_cnc.lib import cnc_utils
+from ..models import RepositoryDetails
+from ..models import Skillet
 
 
 def get_recommended_links() -> list:
@@ -260,3 +266,199 @@ def _get_panhandler_image_data():
         print('Timed out waiting for docker image details')
         print(te)
         return {}
+
+
+def initialize_repo(repo_detail: dict) -> list:
+    """
+    Initialize a git repository object using the supplied repositories details dictionary object
+    :param repo_detail:
+    :return: list of Skillets found in that repository
+    """
+    repo_name = repo_detail.get('name', '')
+    (repository_object, created) = RepositoryDetails.objects.using('panhandler').get_or_create(
+        name=repo_name,
+        defaults={'url': repo_detail.get('url', ''),
+                  'details_json': json.dumps(repo_detail)
+                  }
+    )
+
+    if created:
+        print(f'Indexing new repository object: {repository_object.name}')
+        return refresh_skillets_from_repo(repo_name)
+
+    return load_skillets_from_repo(repo_name)
+
+
+def load_skillets_from_repo(repo_name: str) -> list:
+    """
+    returns a list of skillets from the repository as found in the db
+    :param repo_name: name of the repository to search
+    :return: list of skillet dictionary objects
+    """
+    all_skillets = list()
+
+    try:
+        repo_object = RepositoryDetails.objects.using('panhandler').get(name=repo_name)
+
+        repo_skillet_qs = repo_object.skillet_set.all()
+        for skillet in repo_skillet_qs:
+            all_skillets.append(json.loads(skillet.skillet_json))
+
+        return all_skillets
+
+    except ObjectDoesNotExist:
+        return all_skillets
+    except ValueError:
+        return all_skillets
+
+
+def load_all_skillets(refresh=False) -> list:
+    """
+    Returns a list of skillet dictionaries
+    :param refresh: Boolean flag whether to use the cache or force a cache refresh
+    :return: skillet dictionaries
+    """
+    if refresh is False:
+        cached_skillets = cnc_utils.get_long_term_cached_value('panhandler', 'all_snippets')
+        if cached_skillets is not None:
+            return cached_skillets
+
+    skillet_dicts = list()
+    skillets = Skillet.objects.using('panhandler').all()
+    for skillet in skillets:
+        skillet_dicts.append(json.loads(skillet.skillet_json))
+
+    cnc_utils.set_long_term_cached_value('panhandler', 'all_snippets', skillet_dicts, -1)
+    return skillet_dicts
+
+
+def load_skillets_with_label(label_name, label_value):
+    filtered_skillets = list()
+    all_skillets = load_all_skillets()
+
+    for skillet in all_skillets:
+        if 'labels' in skillet and label_name in skillet['labels']:
+            if type(skillet['labels'][label_name]) is str:
+
+                if skillet['labels'][label_name] == label_value:
+                    filtered_skillets.append(skillet)
+
+            elif type(skillet['labels'][label_name]) is list:
+                for label_list_value in skillet['labels'][label_name]:
+                    if label_list_value == label_value:
+                        filtered_skillets.append(skillet)
+
+    return filtered_skillets
+
+
+def load_all_skillet_label_values(label_name):
+    labels_list = list()
+    skillets = load_all_skillets()
+    for skillet in skillets:
+        if 'labels' not in skillet:
+            continue
+
+        labels = skillet.get('labels', [])
+
+        for label_key in labels:
+            if label_key == label_name:
+
+                if type(labels[label_name]) is str:
+                    label_value = labels[label_name]
+                    if label_value not in labels_list:
+                        labels_list.append(label_value)
+
+                elif type(labels[label_name]) is list:
+                    for label_list_value in labels[label_name]:
+                        if label_list_value not in labels_list:
+                            labels_list.append(label_list_value)
+
+    return labels_list
+
+
+def refresh_skillets_from_repo(repo_name: str) -> list:
+    all_skillets = list()
+
+    user_dir = os.path.expanduser('~/.pan_cnc')
+    snippets_dir = os.path.join(user_dir, 'panhandler/repositories')
+    repo_dir = os.path.join(snippets_dir, repo_name)
+
+    try:
+        repo_object = RepositoryDetails.objects.using('panhandler').get(name=repo_name)
+
+        sl = SkilletLoader()
+
+        found_skillets = sl.load_all_skillets_from_dir(repo_dir)
+
+        for skillet_object in found_skillets:
+            skillet_name = skillet_object.name
+            (skillet_record, created) = Skillet.objects.using('panhandler').get_or_create(
+                name=skillet_name,
+                defaults={
+                    'skillet_json': json.dumps(skillet_object.skillet_dict),
+                    'repository_id': repo_object.id,
+                }
+            )
+
+            if not created:
+                # check if skillet contents have been updated
+                found_skillet_json = json.dumps(skillet_object.skillet_dict)
+                if skillet_record.skillet_json != found_skillet_json:
+                    skillet_record.skillet_json = found_skillet_json
+                    skillet_record.save()
+
+        for db_skillet in repo_object.skillet_set.all():
+            found = False
+            for found_skillet in found_skillets:
+                if db_skillet.name == found_skillet.name:
+                    found = True
+                    continue
+
+            if not found:
+                db_skillet.remove()
+
+        update_skillet_cache()
+
+        return load_skillets_from_repo(repo_name)
+
+    except ObjectDoesNotExist:
+        return all_skillets
+
+
+def load_skillet_by_name(skillet_name: str) -> (dict, None):
+    try:
+        skillet = Skillet.objects.using('panhandler').get(name=skillet_name)
+        return json.loads(skillet.skillet_json)
+    except ObjectDoesNotExist:
+        return None
+    except ValueError as ve:
+        print(f'Could not parse Skillet metadata in load_skillet_by_name')
+        return None
+
+
+def update_skillet_cache() -> None:
+    """
+    Updates the 'all_snippets' key in the cnc cache. This gets called whenever a repository is initialized or updated
+    to ensure the legacy cache is always kept up to date
+    :return: None
+    """
+    all_skillets = load_all_skillets(refresh=True)
+    cnc_utils.set_long_term_cached_value('panhandler', 'all_snippets', all_skillets, -1)
+
+
+def get_repository_details(repository_name: str) -> (dict, None):
+    """
+    returns the details dict as loaded from the database record for this db
+    :param repository_name: name of the repository to find and return
+    :return: loaded dict or None if not found
+    """
+
+    if RepositoryDetails.objects.using('panhandler').filter(name=repository_name).exists():
+        try:
+            repo_db_record = RepositoryDetails.objects.using('panhandler').get(repository_name)
+            return json.loads(repo_db_record.details_json)
+        except ValueError as ve:
+            print(ve)
+            return None
+    else:
+        return None

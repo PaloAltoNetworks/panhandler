@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from django.conf import settings
 from django.contrib import messages
 from django.forms import Form
 from django.forms import fields
@@ -44,12 +45,11 @@ from django.views.generic import RedirectView
 from django.views.generic import View
 from skilletlib import Panos
 from skilletlib import SkilletLoader
-from skilletlib.skillet.template import TemplateSkillet
-from skilletlib.skillet.panos import PanosSkillet
 from skilletlib.exceptions import LoginException
 from skilletlib.exceptions import PanoplyException
 from skilletlib.exceptions import SkilletLoaderException
 from skilletlib.skillet.pan_validation import PanValidationSkillet
+from skilletlib.skillet.template import TemplateSkillet
 from yaml.scanner import ScannerError
 
 from pan_cnc.lib import cnc_utils
@@ -67,6 +67,7 @@ from pan_cnc.views import EditTargetView
 from pan_cnc.views import ProvisionSnippetView
 from panhandler.lib import app_utils
 from .models import Collection
+from .models import RepositoryDetails
 from .models import Skillet
 
 
@@ -90,15 +91,34 @@ class WelcomeView(CNCView):
         return context
 
 
-class ImportRepoView(CNCBaseFormView):
+class PanhandlerAppFormView(CNCBaseFormView):
+
+    def get_snippet(self):
+        return self.snippet
+
+    def load_skillet_by_name(self, skillet_name) -> (dict, None):
+        """
+        Loads application specific skillet
+        :param skillet_name:
+        :return:
+        """
+
+        application_skillets_dir = Path(os.path.join(settings.SRC_PATH, self.app_dir, 'snippets'))
+        skillet_loader = SkilletLoader()
+        app_skillets = skillet_loader.load_all_skillets_from_dir(application_skillets_dir)
+        for skillet in app_skillets:
+            if skillet.name == skillet_name:
+                return skillet.skillet_dict
+
+        return None
+
+
+class ImportRepoView(PanhandlerAppFormView):
     # define initial dynamic form from this snippet metadata
     snippet = 'import_repo'
     next_url = '/provision'
     template_name = 'panhandler/import_repo.html'
     app_dir = 'panhandler'
-
-    def get_snippet(self):
-        return self.snippet
 
     def get_context_data(self, **kwargs):
         recommended_links = app_utils.get_recommended_links()
@@ -155,11 +175,6 @@ class ImportRepoView(CNCBaseFormView):
         except ImportRepositoryException as ire:
             messages.add_message(self.request, messages.ERROR, f'Could not Import Repository: {ire}')
         else:
-            print('Invalidating snippet cache')
-            snippet_utils.invalidate_snippet_caches(self.app_dir)
-
-            # no need to evict all these items, just grab the new repo details and append it to list and re-cache
-            # cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
             repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
 
             # FIX for #148
@@ -171,10 +186,13 @@ class ImportRepoView(CNCBaseFormView):
             cnc_utils.set_long_term_cached_value(self.app_dir, 'imported_repositories', repos, 604800,
                                                  'imported_git_repos')
 
+            app_utils.initialize_repo(repo_detail)
+
             debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
 
+            loaded_skillets = app_utils.load_skillets_from_repo(repo_name)
+
             # check each snippet found for dependencies
-            loaded_skillets = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
             for skillet in loaded_skillets:
                 for depends in skillet['depends']:
                     url = depends.get('url', None)
@@ -224,7 +242,6 @@ class ListReposView(CNCView):
     def get_context_data(self, **kwargs):
 
         context = super().get_context_data(**kwargs)
-        # snippets_dir = Path(os.path.join(settings.SRC_PATH, 'panhandler', 'snippets'))
 
         snippets_dir = Path(os.path.join(os.path.expanduser('~/.pan_cnc'), 'panhandler', 'repositories'))
 
@@ -259,8 +276,12 @@ class ListReposView(CNCView):
                 git_dir = d.joinpath('.git')
 
                 if git_dir.exists() and git_dir.is_dir():
-                    repo_detail = git_utils.get_repo_details(d.name, d, self.app_dir)
+                    repo_detail = app_utils.get_repository_details(d.name)
+                    if not repo_detail:
+                        repo_detail = git_utils.get_repo_details(d.name, d, self.app_dir)
+                        app_utils.initialize_repo(repo_detail)
                     repos.append(repo_detail)
+                    app_utils.initialize_repo(repo_detail)
                     continue
 
             # cache the repos list for 1 week. this will be cleared when we import a new repository or otherwise
@@ -288,19 +309,23 @@ class RepoDetailsView(CNCView):
         user_dir = os.path.expanduser('~')
         repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
+        repo_detail = dict()
+        repo_detail['name'] = repo_name
+
         if os.path.exists(repo_dir):
-            repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+            repo_detail = app_utils.get_repository_details(repo_name)
+            if not repo_detail:
+                repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+                app_utils.initialize_repo(repo_detail)
 
         else:
-            repo_detail = dict()
-            repo_detail['name'] = 'repo_name'
             repo_detail['error'] = 'Repository directory not found'
 
         if 'error' in repo_detail:
             messages.add_message(self.request, messages.ERROR, repo_detail['error'])
 
         try:
-            snippets_from_repo = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
+            snippets_from_repo = app_utils.load_skillets_from_repo(repo_name)
 
         except CCFParserError:
             messages.add_message(self.request, messages.ERROR, 'Could not read all snippets from repo. Parser error')
@@ -341,6 +366,16 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             messages.add_message(self.request, messages.ERROR, 'Repository directory does not exist!')
             return f'/panhandler/repo_detail/{repo_name}'
 
+        repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+        repo_detail_json = json.dumps(repo_detail)
+
+        (repository_object, needs_index) = RepositoryDetails.objects.using('panhandler').get_or_create(
+            name=repo_name,
+            defaults={'url': repo_detail.get('url'),
+                      'details_json': repo_detail_json
+                      }
+        )
+
         msg = git_utils.update_repo(repo_dir, branch)
 
         if 'Error' in msg:
@@ -349,22 +384,23 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
         elif 'updated' in msg or 'Checked out new' in msg:
             # msg updated will catch both switching branches as well as new commits
-            # since this repoo has been updated, we need to ensure the caches are all in sync
-            print('Invalidating snippet cache')
-            snippet_utils.invalidate_snippet_caches(self.app_dir)
+            # since this repo has been updated, we need to ensure the caches are all in sync
             git_utils.update_repo_in_cache(repo_name, repo_dir, self.app_dir)
 
             # remove all python3 init touch files if there is an update
             task_utils.python3_reset_init(repo_dir)
 
             level = messages.INFO
+
+            # set needs_index flag regardless of creation status
+            needs_index = True
         else:
             level = messages.INFO
 
         messages.add_message(self.request, level, msg)
 
         # check if there are new branches available
-        repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+
         repo_branches = git_utils.get_repo_branches_from_dir(repo_dir)
         if repo_detail['branches'] != repo_branches:
             messages.add_message(self.request, messages.INFO, 'New Branches are available')
@@ -372,7 +408,12 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
         # check each snippet found for dependencies
         repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
-        loaded_skillets = snippet_utils.load_snippets_of_type_from_dir(self.app_dir, repo_dir)
+
+        if needs_index:
+            loaded_skillets = app_utils.refresh_skillets_from_repo(repo_name)
+        else:
+            loaded_skillets = app_utils.load_skillets_from_repo(repo_name)
+
         for skillet in loaded_skillets:
             for depends in skillet['depends']:
                 url = depends.get('url', None)
@@ -471,12 +512,14 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
                         print(f'Removing temp file: {tf}')
                         tf.unlink()
 
+                    # re-index skillets in this dir
+                    loaded_skillets = app_utils.refresh_skillets_from_repo(str(d))
+
         if not err_condition:
             repos = ", ".join(updates)
             messages.add_message(self.request, messages.SUCCESS, f'Successfully Updated repositories: {repos}')
 
         cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
-        snippet_utils.invalidate_snippet_caches(self.app_dir)
         return '/panhandler/repos'
 
 
@@ -505,8 +548,6 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
             else:
                 print(f'dir {repo_dir} is already gone!')
 
-            print('Invalidating snippet cache')
-            snippet_utils.invalidate_snippet_caches(self.app_dir)
             cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
             # Fix for #197 - ensure we delete old repo details
             cache_repo_name = repo_name.replace(' ', '_')
@@ -514,18 +555,22 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
                                                  'git_repo_details')
             cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
 
+        repository_object = RepositoryDetails.objects.using('panhandler').get(name=repo_name)
+        repository_object.delete(using='panhandler')
+
+        # fix for #207 - no need to invalid the snippet cache when we have all the skillets in the db
+        all_skillets = app_utils.load_all_skillets()
+        cnc_utils.set_long_term_cached_value(self.app_dir, 'all_snippets', all_skillets, -1)
+
         messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
         return f'/panhandler/repos'
 
 
-class CreateSkilletView(CNCBaseFormView):
+class CreateSkilletView(PanhandlerAppFormView):
     snippet = 'create_skillet'
     app_dir = 'panhandler'
     title = "Skillet Generator"
     header = "Create a New Skillet"
-
-    def get_snippet(self):
-        return self.snippet
 
     def get_context_data(self, **kwargs):
         repo_name = self.kwargs.get('repo_name', None)
@@ -593,7 +638,8 @@ class CreateSkilletView(CNCBaseFormView):
             return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
 
         # ensure this skillet name does not already exist
-        existing_skillet = snippet_utils.load_snippet_with_name(skillet_name, app_dir='panhandler')
+        existing_skillet = app_utils.load_skillet_by_name(skillet_name)
+
         if existing_skillet:
             messages.add_message(self.request, messages.ERROR,
                                  'Could not create Skillet, Skillet with that name already exists')
@@ -618,19 +664,18 @@ class CreateSkilletView(CNCBaseFormView):
 
         messages.add_message(self.request, messages.SUCCESS, f'Skillet Created!')
 
-        snippet_utils.invalidate_snippet_caches(self.app_dir)
+        # go ahead and refresh all the found skillet
+        app_utils.refresh_skillets_from_repo(repo_name)
+
         cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
         return HttpResponseRedirect(f'/panhandler/edit_skillet/{repo_name}/{skillet_name}')
 
 
-class UpdateSkilletView(CNCBaseFormView):
+class UpdateSkilletView(PanhandlerAppFormView):
     snippet = 'edit_skillet'
     next_url = '/provision'
     app_dir = 'panhandler'
     template_name = 'panhandler/edit_skillet.html'
-
-    def get_snippet(self):
-        return self.snippet
 
     def get_header(self) -> str:
         """
@@ -646,8 +691,12 @@ class UpdateSkilletView(CNCBaseFormView):
     def get_context_data(self, **kwargs):
         skillet_name = self.kwargs.get('skillet', None)
         repo_name = self.kwargs.get('repo_name', None)
-        skillet_contents = snippet_utils.get_snippet_metadata(skillet_name, self.app_dir)
-        skillet_dict = snippet_utils.load_snippet_with_name(skillet_name, self.app_dir)
+
+        # get skillet metadata
+        skillet_dict = app_utils.load_skillet_by_name(skillet_name)
+
+        # get the contents of the meta-cnc.yaml file as a str
+        skillet_contents = snippet_utils.read_skillet_metadata(skillet_dict)
 
         skillet_loader = SkilletLoader()
         skillet = skillet_loader.create_skillet(skillet_dict=skillet_dict)
@@ -667,8 +716,6 @@ class UpdateSkilletView(CNCBaseFormView):
         self.request.session['edit_skillet_skillet_path'] = skillet_path
 
         self.prepopulated_form_values['skillet_contents'] = skillet_contents
-
-        # self.save_value_to_workflow('skillet_contents', skillet_contents)
 
         context = super().get_context_data(**kwargs)
         context['skillet_contents'] = skillet_contents
@@ -710,6 +757,8 @@ class UpdateSkilletView(CNCBaseFormView):
 
         skillet = skillet_loader.create_skillet(skillet_dict=skillet_dict)
 
+        # FIXME - this has been reworked in skilletlib for all skillet types
+        # FIXME - possibly need to ensure declared variables that are also outputs are not flagged here
         if 'pan' in skillet.type:
             # extra check to ensure all variables are defined
             for snippet in skillet.get_snippets():
@@ -743,116 +792,10 @@ class UpdateSkilletView(CNCBaseFormView):
 
         messages.add_message(self.request, messages.SUCCESS, f'Skillet updated!')
 
-        # fixme - instead of invalidating all snipets from all repos, we should make repos from each dir have it's
-        # own cache key, and track them seperately. Only invalidate snippet cache from that dir only...
-        snippet_utils.invalidate_snippet_caches(self.app_dir)
+        app_utils.refresh_skillets_from_repo(repo_name)
+
         cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
         return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
-
-
-class ListSnippetTypesView(CNCView):
-    app_dir = 'panhandler'
-    template_name = 'panhandler/snippet_types.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        print('Getting all snippets')
-        panos_snippets = snippet_utils.load_snippets_of_type(snippet_type='panos', app_dir='panhandler')
-        panorama_snippets = snippet_utils.load_snippets_of_type(snippet_type='panorama', app_dir='panhandler')
-        panorama_gpcs_snippets = snippet_utils.load_snippets_of_type(snippet_type='panorama-gpcs', app_dir='panhandler')
-        template_snippets = snippet_utils.load_snippets_of_type(snippet_type='template', app_dir='panhandler')
-        terraform_templates = snippet_utils.load_snippets_of_type(snippet_type='terraform', app_dir='panhandler')
-
-        snippets_by_type = dict()
-        if len(panos_snippets):
-            snippets_by_type['PAN-OS'] = panos_snippets
-        if len(panorama_snippets):
-            snippets_by_type['Panorama'] = panorama_snippets
-        if len(panorama_gpcs_snippets):
-            snippets_by_type['Panorama-GPCS'] = panorama_gpcs_snippets
-        if len(template_snippets):
-            snippets_by_type['Templates'] = template_snippets
-        if len(terraform_templates):
-            snippets_by_type['Terraform'] = terraform_templates
-
-        context['snippets'] = snippets_by_type
-
-        return context
-
-
-class ListSnippetsByGroup(CNCBaseFormView):
-    next_url = '/provision'
-    app_dir = 'panhandler'
-
-    def get_snippet(self):
-        print('Getting snippet from POST here in ListSnippetByGroup:get_snippet')
-        if 'snippet_name' in self.request.POST:
-            print('Found meta-cnc in POST')
-            snippet_name = self.request.POST['snippet_name']
-            print(snippet_name)
-            return snippet_name
-        else:
-            print('what happened here?')
-            return self.snippet
-
-    def save_workflow_to_session(self) -> None:
-        """
-        Save the current user input to the session
-        :return: None
-        """
-
-        if self.app_dir in self.request.session:
-            current_workflow = self.request.session[self.app_dir]
-        else:
-            current_workflow = dict()
-
-        # there is not service here, override with hard coded snippet_name value
-        var_name = 'snippet_name'
-        if var_name in self.request.POST:
-            print('Adding variable %s to session' % var_name)
-            current_workflow[var_name] = self.request.POST.get(var_name)
-
-        self.request.session[self.app_dir] = current_workflow
-
-    def get_context_data(self, **kwargs):
-        snippet_type = self.kwargs['service_type']
-        print(snippet_type)
-
-        context = super().get_context_data(**kwargs)
-
-        snippet_labels = dict()
-        snippet_labels['PAN-OS'] = 'panos'
-        snippet_labels['Panorama'] = 'panorama'
-        snippet_labels['Panorama-GPCS'] = 'panorama-gpcs'
-        snippet_labels['Templates'] = 'template'
-        snippet_labels['Terraform'] = 'terraform'
-
-        context['title'] = 'All Templates with type: %s' % snippet_type
-        context['header'] = 'Template Library'
-        services = snippet_utils.load_snippets_of_type(snippet_labels[snippet_type], self.app_dir)
-
-        form = context['form']
-
-        # we need to construct a new ChoiceField with the following basic format
-        # snippet_name = forms.ChoiceField(choices=(('gold', 'Gold'), ('silver', 'Silver'), ('bronze', 'Bronze')))
-        choices_list = list()
-        # grab each service and construct a simple tuple with name and label, append to the list
-        for service in services:
-            choice = (service['name'], service['label'])
-            choices_list.append(choice)
-
-        # let's sort the list by the label attribute (index 1 in the tuple)
-        choices_list = sorted(choices_list, key=lambda k: k[1])
-        # convert our list of tuples into a tuple itself
-        choices_set = tuple(choices_list)
-        # make our new field
-        new_choices_field = fields.ChoiceField(choices=choices_set, label='Choose Template:')
-        # set it on the original form, overwriting the hardcoded GSB version
-
-        form.fields['snippet_name'] = new_choices_field
-
-        context['form'] = form
-        return context
 
 
 class ListSkilletCollectionsView(CNCView):
@@ -870,7 +813,7 @@ class ListSkilletCollectionsView(CNCView):
             return context
 
         # return a list of all defined collections
-        collections = snippet_utils.load_all_label_values(self.app_dir, 'collection')
+        collections = app_utils.load_all_skillet_label_values('collection')
 
         # build dict of collections related to other collections (if any)
         # and a count of how many skillets are in the collection
@@ -880,7 +823,7 @@ class ListSkilletCollectionsView(CNCView):
         all_skillets = 'All Skillets'
 
         # get the full list of all snippets
-        all_snippets = snippet_utils.load_all_snippets(self.app_dir)
+        all_snippets = app_utils.load_all_skillets()
 
         collections_info[all_skillets] = dict()
         collections_info[all_skillets]['count'] = len(all_snippets)
@@ -892,7 +835,7 @@ class ListSkilletCollectionsView(CNCView):
                 collections_info[c] = dict()
                 collections_info[c]['count'] = 0
 
-            skillets = snippet_utils.load_snippets_by_label('collection', c, self.app_dir)
+            skillets = app_utils.load_skillets_with_label('collection', c)
             collections_info[c]['count'] = len(skillets)
             related = list()
 
@@ -928,12 +871,12 @@ class ListSkilletsInCollectionView(CNCView):
         print(f'Getting all snippets with collection label {collection}')
 
         if collection == 'All Skillets':
-            all_skillets = snippet_utils.load_all_snippets(self.app_dir)
+            all_skillets = app_utils.load_all_skillets()
 
             # remove app type skillets from this list for #196
             skillets = list(s for s in all_skillets if s['type'] != 'app')
         else:
-            skillets = snippet_utils.load_snippets_by_label('collection', collection, self.app_dir)
+            skillets = app_utils.load_skillets_with_label('collection', collection)
 
         # Check if the skillet builder has specified an order for their Skillets
         # if so, sort them that way be default, otherwise sort by name
@@ -1055,7 +998,7 @@ class ViewValidationResultsView(EditTargetView):
 
         header = self.header
         if workflow_name is not None:
-            workflow_skillet_dict = snippet_utils.load_snippet_with_name(workflow_name, self.app_dir)
+            workflow_skillet_dict = app_utils.load_skillet_by_name(workflow_name)
             if workflow_skillet_dict is not None:
                 header = workflow_skillet_dict.get('label', self.header)
 
@@ -1075,7 +1018,7 @@ class ViewValidationResultsView(EditTargetView):
             if {'TARGET_IP', 'TARGET_USERNAME', 'TARGET_PASSWORD'}.issubset(self.get_workflow().keys()):
                 print('Skipping validation input as we already have this information cached')
                 snippet = self.get_value_from_workflow('snippet_name', None)
-                self.meta = snippet_utils.load_snippet_with_name(snippet, self.app_dir)
+                self.meta = app_utils.load_skillet_by_name(snippet)
 
                 target_ip = self.get_value_from_workflow('TARGET_IP', '')
                 # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
@@ -1160,7 +1103,7 @@ class ViewValidationResultsView(EditTargetView):
             print('Could not find a valid meta-cnc def')
             raise SnippetRequiredException
 
-        meta = snippet_utils.load_snippet_with_name(snippet_name, self.app_dir)
+        meta = app_utils.load_skillet_by_name(snippet_name)
 
         context = dict()
         self.header = 'Validation Results'
@@ -1265,7 +1208,7 @@ class ExportValidationResultsView(CNCBaseAuth, View):
     def get(self, request, *args, **kwargs) -> Any:
 
         validation_skillet = kwargs['skillet']
-        meta = snippet_utils.load_snippet_with_name(validation_skillet, self.app_dir)
+        meta = app_utils.load_skillet_by_name(validation_skillet)
 
         filename = meta.get('name', 'Validation Output')
         full_output = dict()
@@ -1309,15 +1252,12 @@ class DeleteFavoriteView(CNCBaseAuth, RedirectView):
         return '/panhandler/favorites'
 
 
-class AddFavoritesView(CNCBaseFormView):
+class AddFavoritesView(PanhandlerAppFormView):
     snippet = 'create_favorite'
     next_url = '/panhandler/favorites'
     app_dir = 'panhandler'
     header = "Favorites"
     title = "Add a new Collection"
-
-    def get_snippet(self):
-        return self.snippet
 
     # once the form has been submitted and we have all the values placed in the workflow, execute this
     def form_valid(self, form):
@@ -1356,8 +1296,7 @@ class FavoriteCollectionView(CNCView):
 
         skillets = list()
         for s in skillet_ids:
-            skillet_dict = snippet_utils.load_snippet_with_name(s.skillet_id, self.app_dir)
-            skillets.append(skillet_dict)
+            skillets.append(json.loads(s.skillet_json))
 
         if not skillets:
             messages.add_message(self.request, messages.INFO,
@@ -1372,22 +1311,19 @@ class FavoriteCollectionView(CNCView):
         return context
 
 
-class AddSkilletToFavoritesView(CNCBaseFormView):
+class AddSkilletToFavoritesView(PanhandlerAppFormView):
     snippet = 'add_skillet_to_favorite'
     next_url = '/panhandler/favorites'
     app_dir = 'panhandler'
     header = "Favorites"
     title = "Add a new Collection"
 
-    def get_snippet(self):
-        return self.snippet
-
     def get_context_data(self, **kwargs) -> dict:
 
         skillet_name = self.kwargs.get('skillet_name', '')
         all_favorites = Collection.objects.using('panhandler').all()
 
-        skillet = snippet_utils.load_snippet_with_name(skillet_name, self.app_dir)
+        skillet = app_utils.load_skillet_by_name(skillet_name)
 
         if skillet is None:
             raise SnippetRequiredException('Could not find that skillet!')
@@ -1407,8 +1343,8 @@ class AddSkilletToFavoritesView(CNCBaseFormView):
         self.save_value_to_workflow('all_favorites', favorite_names)
         self.save_value_to_workflow('skillet_name', skillet_name)
 
-        if Skillet.objects.using('panhandler').filter(skillet_id=skillet_name).exists():
-            skillet = Skillet.objects.using('panhandler').get(skillet_id=skillet_name)
+        if Skillet.objects.using('panhandler').filter(name=skillet_name).exists():
+            skillet = Skillet.objects.using('panhandler').get(name=skillet_name)
             current_favorites_qs = skillet.collection_set.all()
             current_favorites = list()
             for f in current_favorites_qs:
@@ -1430,17 +1366,18 @@ class AddSkilletToFavoritesView(CNCBaseFormView):
             skillet_name = workflow['skillet_name']
             favorites = workflow['favorites']
 
+            # FIXME - should no longer be deleting skillets due to no favorites ...
             if not favorites:
-                if Skillet.objects.using('panhandler').filter(skillet_id=skillet_name).exists():
-                    skillet = Skillet.objects.using('panhandler').get(skillet_id=skillet_name)
-                    skillet.delete(using='panhandler')
+                if Skillet.objects.using('panhandler').filter(name=skillet_name).exists():
+                    skillet = Skillet.objects.using('panhandler').get(name=skillet_name)
+                    skillet.collection_set.clear()
                     messages.add_message(self.request, messages.INFO, 'Removed Skillet from All Favorites')
                     self.next_url = self.request.session.get('last_page', '/')
 
                 return super().form_valid(form)
 
             (skillet, created) = Skillet.objects.using('panhandler').get_or_create(
-                skillet_id=skillet_name
+                name=skillet_name
             )
 
             if not created:
