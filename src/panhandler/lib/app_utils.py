@@ -354,6 +354,7 @@ def load_skillets_with_label(label_name, label_value):
 def load_all_skillet_label_values(label_name):
     labels_list = list()
     skillets = load_all_skillets()
+
     for skillet in skillets:
         if 'labels' not in skillet:
             continue
@@ -415,7 +416,7 @@ def refresh_skillets_from_repo(repo_name: str) -> list:
                     continue
 
             if not found:
-                db_skillet.remove()
+                db_skillet.delete(using='panhandler')
 
         update_skillet_cache()
 
@@ -455,10 +456,30 @@ def get_repository_details(repository_name: str) -> (dict, None):
 
     if RepositoryDetails.objects.using('panhandler').filter(name=repository_name).exists():
         try:
-            repo_db_record = RepositoryDetails.objects.using('panhandler').get(repository_name)
+            repo_db_record = RepositoryDetails.objects.using('panhandler').get(name=repository_name)
             return json.loads(repo_db_record.details_json)
         except ValueError as ve:
             print(ve)
             return None
     else:
         return None
+
+
+def initialize_default_repositories() -> None:
+    """
+    Find any configured repositories in the application configuration
+    and build db records for their respective skillets.
+
+    Called from the WelcomeView to ensure all default skillets are found and indexed
+
+    :return: None
+    """
+    app_config = cnc_utils.get_app_config('panhandler')
+    if 'repositories' not in app_config:
+        return
+
+    for r in app_config['repositories']:
+        repo_details = dict()
+        repo_details.update(r)
+
+        initialize_repo(repo_details)

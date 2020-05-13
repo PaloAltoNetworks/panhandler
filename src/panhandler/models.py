@@ -4,6 +4,7 @@ from django.db import models
 class RepositoryDetails(models.Model):
     name = models.CharField(max_length=200)
     url = models.CharField(max_length=512)
+    deploy_key_path = models.CharField(max_length=128, default='', null='')
     details_json = models.TextField(max_length=2048)
 
 

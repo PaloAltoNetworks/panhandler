@@ -88,6 +88,9 @@ class WelcomeView(CNCView):
             update_required = "true"
 
         context['update_required'] = update_required
+
+        app_utils.initialize_default_repositories()
+
         return context
 
 
@@ -231,7 +234,7 @@ class ImportRepoView(PanhandlerAppFormView):
             else:
                 messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 
-        # return render(self.request, 'pan_cnc/results.html', context)
+        snippet_utils.invalidate_snippet_caches(self.app_dir)
         return HttpResponseRedirect('repos')
 
 
@@ -272,7 +275,6 @@ class ListReposView(CNCView):
             repos = list()
 
             for d in snippets_dir.iterdir():
-                # git_dir = os.path.join(d, '.git')
                 git_dir = d.joinpath('.git')
 
                 if git_dir.exists() and git_dir.is_dir():
@@ -297,8 +299,6 @@ class RepoDetailsView(CNCView):
     template_name = 'panhandler/repo_detail.html'
     app_dir = 'panhandler'
 
-    # define initial dynamic form from this snippet metadata
-
     def get_context_data(self, **kwargs):
 
         # always ensure workflow related items are removed from session when we get here in case a user
@@ -313,27 +313,25 @@ class RepoDetailsView(CNCView):
         repo_detail['name'] = repo_name
 
         if os.path.exists(repo_dir):
+            # retrieve details from the db where possible
             repo_detail = app_utils.get_repository_details(repo_name)
             if not repo_detail:
+                # no db record exists or json is not parsable
                 repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
-                app_utils.initialize_repo(repo_detail)
+
+            # initialize will set up db object only if needed
+            skillets_from_repo = app_utils.initialize_repo(repo_detail)
 
         else:
             repo_detail['error'] = 'Repository directory not found'
+            skillets_from_repo = list()
 
         if 'error' in repo_detail:
             messages.add_message(self.request, messages.ERROR, repo_detail['error'])
 
-        try:
-            snippets_from_repo = app_utils.load_skillets_from_repo(repo_name)
-
-        except CCFParserError:
-            messages.add_message(self.request, messages.ERROR, 'Could not read all snippets from repo. Parser error')
-            snippets_from_repo = list()
-
         # get a list of all collections found in this repo
         collections = list()
-        for skillet in snippets_from_repo:
+        for skillet in skillets_from_repo:
             if 'labels' in skillet and 'collection' in skillet['labels']:
                 collection = skillet['labels']['collection']
 
@@ -349,7 +347,7 @@ class RepoDetailsView(CNCView):
         context = super().get_context_data(**kwargs)
         context['repo_detail'] = repo_detail
         context['repo_name'] = repo_name
-        context['snippets'] = snippets_from_repo
+        context['snippets'] = skillets_from_repo
         context['collections'] = collections
         return context
 
@@ -366,6 +364,8 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             messages.add_message(self.request, messages.ERROR, 'Repository directory does not exist!')
             return f'/panhandler/repo_detail/{repo_name}'
 
+        msg = git_utils.update_repo(repo_dir, branch)
+
         repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
         repo_detail_json = json.dumps(repo_detail)
 
@@ -376,7 +376,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
                       }
         )
 
-        msg = git_utils.update_repo(repo_dir, branch)
+        level = messages.INFO
 
         if 'Error' in msg:
             level = messages.ERROR
@@ -384,27 +384,20 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
         elif 'updated' in msg or 'Checked out new' in msg:
             # msg updated will catch both switching branches as well as new commits
-            # since this repo has been updated, we need to ensure the caches are all in sync
-            git_utils.update_repo_in_cache(repo_name, repo_dir, self.app_dir)
+            level = messages.INFO
 
             # remove all python3 init touch files if there is an update
             task_utils.python3_reset_init(repo_dir)
 
-            level = messages.INFO
-
             # set needs_index flag regardless of creation status
             needs_index = True
-        else:
-            level = messages.INFO
 
         messages.add_message(self.request, level, msg)
 
         # check if there are new branches available
-
         repo_branches = git_utils.get_repo_branches_from_dir(repo_dir)
         if repo_detail['branches'] != repo_branches:
             messages.add_message(self.request, messages.INFO, 'New Branches are available')
-            git_utils.update_repo_in_cache(repo_name, repo_dir, self.app_dir)
 
         # check each snippet found for dependencies
         repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
@@ -454,6 +447,13 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         for tf in touch_files:
             print(f'Removing temp file: {tf}')
             tf.unlink()
+
+        repository_object.details_json = json.dumps(repo_detail)
+        repository_object.save()
+
+        # manage cached items as well
+        git_utils.update_repo_detail_in_cache(repo_detail, self.app_dir)
+        snippet_utils.invalidate_snippet_caches(self.app_dir)
 
         return f'/panhandler/repo_detail/{repo_name}'
 
@@ -519,6 +519,7 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
             repos = ", ".join(updates)
             messages.add_message(self.request, messages.SUCCESS, f'Successfully Updated repositories: {repos}')
 
+        snippet_utils.invalidate_snippet_caches(self.app_dir)
         cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
         return '/panhandler/repos'
 
@@ -557,6 +558,8 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
 
         repository_object = RepositoryDetails.objects.using('panhandler').get(name=repo_name)
         repository_object.delete(using='panhandler')
+
+        snippet_utils.invalidate_snippet_caches(self.app_dir)
 
         # fix for #207 - no need to invalid the snippet cache when we have all the skillets in the db
         all_skillets = app_utils.load_all_skillets()
