@@ -28,6 +28,9 @@ export LATEST_EXPOSED_PORT=8080
 export CNC_USERNAME="${CNC_USERNAME:=paloalto}"
 export CNC_PASSWORD="${CNC_PASSWORD:=panhandler}"
 
+# Fix for #208 - manually set column size for celery
+export COLUMNS=80
+
 function ensure_docker_volume() {
   if [[ ! $(docker volume ls -q -f name=$CNC_VOLUME) ]]; then
     echo "Creating data volume"
@@ -50,7 +53,7 @@ function validate_container_id() {
     return 1
   fi
 
-  len=$(echo $1 | wc -c | sed -e 's/ //g')
+  len=$(echo "$1" | wc -c | sed -e 's/ //g')
   if [[ $len -eq '13' ]]; then
     return 0
   else
@@ -125,6 +128,7 @@ function create_panhandler_container() {
     -v "/var/run/docker.sock:/var/run/docker.sock" \
     -e CNC_USERNAME \
     -e CNC_PASSWORD \
+    -e COLUMNS \
     --name panhandler "${PANHANDLER_IMAGE}"
 
   # check if on a mac - this is only needed on Linux
