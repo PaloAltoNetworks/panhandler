@@ -2,13 +2,16 @@
 FROM python:3.8-slim
 
 LABEL description="Panhandler"
-LABEL version="3.1"
+LABEL version="3.3"
 LABEL maintainer="sp-solutions@paloaltonetworks.com"
 
 ENV CNC_USERNAME=paloalto
 ENV CNC_PASSWORD=panhandler
 ENV CNC_HOME=/home/cnc_user
 ENV CNC_APP=Panhandler
+# fix for #209
+ENV COLUMNS=80
+
 WORKDIR /app
 
 RUN groupadd -g 999 cnc_group && \
