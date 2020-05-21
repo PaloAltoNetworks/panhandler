@@ -234,7 +234,9 @@ class ImportRepoView(PanhandlerAppFormView):
             else:
                 messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 
-        snippet_utils.invalidate_snippet_caches(self.app_dir)
+        # fix for gl #3 - be smarter about clearing the cache
+        app_utils.update_skillet_cache()
+        # snippet_utils.invalidate_snippet_caches(self.app_dir)
         return HttpResponseRedirect('repos')
 
 
@@ -453,7 +455,9 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
         # manage cached items as well
         git_utils.update_repo_detail_in_cache(repo_detail, self.app_dir)
-        snippet_utils.invalidate_snippet_caches(self.app_dir)
+        # fix for gl #3 - be smarter about clearing the cache
+        app_utils.update_skillet_cache()
+        # snippet_utils.invalidate_snippet_caches(self.app_dir)
 
         return f'/panhandler/repo_detail/{repo_name}'
 
@@ -513,13 +517,15 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
                         tf.unlink()
 
                     # re-index skillets in this dir
-                    loaded_skillets = app_utils.refresh_skillets_from_repo(str(d))
+                    app_utils.refresh_skillets_from_repo(str(d))
 
         if not err_condition:
             repos = ", ".join(updates)
             messages.add_message(self.request, messages.SUCCESS, f'Successfully Updated repositories: {repos}')
 
-        snippet_utils.invalidate_snippet_caches(self.app_dir)
+        # fix for gl #3 - be smarter about clearing the cache
+        app_utils.update_skillet_cache()
+        # snippet_utils.invalidate_snippet_caches(self.app_dir)
         cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
         return '/panhandler/repos'
 
@@ -559,11 +565,15 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
         repository_object = RepositoryDetails.objects.using('panhandler').get(name=repo_name)
         repository_object.delete(using='panhandler')
 
-        snippet_utils.invalidate_snippet_caches(self.app_dir)
+        # no need for this per gl #3
+        # snippet_utils.invalidate_snippet_caches(self.app_dir)
 
         # fix for #207 - no need to invalid the snippet cache when we have all the skillets in the db
-        all_skillets = app_utils.load_all_skillets()
-        cnc_utils.set_long_term_cached_value(self.app_dir, 'all_snippets', all_skillets, -1)
+        # all_skillets = app_utils.load_all_skillets()
+        # cnc_utils.set_long_term_cached_value(self.app_dir, 'all_snippets', all_skillets, -1)
+
+        # this is now moved into it's own library function per gitlab issue #3
+        app_utils.update_skillet_cache()
 
         messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
         return f'/panhandler/repos'
