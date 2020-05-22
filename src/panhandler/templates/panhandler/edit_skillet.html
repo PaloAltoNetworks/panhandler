@@ -612,7 +612,13 @@
                     } else if ('capture_object' in output_object) {
                         capture_type = 'capture_object';
                     }
-                    add_output(output_object['name'], capture_type, output_object[capture_type], skillet_type);
+
+                    if ('filter_items' in output_object) {
+                        add_filtered_output(output_object['name'], capture_type, output_object[capture_type],
+                            output_object['filter_items'], skillet_type);
+                    } else {
+                        add_output(output_object['name'], capture_type, output_object[capture_type], skillet_type);
+                    }
                 });
             }
 
@@ -649,13 +655,20 @@
                 let name_span = output_div_obj.find('[data-output_attribute_type="name"]');
                 let capture_type_span = output_div_obj.find('[data-output_attribute_type="key"]');
                 let capture_value_span = output_div_obj.find('[data-output_attribute_type="value"]');
+                let capture_filter_span = output_div_obj.find('[data-output_attribute_type="filter"]');
+
                 let name = name_span.html();
                 let capture_key = capture_type_span.html();
                 let capture_value = capture_value_span.html();
+                let capture_filter = capture_filter_span.html();
 
                 let output_def = {};
                 output_def['name'] = name;
                 output_def[capture_key] = capture_value;
+
+                if ((typeof capture_filter !== 'undefined') && (capture_filter !== '')) {
+                    output_def['filter_items'] = capture_filter;
+                }
 
                 snippet_def['outputs'].push(output_def);
             });
@@ -873,7 +886,7 @@
 
             new_output_name.html(output_name);
             new_output_key.html(output_key);
-            new_output_value.html(output_value);
+            new_output_value.html(output_value.replace('\n', ''));
             new_output_filter.html(filter_expression);
 
             all_outputs.append(new_output);
@@ -902,6 +915,7 @@
 
                 if ((typeof filter_expression !== 'undefined') && (filter_expression !== '')) {
                     add_filtered_output(opt_name, opt_key, opt_val, filter_expression, output_type);
+                    opt_filter_field.val('');
                 }
 
             } else {
@@ -909,10 +923,10 @@
             }
 
             opt_name_field.val('');
-            opt_key_field.val('');
-            opt_val_field.val('');
+            {#opt_key_field.val('');#}
+            opt_val_field.val('.');
 
-            opt_key_field.focus();
+            opt_name_field.focus();
         }
 
         function update_preamble() {
@@ -989,7 +1003,12 @@
                 initial_context['username'] = 'admin';
                 initial_context['password'] = 'admin';
 
-                update_panos_snippet();
+                if (skillet['type'] === 'pan-validation') {
+                    update_snippet('pan-validation');
+                } else {
+                    update_panos_snippet();
+                }
+
             } else {
                 update_snippet(skillet['type']);
             }
@@ -1101,7 +1120,18 @@
 
             let doc = $(document.documentElement);
             doc.css('cursor', 'progress');
-            let snippet_name = $('#id_panos_snippet_name').val();
+
+            let snippet_name = '';
+            if ((skillet['type'] === 'panos') || (skillet['type'] === 'panorama') ||
+                (skillet['type'] === 'panorama-gpcs')) {
+                snippet_name = $('#id_panos_snippet_name').val();
+            } else if(skillet['type'] === 'pan-validation') {
+                snippet_name = $('#id_pan_validation_snippet_name').val();
+            } else {
+                doc.css('cursor', '');
+                alert('Unsupported Skillet type for Snippet Debug');
+                return false;
+            }
 
             update_skillet_from_ui();
 
@@ -1123,7 +1153,9 @@
             let test_skillet = skillet;
             let test_snippet = get_snippet_definition(snippet_name);
 
-            if (! test_snippet['cmd'] in ['get', 'show', 'parse']) {
+            debugger;
+            if (! (test_snippet['cmd'] in ['get', 'show', 'parse'])) {
+                doc.css('cursor', '');
                 alert('Snippet Debug only supported for get, show, and parse commands');
                 return false;
             }
@@ -1157,7 +1189,16 @@
         }
 
         function cancel_test_snippet() {
-            let snippet_name = $('#id_panos_snippet_name').val();
+
+            let snippet_name = '';
+            if ((skillet['type'] === 'panos') || (skillet['type'] === 'panorama') ||
+                (skillet['type'] === 'panorama-gpcs'))
+            {
+                snippet_name = $('#id_panos_snippet_name').val();
+            } else {
+               snippet_name = $('id_pan_validation_snippet_name') .val();
+            }
+
             edit_snippet_by_name(snippet_name);
         }
 
@@ -1387,11 +1428,6 @@
                 <textarea name="skillet_description" cols="50" rows="3" class="form-control"
                           id="id_skillet_description">{{ skillet.description }}</textarea>
             </div>
-            <div class="text-right">
-                <button type="button" class="btn btn-outline-primary"
-                        onclick="update_preamble()">Update Preamble
-                </button>
-            </div>
             <hr/>
             <div class="form-group mb-4">
                 <div id="all_labels">
@@ -1567,14 +1603,14 @@
    <span data-output_attribute_type="key"></span>: <span data-output_attribute_type="value"></span></code></pre>
     </div>
 
-    <!-- Filtered Output Definitions Clone -->
+    <!-- Filtered Output Definitions Clone OLD -->
     <div id="filtered_output_base" style="display: none" class="bg-light mb-0 w-100 mt-1 p-1">
         <a href="#" class="float-right" onclick="remove_output(this);">
             <i class="fa fa-times"></i>
         </a>
         <pre class="mb-0"><code class="yaml"> - name: <span data-output_attribute_type="name"></span>
    <span data-output_attribute_type="key"></span>: <span data-output_attribute_type="value"></span>
-   filter_items: <span data-output_attribute_type="filter"></span></code></pre>
+   <span>filter_items</span>: <span data-output_attribute_type="filter"></span></code></pre>
     </div>
 
     <!-- output definitions Clone OLD -->
@@ -1807,17 +1843,21 @@
                     </button>
                 </div>
                 <div class="modal-body" style="overflow-y: auto">
-                    <div class="form-group">
-                        <label for="id_panos_snippet_name">Name:</label>
-                        <input type="text" value="" class="form-control" id="id_panos_snippet_name" disabled>
-                        <label for="id_panos_snippet_cmd">CMD:</label>
-                        <select class="form-control" id="id_panos_snippet_cmd">
-                            <option>set</option>
-                            <option>get</option>
-                            <option>cli</option>
-                            <option>op</option>
-                            <option>parse</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="id_panos_snippet_name">Name:</label>
+                            <input type="text" value="" class="form-control" id="id_panos_snippet_name" disabled>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="id_panos_snippet_cmd">CMD:</label>
+                            <select class="form-control" id="id_panos_snippet_cmd">
+                                <option>set</option>
+                                <option>get</option>
+                                <option>cli</option>
+                                <option>op</option>
+                                <option>parse</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="form-group">
                         <label for="id_panos_snippet_set_xpath">XPath:</label>
@@ -1872,26 +1912,27 @@
                     </a>
                     <div id="panos_outputs_add" class="collapse">
                         <div class="form-row">
-                                                 <div class="form-group col-md-6">
-                                                 <label for="id_panos_output_name">Variable Name:</label>
-                                                 <input type="text" value="" placeholder="" class="form-control"
-                                                 id="id_panos_output_name">
-                                                 </div>
-                                                 <div class="form-group col-md-6">
-                                                 <label for="id_panos_output_key">Capture Type:</label>
-                                                 <select id="id_panos_output_key" class="form-control">
-                                                 <option value="capture_list" selected="selected">Capture List</option>
-                                                 <option value="capture_pattern">Capture Pattern</option>
-                                                 <option value="capture_value">Capture Value</option>
-                                                 <option value="capture_object">Capture Object</option>
-                                                 </select>
-                                                 </div>
-                                                 </div>
+                            <div class="form-group col-md-6">
+                                <label for="id_panos_output_name">Variable Name:</label>
+                                <input type="text" value="" placeholder="" class="form-control"
+                                       id="id_panos_output_name">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="id_panos_output_key">Capture Type:</label>
+                                <select id="id_panos_output_key" class="form-control">
+                                    <option value="capture_list" selected="selected">Capture List</option>
+                                    <option value="capture_pattern">Capture Pattern</option>
+                                    <option value="capture_value">Capture Value</option>
+                                    <option value="capture_object">Capture Object</option>
+                                </select>
+                            </div>
+                        </div>
                         <div class="form-group">
                             <label for="id_panos_output_filter">Filter Items:</label>
                             <input type="text" value="" class="form-control" id="id_panos_output_filter"
-                                data-modal_source="id_panos_output_key" data-modal_value="capture_list"
-                                title="Boolean Expression where only passing items will be added to the captured list">
+                                   data-modal_source="id_panos_output_key" data-modal_value="capture_list"
+                                   placeholder="item == 'some_value'"
+                                   title="Boolean Expression where only passing items will be added to the captured list">
                         </div>
                         <div class="form-group">
                                                    <label for="id_panos_output_value">XPath Query:</label>
@@ -2130,15 +2171,21 @@
                     </button>
                 </div>
                 <div class="modal-body" style="overflow-y: auto">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="id_pan_validation_snippet_name">Name:</label>
+                            <input type="text" value="" class="form-control" id="id_pan_validation_snippet_name" disabled>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="id_pan_validation_snippet_cmd">Cmd:</label>
+                            <select id="id_pan_validation_snippet_cmd" class="form-control">
+                                <option selected>validate</option>
+                                <option>validate_xml</option>
+                                <option>parse</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="form-group">
-                        <label for="id_pan_validation_snippet_name">Name:</label>
-                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_name" disabled>
-                        <label for="id_pan_validation_snippet_cmd">Cmd:</label>
-                        <select id="id_pan_validation_snippet_cmd" class="form-control">
-                            <option selected>validate</option>
-                            <option>validate_xml</option>
-                            <option>parse</option>
-                        </select>
                         <label for="id_pan_validation_snippet_when">When:</label>
                         <textarea class="form-control" rows="1" id="id_pan_validation_snippet_when"></textarea>
                         <p class="small muted text-right m-0">
@@ -2186,13 +2233,30 @@
                             <i class="fa fa-plus"></i>Add Output
                         </a>
                         <div id="pan_validation_outputs_add" class="collapse">
-                            <label for="id_pan_validation_output_name">Variable Name:</label>
-                            <input type="text" value="" placeholder="" class="form-control"
-                                   id="id_pan_validation_output_name">
-                            <label for="id_pan_validation_output_key">Capture Type:</label>
-                            <select id="id_pan_validation_output_key" class="form-control">
-                                <option value="capture_pattern">Capture Pattern</option>
-                            </select>
+                        <div class="form-row">
+                            <div class="form-group col-md-6">
+                                <label for="id_pan_validation_output_name">Variable Name:</label>
+                                <input type="text" value="" placeholder="" class="form-control"
+                                       id="id_pan_validation_output_name">
+                            </div>
+                            <div class="form-group col-md-6">
+                                <label for="id_pan_validation_output_key">Capture Type:</label>
+                                <select id="id_pan_validation_output_key" class="form-control">
+                                        <option value="capture_list" selected="selected">Capture List</option>
+                                        <option value="capture_pattern">Capture Pattern</option>
+                                        <option value="capture_value">Capture Value</option>
+                                        <option value="capture_object">Capture Object</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="id_pan_validation_output_filter">Filter Items:</label>
+                            <input type="text" value="" class="form-control" id="id_pan_validation_output_filter"
+                                   placeholder="item == 'some_value'"
+                                   data-modal_source="id_pan_validation_output_key" data-modal_value="capture_list"
+                                   title="Boolean Expression where only passing items will be added to the captured list">
+                        </div>
+                        <div class="form-group">
                             <label for="id_pan_validation_output_value">Pattern:</label>
                             <div class="input-group">
                                 <input type="text" value="" placeholder="" class="form-control"
@@ -2207,6 +2271,7 @@
                                 </div>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
                 <div class="modal-footer">
