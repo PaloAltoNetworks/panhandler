@@ -863,6 +863,27 @@
             new_output.css('display', '');
         }
 
+        function add_filtered_output(output_name, output_key, output_value, filter_expression, output_type) {
+            let output_base = $('#filtered_output_base');
+            let all_outputs = $('#all_' + output_type + '_output_options');
+
+            let new_output = output_base.clone();
+            let new_output_name = new_output.find('[data-output_attribute_type="name"]');
+            let new_output_key = new_output.find('[data-output_attribute_type="key"]');
+            let new_output_value = new_output.find('[data-output_attribute_type="value"]');
+            let new_output_filter = new_output.find('[data-output_attribute_type="filter"]');
+
+            new_output_name.html(output_name);
+            new_output_key.html(output_key);
+            new_output_value.html(output_value);
+            new_output_filter.html(filter_expression);
+
+            all_outputs.append(new_output);
+
+            new_output.prop('id', 'output_' + output_name);
+            new_output.css('display', '');
+        }
+
         function add_new_output(output_type) {
             /**
              * Called from adding a new snippet output capture
@@ -876,7 +897,18 @@
             let opt_val = opt_val_field.val();
             let opt_name = opt_name_field.val();
 
-            add_output(opt_name, opt_key, opt_val, output_type);
+            if (opt_key === 'capture_list') {
+
+                let opt_filter_field = $('#id_' + output_type + '_output_filter');
+                let filter_expression = opt_filter_field.val();
+
+                if ((typeof filter_expression !== 'undefined') && (filter_expression !== '')) {
+                    add_filtered_output(opt_name, opt_key, opt_val, filter_expression, output_type);
+                }
+
+            } else {
+                add_output(opt_name, opt_key, opt_val, output_type);
+            }
 
             opt_name_field.val('');
             opt_key_field.val('');
@@ -1442,6 +1474,16 @@
    <span data-output_attribute_type="key"></span>: <span data-output_attribute_type="value"></span></code></pre>
     </div>
 
+    <!-- Filtered Output Definitions Clone -->
+    <div id="filtered_output_base" style="display: none" class="bg-light mb-0 w-100 mt-1 p-1">
+        <a href="#" class="float-right" onclick="remove_output(this);">
+            <i class="fa fa-times"></i>
+        </a>
+        <pre class="mb-0"><code class="yaml"> - name: <span data-output_attribute_type="name"></span>
+   <span data-output_attribute_type="key"></span>: <span data-output_attribute_type="value"></span>
+   filter_items: <span data-output_attribute_type="filter"></span></code></pre>
+    </div>
+
     <!-- output definitions Clone OLD -->
     <div class="input-group mb-3" id="output_base_old" style="display: none">
         <input type="text" value="" class="form-control" data-output_attribute_type="name"
@@ -1735,27 +1777,41 @@
                        aria-expanded="true" aria-controls="panos_outputs_add">
                         <i class="fa fa-plus"></i>Add Output
                     </a>
-                    <div id="panos_outputs_add" class="form-group collapse">
-                        <label for="id_panos_output_name">Variable Name:</label>
-                        <input type="text" value="" placeholder="" class="form-control"
-                               id="id_panos_output_name">
-                        <label for="id_panos_output_key">Capture Type:</label>
-                        <select id="id_panos_output_key" class="form-control">
-                            <option value="capture_list" selected="selected">Capture List</option>
-                            <option value="capture_pattern">Capture Pattern</option>
-                            <option value="capture_value">Capture Value</option>
-                            <option value="capture_object">Capture Object</option>
-                        </select>
+                    <div id="panos_outputs_add" class="collapse">
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="id_panos_output_name">Variable Name:</label>
+                            <input type="text" value="" placeholder="" class="form-control"
+                                   id="id_panos_output_name">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="id_panos_output_key">Capture Type:</label>
+                            <select id="id_panos_output_key" class="form-control">
+                                <option value="capture_list" selected="selected">Capture List</option>
+                                <option value="capture_pattern">Capture Pattern</option>
+                                <option value="capture_value">Capture Value</option>
+                                <option value="capture_object">Capture Object</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_panos_output_filter">Filter Items:</label>
+                        <input type="text" value="" class="form-control" id="id_panos_output_filter"
+                               data-modal_source="id_panos_output_key" data-modal_value="capture_list"
+                               title="Boolean Expression where only passing items will be added to the captured list">
+                    </div>
+                    <div class="form-group">
                         <label for="id_panos_output_value">XPath Query:</label>
                         <div class="input-group">
                             <input type="text" value="" placeholder="" class="form-control"
-                                   id="id_panos_output_value">
+                                   id="id_panos_output_value"
+                                   title="Query used to find and return values from the output of this snippet.">
                             <div class="input-group-append">
-                                <span class="input-group-text">
-                                    <a href="#" onclick="add_new_output('panos');">
-                                        <i class="fa fa-plus"></i>
-                                    </a>
-                                </span>
+                            <span class="input-group-text">
+                                <a href="#" onclick="add_new_output('panos');">
+                                    <i class="fa fa-plus"></i>
+                                </a>
+                            </span>
                             </div>
                         </div>
                     </div>
