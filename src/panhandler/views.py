@@ -70,6 +70,8 @@ from .models import Collection
 from .models import RepositoryDetails
 from .models import Skillet
 
+from paramiko import RSAKey
+
 
 class WelcomeView(CNCView):
     template_name = "panhandler/welcome.html"
@@ -346,9 +348,12 @@ class RepoDetailsView(CNCView):
                         if collection_member not in collections:
                             collections.append(collection_member)
 
+        repo_record = RepositoryDetails.objects.using('panhandler').get(name=repo_name)
+
         context = super().get_context_data(**kwargs)
         context['repo_detail'] = repo_detail
         context['repo_name'] = repo_name
+        context['repo_record'] = repo_record
         context['snippets'] = skillets_from_repo
         context['collections'] = collections
         return context
@@ -1492,3 +1497,56 @@ class SkilletTestView(CNCBaseAuth, View):
         json_output = json.dumps(results)
         response = HttpResponse(json_output, content_type="application/json")
         return response
+
+
+class GenerateKeyView(CNCBaseAuth, View):
+
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+
+        if self.request.is_ajax():
+            try:
+                json_str = self.request.body
+                json_obj = json.loads(json_str)
+                repo_name = json_obj.get('name', '')
+
+            except ValueError:
+                message = 'Could not parse input'
+                return HttpResponse(message, content_type="application/json")
+        else:
+            message = 'invalid input'
+            return HttpResponse(message, content_type="application/json")
+
+        if not RepositoryDetails.objects.using('panhandler').filter(name=repo_name).exists():
+            message = 'invalid repository'
+            return HttpResponse(message, content_type="application/json")
+
+        user_dir = os.path.expanduser('~/.ssh')
+        private_key_path = os.path.join(user_dir, repo_name)
+        pub_key_path = os.path.join(user_dir, repo_name + '.pub')
+
+        output = dict()
+
+        # check if this already exists
+        if os.path.exists(pub_key_path):
+            with open(pub_key_path, 'r') as pkp:
+                pub_key = pkp.read()
+
+            output['pub'] = pub_key
+
+            return HttpResponse(json.dumps(output), content_type="application/json")
+
+        private_key = RSAKey.generate(bits=2048)
+        private_key.write_private_key_file(private_key_path, password=None)
+
+        pub = RSAKey(filename=private_key_path, password=None)
+
+        public_key_contents = f'{pub.get_name()} {pub.get_base64()} panhandler'
+        with open(pub_key_path, 'w') as pkp:
+            pkp.write(public_key_contents)
+
+        output['pub'] = public_key_contents
+
+        json_output = json.dumps(output)
+        response = HttpResponse(json_output, content_type="application/json")
+        return response
+

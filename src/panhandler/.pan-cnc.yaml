@@ -131,3 +131,6 @@ views:
 
   - name: test_skillet
     class: SkilletTestView
+
+  - name: generate_key
+    class: GenerateKeyView

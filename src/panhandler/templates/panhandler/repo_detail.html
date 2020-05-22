@@ -1,11 +1,38 @@
 {% extends base_html|default:'pan_cnc/base.html' %}
 {% load static %}
+{% block head %}
+    <script type="text/javascript">
 
+    function generate_key() {
+
+        let pub_input = $('#id_deploy_key_pub');
+
+        let data = {
+            'name': '{{ repo_name }}',
+        }
+
+        $.ajax({
+                method: "POST",
+                url: "/panhandler/generate_key",
+                headers: {'X-CSRFToken': '{{ csrf_token }}'},
+                contentType: "application/json",
+                dataType: "json",
+                data: JSON.stringify(data)
+            })
+                .fail(function (message) {
+                    alert('error');
+                    console.log(message)
+                })
+                .done(function (data) {
+                    pub_input.val(data['pub']);
+                    $('#deploy_key_modal').modal();
+                });
+    }
+    </script>
+{% endblock %}
 {% block content %}
     <div class="card border-primary mb-5 shadow-lg">
         <div class="card-header">Repository Detail for {{ repo_detail.name }}
-
-
             <div class="float-right">
                 {% if view.help_text != '' %}
                     <a href="#" data-toggle="modal" data-target="#helpTextModal" title="Help">
@@ -46,6 +73,11 @@
                    class="btn btn-primary mr-2">Update To Latest</a>
                 <a href="/panhandler/remove_repo/{{ repo_name }}" class="btn btn-danger mr-2">Remove Repository</a>
                 <a href="/panhandler/repos" class="btn btn-secondary mr-2">Repositories</a>
+                {% if repo_record.deploy_key_priv != ''  %}
+                    <a href="#" onclick="push_local_changes()" class="btn btn-success mr-2">Push Local Changes</a>
+                {% else %}
+                    <a href="#" onclick="generate_key()" class="btn btn-success mr-2">Generate SSH Deploy Key</a>
+                {% endif %}
             </p>
             <h5 class="card-title">Latest Updates</h5>
             <p class="card-text">
@@ -221,4 +253,35 @@
             </div>
         </div>
     </div>
+
+    <!-- Upload SSH Key -->
+    <div class="modal fade" id="deploy_key_modal" tabindex="-1" role="dialog"
+         aria-labelledby="deploy_key_modal"
+         aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deploy_key_modal_title">SSH Deploy Key</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto">
+                    <p class="card-text">
+                       This is your SSH Deploy Key for this repository. Please add this to the upstream repository
+                        settings with Read / Write permissions.
+                    </p>
+                    <label for="id_deploy_key_pub">Public Key:</label>
+                    <textarea class="form-control" rows="7" id="id_deploy_key_pub"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-success" data-dismiss="modal">
+                        Got It
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
 {% endblock %}
