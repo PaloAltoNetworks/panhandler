@@ -1,7 +1,7 @@
-GitPython==3.1.1
+GitPython==3.1.2
 PyYAML==5.3.1
 celery==4.4.2
-django==3.0.5
+django==3.0.6
 django-widget-tweaks==1.4.8
 docker==4.2.0
 cryptography==2.9.2
@@ -10,17 +10,15 @@ jsonpath-ng==1.5.1
 netaddr==0.7.19
 oyaml==0.9
 pan-python==0.16.0
+paramiko~=2.7.1
 passlib==1.7.2
+pathlib~=1.0.1
 pyAesCrypt==0.4.3
 requests==2.23.0
 requests-toolbelt==0.9.1
 urllib3==1.25.9
-virtualenv==20.0.18
+virtualenv==20.0.21
 xmldiff==2.4
 xmltodict==0.12.0
 # skilletlib==0.1.5.6
 git+https://github.com/PaloAltoNetworks/skilletlib.git@develop#egg=skilletlib
-
-
-pathlib~=1.0.1
-paramiko~=2.7.1

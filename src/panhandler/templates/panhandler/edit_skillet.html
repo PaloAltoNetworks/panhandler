@@ -916,6 +916,8 @@
                 if ((typeof filter_expression !== 'undefined') && (filter_expression !== '')) {
                     add_filtered_output(opt_name, opt_key, opt_val, filter_expression, output_type);
                     opt_filter_field.val('');
+                } else {
+                   add_output(opt_name, opt_key, opt_val, output_type);
                 }
 
             } else {
@@ -1151,16 +1153,15 @@
             results_input.val('Contacting Device ... ');
 
             let test_skillet = skillet;
-            let test_snippet = get_snippet_definition(snippet_name);
+            let snippet = get_snippet_definition(snippet_name);
 
-            debugger;
-            if (! (test_snippet['cmd'] in ['get', 'show', 'parse'])) {
+            if (! (['get', 'show', 'parse'].indexOf(snippet['cmd']) >= 0)) {
                 doc.css('cursor', '');
                 alert('Snippet Debug only supported for get, show, and parse commands');
                 return false;
             }
 
-            test_skillet['snippets'] = [test_snippet];
+            test_skillet['snippets'] = [snippet];
 
             $.ajax({
                 method: "POST",

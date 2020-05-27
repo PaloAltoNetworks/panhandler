@@ -52,11 +52,12 @@ from skilletlib.skillet.pan_validation import PanValidationSkillet
 from skilletlib.skillet.template import TemplateSkillet
 from yaml.scanner import ScannerError
 
+from cnc.models import RepositoryDetails
 from pan_cnc.lib import cnc_utils
+from pan_cnc.lib import db_utils
 from pan_cnc.lib import git_utils
 from pan_cnc.lib import snippet_utils
 from pan_cnc.lib import task_utils
-from pan_cnc.lib.exceptions import CCFParserError
 from pan_cnc.lib.exceptions import ImportRepositoryException
 from pan_cnc.lib.exceptions import SnippetRequiredException
 from pan_cnc.lib.validators import FqdnOrIp
@@ -67,10 +68,7 @@ from pan_cnc.views import EditTargetView
 from pan_cnc.views import ProvisionSnippetView
 from panhandler.lib import app_utils
 from .models import Collection
-from .models import RepositoryDetails
-from .models import Skillet
-
-from paramiko import RSAKey
+from .models import Favorite
 
 
 class WelcomeView(CNCView):
@@ -91,7 +89,7 @@ class WelcomeView(CNCView):
 
         context['update_required'] = update_required
 
-        app_utils.initialize_default_repositories()
+        db_utils.initialize_default_repositories('panhandler')
 
         return context
 
@@ -191,11 +189,11 @@ class ImportRepoView(PanhandlerAppFormView):
             cnc_utils.set_long_term_cached_value(self.app_dir, 'imported_repositories', repos, 604800,
                                                  'imported_git_repos')
 
-            app_utils.initialize_repo(repo_detail)
+            db_utils.initialize_repo(repo_detail)
 
             debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
 
-            loaded_skillets = app_utils.load_skillets_from_repo(repo_name)
+            loaded_skillets = db_utils.load_skillets_from_repo(repo_name)
 
             # check each snippet found for dependencies
             for skillet in loaded_skillets:
@@ -237,8 +235,10 @@ class ImportRepoView(PanhandlerAppFormView):
                 messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 
         # fix for gl #3 - be smarter about clearing the cache
-        app_utils.update_skillet_cache()
+        db_utils.update_skillet_cache()
         # snippet_utils.invalidate_snippet_caches(self.app_dir)
+
+        # git_utils.update_repo_in_cache(repo_name, repo_dir, repo_detail)
         return HttpResponseRedirect('repos')
 
 
@@ -282,12 +282,12 @@ class ListReposView(CNCView):
                 git_dir = d.joinpath('.git')
 
                 if git_dir.exists() and git_dir.is_dir():
-                    repo_detail = app_utils.get_repository_details(d.name)
+                    repo_detail = db_utils.get_repository_details(d.name)
                     if not repo_detail:
                         repo_detail = git_utils.get_repo_details(d.name, d, self.app_dir)
-                        app_utils.initialize_repo(repo_detail)
+                        db_utils.initialize_repo(repo_detail)
                     repos.append(repo_detail)
-                    app_utils.initialize_repo(repo_detail)
+                    db_utils.initialize_repo(repo_detail)
                     continue
 
             # cache the repos list for 1 week. this will be cleared when we import a new repository or otherwise
@@ -303,6 +303,22 @@ class RepoDetailsView(CNCView):
     template_name = 'panhandler/repo_detail.html'
     app_dir = 'panhandler'
 
+    @staticmethod
+    def __get_repo_dir(repo_name: str):
+        user_dir = os.path.expanduser('~')
+        return os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
+
+    def get(self, request, *args, **kwargs):
+        repo_name = self.kwargs['repo_name']
+        repo_detail = dict()
+        repo_detail['name'] = repo_name
+        repo_dir = self.__get_repo_dir(repo_name)
+        if not os.path.exists(repo_dir) or not RepositoryDetails.objects.filter(name=repo_name).exists():
+            messages.add_message(self.request, messages.ERROR, 'Repository does not exist!')
+            return HttpResponseRedirect('/panhandler/repos')
+
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
 
         # always ensure workflow related items are removed from session when we get here in case a user
@@ -310,25 +326,16 @@ class RepoDetailsView(CNCView):
         self.clean_up_workflow()
 
         repo_name = self.kwargs['repo_name']
-        user_dir = os.path.expanduser('~')
-        repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
+        # retrieve details from the db where possible
+        repo_detail = db_utils.get_repository_details(repo_name)
+        repo_dir = self.__get_repo_dir(repo_name)
 
-        repo_detail = dict()
-        repo_detail['name'] = repo_name
+        if not repo_detail:
+            # no db record exists or json is not parsable
+            repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
 
-        if os.path.exists(repo_dir):
-            # retrieve details from the db where possible
-            repo_detail = app_utils.get_repository_details(repo_name)
-            if not repo_detail:
-                # no db record exists or json is not parsable
-                repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
-
-            # initialize will set up db object only if needed
-            skillets_from_repo = app_utils.initialize_repo(repo_detail)
-
-        else:
-            repo_detail['error'] = 'Repository directory not found'
-            skillets_from_repo = list()
+        # initialize will set up db object only if needed
+        skillets_from_repo = db_utils.initialize_repo(repo_detail)
 
         if 'error' in repo_detail:
             messages.add_message(self.request, messages.ERROR, repo_detail['error'])
@@ -348,11 +355,19 @@ class RepoDetailsView(CNCView):
                         if collection_member not in collections:
                             collections.append(collection_member)
 
-        repo_record = RepositoryDetails.objects.using('panhandler').get(name=repo_name)
+        repo_record = RepositoryDetails.objects.get(name=repo_name)
+
+        status = git_utils.get_git_status(repo_dir)
+        if 'branch is ahead' in status:
+            needs_push = True
+        else:
+            needs_push = False
 
         context = super().get_context_data(**kwargs)
         context['repo_detail'] = repo_detail
         context['repo_name'] = repo_name
+        context['status'] = status
+        context['needs_push'] = needs_push
         context['repo_record'] = repo_record
         context['snippets'] = skillets_from_repo
         context['collections'] = collections
@@ -371,12 +386,15 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             messages.add_message(self.request, messages.ERROR, 'Repository directory does not exist!')
             return f'/panhandler/repo_detail/{repo_name}'
 
+        # always clear the repo detail cache to pull new branches and commits
+        cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'git_repo_details')
+
         msg = git_utils.update_repo(repo_dir, branch)
 
         repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
         repo_detail_json = json.dumps(repo_detail)
 
-        (repository_object, needs_index) = RepositoryDetails.objects.using('panhandler').get_or_create(
+        (repository_object, needs_index) = RepositoryDetails.objects.get_or_create(
             name=repo_name,
             defaults={'url': repo_detail.get('url'),
                       'details_json': repo_detail_json
@@ -399,6 +417,9 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
             # set needs_index flag regardless of creation status
             needs_index = True
 
+        else:
+            print(f'update repo msg was: {msg}')
+
         messages.add_message(self.request, level, msg)
 
         # check if there are new branches available
@@ -410,9 +431,9 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
 
         if needs_index:
-            loaded_skillets = app_utils.refresh_skillets_from_repo(repo_name)
+            loaded_skillets = db_utils.refresh_skillets_from_repo(repo_name)
         else:
-            loaded_skillets = app_utils.load_skillets_from_repo(repo_name)
+            loaded_skillets = db_utils.load_skillets_from_repo(repo_name)
 
         for skillet in loaded_skillets:
             for depends in skillet['depends']:
@@ -461,7 +482,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         # manage cached items as well
         git_utils.update_repo_detail_in_cache(repo_detail, self.app_dir)
         # fix for gl #3 - be smarter about clearing the cache
-        app_utils.update_skillet_cache()
+        db_utils.update_skillet_cache()
         # snippet_utils.invalidate_snippet_caches(self.app_dir)
 
         return f'/panhandler/repo_detail/{repo_name}'
@@ -522,14 +543,14 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
                         tf.unlink()
 
                     # re-index skillets in this dir
-                    app_utils.refresh_skillets_from_repo(str(d))
+                    db_utils.refresh_skillets_from_repo(str(d))
 
         if not err_condition:
             repos = ", ".join(updates)
             messages.add_message(self.request, messages.SUCCESS, f'Successfully Updated repositories: {repos}')
 
         # fix for gl #3 - be smarter about clearing the cache
-        app_utils.update_skillet_cache()
+        db_utils.update_skillet_cache()
         # snippet_utils.invalidate_snippet_caches(self.app_dir)
         cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
         return '/panhandler/repos'
@@ -567,8 +588,8 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
                                                  'git_repo_details')
             cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
 
-        repository_object = RepositoryDetails.objects.using('panhandler').get(name=repo_name)
-        repository_object.delete(using='panhandler')
+        repository_object = RepositoryDetails.objects.get(name=repo_name)
+        repository_object.delete()
 
         # no need for this per gl #3
         # snippet_utils.invalidate_snippet_caches(self.app_dir)
@@ -578,7 +599,7 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
         # cnc_utils.set_long_term_cached_value(self.app_dir, 'all_snippets', all_skillets, -1)
 
         # this is now moved into it's own library function per gitlab issue #3
-        app_utils.update_skillet_cache()
+        db_utils.update_skillet_cache()
 
         messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
         return f'/panhandler/repos'
@@ -656,7 +677,7 @@ class CreateSkilletView(PanhandlerAppFormView):
             return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
 
         # ensure this skillet name does not already exist
-        existing_skillet = app_utils.load_skillet_by_name(skillet_name)
+        existing_skillet = db_utils.load_skillet_by_name(skillet_name)
 
         if existing_skillet:
             messages.add_message(self.request, messages.ERROR,
@@ -683,7 +704,7 @@ class CreateSkilletView(PanhandlerAppFormView):
         messages.add_message(self.request, messages.SUCCESS, f'Skillet Created!')
 
         # go ahead and refresh all the found skillet
-        app_utils.refresh_skillets_from_repo(repo_name)
+        db_utils.refresh_skillets_from_repo(repo_name)
 
         cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
         return HttpResponseRedirect(f'/panhandler/edit_skillet/{repo_name}/{skillet_name}')
@@ -711,7 +732,7 @@ class UpdateSkilletView(PanhandlerAppFormView):
         repo_name = self.kwargs.get('repo_name', None)
 
         # get skillet metadata
-        skillet_dict = app_utils.load_skillet_by_name(skillet_name)
+        skillet_dict = db_utils.load_skillet_by_name(skillet_name)
 
         # get the contents of the meta-cnc.yaml file as a str
         skillet_contents = snippet_utils.read_skillet_metadata(skillet_dict)
@@ -810,7 +831,7 @@ class UpdateSkilletView(PanhandlerAppFormView):
 
         messages.add_message(self.request, messages.SUCCESS, f'Skillet updated!')
 
-        app_utils.refresh_skillets_from_repo(repo_name)
+        db_utils.refresh_skillets_from_repo(repo_name)
 
         cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
         return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
@@ -831,7 +852,7 @@ class ListSkilletCollectionsView(CNCView):
             return context
 
         # return a list of all defined collections
-        collections = app_utils.load_all_skillet_label_values('collection')
+        collections = db_utils.load_all_skillet_label_values('collection')
 
         # build dict of collections related to other collections (if any)
         # and a count of how many skillets are in the collection
@@ -841,7 +862,7 @@ class ListSkilletCollectionsView(CNCView):
         all_skillets = 'All Skillets'
 
         # get the full list of all snippets
-        all_snippets = app_utils.load_all_skillets()
+        all_snippets = db_utils.load_all_skillets()
 
         collections_info[all_skillets] = dict()
         collections_info[all_skillets]['count'] = len(all_snippets)
@@ -853,7 +874,7 @@ class ListSkilletCollectionsView(CNCView):
                 collections_info[c] = dict()
                 collections_info[c]['count'] = 0
 
-            skillets = app_utils.load_skillets_with_label('collection', c)
+            skillets = db_utils.load_skillets_with_label('collection', c)
             collections_info[c]['count'] = len(skillets)
             related = list()
 
@@ -889,12 +910,12 @@ class ListSkilletsInCollectionView(CNCView):
         print(f'Getting all snippets with collection label {collection}')
 
         if collection == 'All Skillets':
-            all_skillets = app_utils.load_all_skillets()
+            all_skillets = db_utils.load_all_skillets()
 
             # remove app type skillets from this list for #196
             skillets = list(s for s in all_skillets if s['type'] != 'app')
         else:
-            skillets = app_utils.load_skillets_with_label('collection', collection)
+            skillets = db_utils.load_skillets_with_label('collection', collection)
 
         # Check if the skillet builder has specified an order for their Skillets
         # if so, sort them that way be default, otherwise sort by name
@@ -926,6 +947,9 @@ class ViewSkilletView(ProvisionSnippetView):
             self.snippet = skillet
             self.save_value_to_workflow('snippet_name', skillet)
         return skillet
+
+    def load_skillet_by_name(self, skillet_name) -> (dict, None):
+        return db_utils.load_skillet_by_name(skillet_name)
 
 
 class CheckAppUpdateView(CNCBaseAuth, RedirectView):
@@ -1016,7 +1040,7 @@ class ViewValidationResultsView(EditTargetView):
 
         header = self.header
         if workflow_name is not None:
-            workflow_skillet_dict = app_utils.load_skillet_by_name(workflow_name)
+            workflow_skillet_dict = db_utils.load_skillet_by_name(workflow_name)
             if workflow_skillet_dict is not None:
                 header = workflow_skillet_dict.get('label', self.header)
 
@@ -1036,7 +1060,7 @@ class ViewValidationResultsView(EditTargetView):
             if {'TARGET_IP', 'TARGET_USERNAME', 'TARGET_PASSWORD'}.issubset(self.get_workflow().keys()):
                 print('Skipping validation input as we already have this information cached')
                 snippet = self.get_value_from_workflow('snippet_name', None)
-                self.meta = app_utils.load_skillet_by_name(snippet)
+                self.meta = db_utils.load_skillet_by_name(snippet)
 
                 target_ip = self.get_value_from_workflow('TARGET_IP', '')
                 # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
@@ -1121,7 +1145,7 @@ class ViewValidationResultsView(EditTargetView):
             print('Could not find a valid meta-cnc def')
             raise SnippetRequiredException
 
-        meta = app_utils.load_skillet_by_name(snippet_name)
+        meta = db_utils.load_skillet_by_name(snippet_name)
 
         context = dict()
         self.header = 'Validation Results'
@@ -1226,7 +1250,7 @@ class ExportValidationResultsView(CNCBaseAuth, View):
     def get(self, request, *args, **kwargs) -> Any:
 
         validation_skillet = kwargs['skillet']
-        meta = app_utils.load_skillet_by_name(validation_skillet)
+        meta = db_utils.load_skillet_by_name(validation_skillet)
 
         filename = meta.get('name', 'Validation Output')
         full_output = dict()
@@ -1250,7 +1274,7 @@ class FavoritesView(CNCView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        favorites = Collection.objects.using('panhandler').all()
+        favorites = Collection.objects.all()
         collections_info = dict()
         for f in favorites:
             collections_info[f.name] = dict()
@@ -1265,8 +1289,8 @@ class DeleteFavoriteView(CNCBaseAuth, RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         collection_name = kwargs['favorite']
-        collection = Collection.objects.using('panhandler').get(name=collection_name)
-        collection.delete(using='panhandler')
+        collection = Collection.objects.get(name=collection_name)
+        collection.delete()
         return '/panhandler/favorites'
 
 
@@ -1287,7 +1311,7 @@ class AddFavoritesView(PanhandlerAppFormView):
             collection_description = workflow['collection_description']
             categories = workflow.get('collection_categories', '[]')
 
-            c = Collection.objects.using('panhandler').create(
+            c = Collection.objects.create(
                 name=collection_name,
                 description=collection_description,
                 categories=categories
@@ -1310,11 +1334,12 @@ class FavoriteCollectionView(CNCView):
         context = super().get_context_data(**kwargs)
         collection = self.kwargs.get('favorite', '')
 
-        skillet_ids = Skillet.objects.using('panhandler').filter(collection__name=collection)
+        skillet_ids = Favorite.objects.filter(collection__name=collection)
 
         skillets = list()
         for s in skillet_ids:
-            skillets.append(json.loads(s.skillet_json))
+            skillet_dict = db_utils.load_skillet_by_name(s.skillet_id)
+            skillets.append(skillet_dict)
 
         if not skillets:
             messages.add_message(self.request, messages.INFO,
@@ -1339,9 +1364,9 @@ class AddSkilletToFavoritesView(PanhandlerAppFormView):
     def get_context_data(self, **kwargs) -> dict:
 
         skillet_name = self.kwargs.get('skillet_name', '')
-        all_favorites = Collection.objects.using('panhandler').all()
+        all_favorites = Collection.objects.all()
 
-        skillet = app_utils.load_skillet_by_name(skillet_name)
+        skillet = db_utils.load_skillet_by_name(skillet_name)
 
         if skillet is None:
             raise SnippetRequiredException('Could not find that skillet!')
@@ -1361,9 +1386,9 @@ class AddSkilletToFavoritesView(PanhandlerAppFormView):
         self.save_value_to_workflow('all_favorites', favorite_names)
         self.save_value_to_workflow('skillet_name', skillet_name)
 
-        if Skillet.objects.using('panhandler').filter(name=skillet_name).exists():
-            skillet = Skillet.objects.using('panhandler').get(name=skillet_name)
-            current_favorites_qs = skillet.collection_set.all()
+        if Favorite.objects.filter(skillet_id=skillet_name).exists():
+            favorite = Favorite.objects.get(skillet_id=skillet_name)
+            current_favorites_qs = favorite.collection_set.all()
             current_favorites = list()
             for f in current_favorites_qs:
                 current_favorites.append(f.name)
@@ -1386,23 +1411,23 @@ class AddSkilletToFavoritesView(PanhandlerAppFormView):
 
             # FIXME - should no longer be deleting skillets due to no favorites ...
             if not favorites:
-                if Skillet.objects.using('panhandler').filter(name=skillet_name).exists():
-                    skillet = Skillet.objects.using('panhandler').get(name=skillet_name)
+                if Favorite.objects.filter(skillet_id=skillet_name).exists():
+                    skillet = Favorite.objects.get(skillet_id=skillet_name)
                     skillet.collection_set.clear()
                     messages.add_message(self.request, messages.INFO, 'Removed Skillet from All Favorites')
                     self.next_url = self.request.session.get('last_page', '/')
 
                 return super().form_valid(form)
 
-            (skillet, created) = Skillet.objects.using('panhandler').get_or_create(
-                name=skillet_name
+            (skillet, created) = Favorite.objects.get_or_create(
+                skillet_id=skillet_name
             )
 
             if not created:
                 skillet.collection_set.clear()
 
             for f in favorites:
-                c = Collection.objects.using('panhandler').get(name=f)
+                c = Collection.objects.get(name=f)
                 skillet.collection_set.add(c)
 
             self.pop_value_from_workflow('favorites')
@@ -1516,37 +1541,62 @@ class GenerateKeyView(CNCBaseAuth, View):
             message = 'invalid input'
             return HttpResponse(message, content_type="application/json")
 
-        if not RepositoryDetails.objects.using('panhandler').filter(name=repo_name).exists():
-            message = 'invalid repository'
-            return HttpResponse(message, content_type="application/json")
-
-        user_dir = os.path.expanduser('~/.ssh')
-        private_key_path = os.path.join(user_dir, repo_name)
-        pub_key_path = os.path.join(user_dir, repo_name + '.pub')
-
+        pub_key = git_utils.generate_ssh_key(repo_name)
         output = dict()
-
-        # check if this already exists
-        if os.path.exists(pub_key_path):
-            with open(pub_key_path, 'r') as pkp:
-                pub_key = pkp.read()
-
-            output['pub'] = pub_key
-
-            return HttpResponse(json.dumps(output), content_type="application/json")
-
-        private_key = RSAKey.generate(bits=2048)
-        private_key.write_private_key_file(private_key_path, password=None)
-
-        pub = RSAKey(filename=private_key_path, password=None)
-
-        public_key_contents = f'{pub.get_name()} {pub.get_base64()} panhandler'
-        with open(pub_key_path, 'w') as pkp:
-            pkp.write(public_key_contents)
-
-        output['pub'] = public_key_contents
-
+        output['pub'] = pub_key
         json_output = json.dumps(output)
         response = HttpResponse(json_output, content_type="application/json")
         return response
 
+
+class PushGitRepositoryView(CNCBaseAuth, View):
+
+    def post(self, request, *args, **kwargs) -> HttpResponse:
+
+        if self.request.is_ajax():
+            try:
+                json_str = self.request.body
+                json_obj = json.loads(json_str)
+                repo_name = json_obj.get('name', '')
+
+            except ValueError:
+                message = 'Could not parse input'
+                return HttpResponse(message, content_type="application/json")
+        else:
+            message = 'invalid input'
+            return HttpResponse(message, content_type="application/json")
+
+        if not RepositoryDetails.objects.filter(name=repo_name).exists():
+            message = 'invalid repository'
+            return HttpResponse(message, content_type="application/json")
+
+        repo = RepositoryDetails.objects.get(name=repo_name)
+
+        output = dict()
+        json_output = json.dumps(output)
+
+        if not repo.url.startswith('git@') and not repo.url.startswith('ssh://'):
+            message = 'invalid Repository URL - Push requires an SSH URL'
+            output['status'] = message
+            return HttpResponse(json.dumps(output), content_type="application/json")
+
+        user_dir = os.path.expanduser('~/.pan_cnc')
+        snippets_dir = os.path.join(user_dir, 'panhandler/repositories')
+        repo_dir = os.path.join(snippets_dir, repo_name)
+
+        if repo.deploy_key_path == '':
+            deploy_key_path = git_utils.get_ssh_priv_key_path(repo_name)
+            repo.deploy_key_path = deploy_key_path
+            repo.save()
+
+        (success, msg) = git_utils.push_local_changes(repo_dir, repo.deploy_key_path)
+
+        if success:
+            output['status'] = 'Changes pushed upstream'
+            messages.add_message(self.request, messages.SUCCESS, 'Changes pushed upstream')
+        else:
+            output['status'] = f'Error pushing changes upstream\n{msg}'
+
+        json_output = json.dumps(output)
+        response = HttpResponse(json_output, content_type="application/json")
+        return response

@@ -134,3 +134,7 @@ views:
 
   - name: generate_key
     class: GenerateKeyView
+
+  - name: push
+    class: PushGitRepositoryView
+
