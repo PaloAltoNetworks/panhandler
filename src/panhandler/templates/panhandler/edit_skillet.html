@@ -146,13 +146,20 @@
                 let name_span = output_div_obj.find('[data-output_attribute_type="name"]');
                 let capture_type_span = output_div_obj.find('[data-output_attribute_type="key"]');
                 let capture_value_span = output_div_obj.find('[data-output_attribute_type="value"]');
+                let capture_filter_span = output_div_obj.find('[data-output_attribute_type="filter"]');
+
                 let name = name_span.html();
                 let capture_key = capture_type_span.html();
                 let capture_value = capture_value_span.html();
+                let capture_filter = capture_filter_span.html();
 
                 let output_def = {};
                 output_def['name'] = name;
                 output_def[capture_key] = capture_value;
+
+                if ((typeof capture_filter !== 'undefined') && (capture_filter !== '')) {
+                    output_def['filter_items'] = capture_filter;
+                }
 
                 snippet_def['outputs'].push(output_def);
             });
@@ -341,6 +348,11 @@
             }
         }
 
+        function is_pan_type_skillet() {
+
+            return ['panos', 'panorama', 'panorama-gpcs'].indexOf(skillet['type']);
+        }
+
         function setup_variable_type_hint_options(variable_definition) {
 
             // first, remove any options that may be present
@@ -425,7 +437,7 @@
             let snippet_def = {};
             snippet_def['name'] = snippet_name;
 
-            if (skillet['type'] === 'panos') {
+            if (is_pan_type_skillet()) {
                 snippet_def['cmd'] = 'set';
                 snippet_def['xpath'] = '';
                 snippet_def['element'] = '';
@@ -734,7 +746,7 @@
 
         function edit_snippet_by_name(snippet_name) {
             let snippet_def = get_snippet_definition(snippet_name);
-            if (skillet['type'] === 'panos') {
+            if (is_pan_type_skillet()) {
                 setup_panos_snippet(snippet_def);
                 $('#edit_panos_snippet_modal').modal();
             } else if (skillet['type'] === 'rest') {
@@ -1124,8 +1136,7 @@
             doc.css('cursor', 'progress');
 
             let snippet_name = '';
-            if ((skillet['type'] === 'panos') || (skillet['type'] === 'panorama') ||
-                (skillet['type'] === 'panorama-gpcs')) {
+            if (is_pan_type_skillet()) {
                 snippet_name = $('#id_panos_snippet_name').val();
             } else if(skillet['type'] === 'pan-validation') {
                 snippet_name = $('#id_pan_validation_snippet_name').val();
@@ -1192,8 +1203,7 @@
         function cancel_test_snippet() {
 
             let snippet_name = '';
-            if ((skillet['type'] === 'panos') || (skillet['type'] === 'panorama') ||
-                (skillet['type'] === 'panorama-gpcs'))
+            if (is_pan_type_skillet())
             {
                 snippet_name = $('#id_panos_snippet_name').val();
             } else {
@@ -1936,20 +1946,20 @@
                                    title="Boolean Expression where only passing items will be added to the captured list">
                         </div>
                         <div class="form-group">
-                                                   <label for="id_panos_output_value">XPath Query:</label>
-                                                   <div class="input-group">
-                                                   <input type="text" value="" placeholder="" class="form-control"
-                                                   id="id_panos_output_value"
-                                                   title="Query used to find and return values from the output of this snippet.">
-                                                   <div class="input-group-append">
-                                                   <span class="input-group-text">
-                                                   <a href="#" onclick="add_new_output('panos');">
-                                                   <i class="fa fa-plus"></i>
-                                                   </a>
-                                                   </span>
-                                                   </div>
-                                                   </div>
-                                                   </div>
+                            <label for="id_panos_output_value">XPath Query:</label>
+                            <div class="input-group">
+                                <input type="text" value="" placeholder="" class="form-control"
+                                       id="id_panos_output_value"
+                                       title="Query used to find and return values from the output of this snippet.">
+                                <div class="input-group-append">
+                                    <span class="input-group-text">
+                                        <a href="#" onclick="add_new_output('panos');">
+                                            <i class="fa fa-plus"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
