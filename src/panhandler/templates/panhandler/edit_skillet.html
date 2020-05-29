@@ -140,7 +140,7 @@
 
             snippet_def['output_type'] = $('#id_panos_snippet_output_type').val();
 
-            snippet_def['outputs'] = [];
+            let new_outputs = [];
             $('#all_panos_output_options').find('[id^="output_"]').each(function (index, output_div) {
                 let output_div_obj = $(output_div);
                 let name_span = output_div_obj.find('[data-output_attribute_type="name"]');
@@ -161,14 +161,15 @@
                     output_def['filter_items'] = capture_filter;
                 }
 
-                snippet_def['outputs'].push(output_def);
+                new_outputs.push(output_def);
+
             });
 
-            // get our old snippet def
-            // let old_snippet_def = get_snippet_definition(snippet_name);
-            // console.log('Replacing Snippet');
-            // console.log(old_snippet_def);
-            // console.log('with');
+            // fix for #1 - do not add empty attributes
+            if (new_outputs.length > 0) {
+                snippet_def['outputs'] = new_outputs;
+            }
+
             console.log(snippet_def);
 
             // old_snippet_def = snippet_def;
@@ -350,7 +351,7 @@
 
         function is_pan_type_skillet() {
 
-            return ['panos', 'panorama', 'panorama-gpcs'].indexOf(skillet['type']);
+            return (['panos', 'panorama', 'panorama-gpcs'].indexOf(skillet['type']) >= 0);
         }
 
         function setup_variable_type_hint_options(variable_definition) {
@@ -655,6 +656,7 @@
             for (let attribute_name in snippet_def) {
                 let z = $('#id_' + snippet_type + '_snippet_' + attribute_name);
                 if (z.length) {
+                    let curent_value = z.val();
                     snippet_def[attribute_name] = z.val();
 
                     extract_variables(snippet_def[attribute_name]);
@@ -684,6 +686,12 @@
 
                 snippet_def['outputs'].push(output_def);
             });
+
+            debugger;
+            // fix for #1 - do not add blank attributes
+            if (snippet_def['outputs'] === []) {
+                delete snippet_def['outputs'];
+            }
         }
 
         function update_rest_snippet() {
@@ -706,6 +714,7 @@
 
             setup_snippet_modal(snippet_def, 'panos');
 
+            $('#id_panos_snippet_output_type').val('xml');
             // set output capture type to list by default
             $('#id_panos_output_key').val('capture_object');
             // set output capture type to list by default
@@ -964,6 +973,11 @@
             if (skillet_description_input.val() !== skillet['description']) {
                 skillet_description_input.effect('highlight');
                 skillet['description'] = skillet_description_input.val();
+            }
+
+            // fix for GL #1 - remove empty attributes from skillet
+            if (('depends' in skillet) && (skillet['depends'].length === 0)) {
+                delete skillet['depends'];
             }
 
             console.log(skillet);
