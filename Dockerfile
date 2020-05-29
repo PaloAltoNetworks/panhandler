@@ -29,7 +29,7 @@ RUN apk add --update --no-cache git curl build-base musl-dev python3-dev libffi-
     unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /bin && \
     rm -f terraform_${TERRAFORM_VERSION}_linux_amd64.zip  && \
     rm -f terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
-    apk del build-base linux-headers openssl-dev python3-dev libffi-dev musl-dev && \
+    apk del linux-headers python3-dev musl-dev && \
     rm -rf /var/cache/apk/* && \
     if [ -f /app/cnc/db.sqlite3 ]; then rm /app/cnc/db.sqlite3; fi
 
