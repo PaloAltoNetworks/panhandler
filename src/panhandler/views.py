@@ -1573,7 +1573,6 @@ class PushGitRepositoryView(CNCBaseAuth, View):
         repo = RepositoryDetails.objects.get(name=repo_name)
 
         output = dict()
-        json_output = json.dumps(output)
 
         if not repo.url.startswith('git@') and not repo.url.startswith('ssh://'):
             message = 'invalid Repository URL - Push requires an SSH URL'

@@ -105,7 +105,9 @@
             for (let attribute_name in snippet_def) {
                 let z = $('#id_panos_snippet_' + attribute_name);
                 if (z.length) {
-                    snippet_def[attribute_name] = z.val();
+                    if (z.val() !== '') {
+                        snippet_def[attribute_name] = z.val();
+                    }
                 }
             }
 
@@ -687,7 +689,6 @@
                 snippet_def['outputs'].push(output_def);
             });
 
-            debugger;
             // fix for #1 - do not add blank attributes
             if (snippet_def['outputs'] === []) {
                 delete snippet_def['outputs'];
@@ -1024,12 +1025,22 @@
         function show_test_snippet() {
 
             let context_object = $('#id_test_snippet_context');
+
             let initial_context = {};
+            if (context_object.val() !== '') {
+                try {
+                    initial_context = JSON.parse(context_object.val());
+                } catch(e) {
+                    initial_context = {};
+                }
+            }
 
             if (skillet['type'].startsWith('pan')) {
-                initial_context['ip_address'] = '10.10.10.10';
-                initial_context['username'] = 'admin';
-                initial_context['password'] = 'admin';
+                if (!('ip_address' in initial_context)) {
+                    initial_context['ip_address'] = '10.10.10.10';
+                    initial_context['username'] = 'admin';
+                    initial_context['password'] = 'admin';
+                }
 
                 if (skillet['type'] === 'pan-validation') {
                     update_snippet('pan-validation');
@@ -1042,12 +1053,11 @@
             }
 
             $.each(skillet_variables, function (index, v) {
+                console.log('checking ' + v.name );
                 initial_context[v.name] = v.default;
             });
 
-            if (context_object.val() === '') {
-                context_object.val(JSON.stringify(initial_context, null, '  '));
-            }
+            context_object.val(JSON.stringify(initial_context, null, '  '));
 
             $('#show_test_snippet_modal').modal();
 
@@ -1077,6 +1087,7 @@
                 headers: {'X-CSRFToken': '{{ csrf_token }}'},
                 contentType: "application/json",
                 dataType: "json",
+                async: false,
                 data: JSON.stringify({"template_str": template_str})
             })
                 .fail(function (message) {
@@ -1180,7 +1191,7 @@
             let test_skillet = skillet;
             let snippet = get_snippet_definition(snippet_name);
 
-            if (! (['get', 'show', 'parse'].indexOf(snippet['cmd']) >= 0)) {
+            if (! (['get', 'show', 'parse', 'op'].indexOf(snippet['cmd']) >= 0)) {
                 doc.css('cursor', '');
                 alert('Snippet Debug only supported for get, show, and parse commands');
                 return false;
@@ -1267,7 +1278,7 @@
                 if (skillet_variables.findIndex(i => i.name === declared_variable) === -1) {
                     let new_var = {};
                     new_var['name'] = declared_variable;
-                    new_var['description'] = 'New Variable';
+                    new_var['description'] = declared_variable;
                     new_var['type_hint'] = 'text';
                     new_var['default'] = '';
                     skillet_variables.push(new_var);
@@ -1874,13 +1885,14 @@
                             <input type="text" value="" class="form-control" id="id_panos_snippet_name" disabled>
                         </div>
                         <div class="form-group col-md-6">
-                            <label for="id_panos_snippet_cmd">CMD:</label>
-                            <select class="form-control" id="id_panos_snippet_cmd">
+                            <label for="id_panos_snippet_cmd">Command:</label>
+                            <select class="form-control" id="id_panos_snippet_cmd" title="cmd">
                                 <option>set</option>
                                 <option>get</option>
                                 <option>cli</option>
                                 <option>op</option>
                                 <option>parse</option>
+                                <option>move</option>
                             </select>
                         </div>
                     </div>
@@ -1895,6 +1907,13 @@
                                 <i class="fa fa-edit"></i>
                             </a>
                         </p>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_panos_snippet_move_xpath">XPath:</label>
+                        <input type="text" value="" class="form-control" id="id_panos_snippet_move_xpath"
+                               data-modal_source="id_panos_snippet_cmd" data-modal_value="move">
+                        <label for="id_panos_snippet_move_where">Where:</label>
+                        <input type="text" value="" class="form-control" id="id_panos_snippet_move_where">
                     </div>
                     <div class="form-group">
                         <label for="id_panos_snippet_get_xpath">XPath:</label>
