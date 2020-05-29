@@ -53,10 +53,6 @@ views:
     menu: Panhandler
     menu_option: Skillet Collections
 
-  - name: snippets_by_type
-    class: ListSnippetsByGroup
-    parameter: service_type
-
   - name: repos
     class: ListReposView
     menu: Panhandler
