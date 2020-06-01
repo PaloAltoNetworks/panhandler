@@ -135,7 +135,7 @@
 
                 case 'op':
                     snippet_def['cmd_str'] = $('#id_panos_snippet_cmd_op').val();
-
+                    snippet_def['parse_result'] = $('#id_panos_snippet_op_parse_result').val();
                     extract_variables(snippet_def['cmd_str']);
                     break;
             }
@@ -740,6 +740,12 @@
 
                 case 'op':
                     $('#id_panos_snippet_cmd_op').val(snippet_def['cmd_str']);
+
+                    if (typeof snippet_def['parse_result'] === 'undefined') {
+                        snippet_def['parse_result'] = 'True';
+                    }
+
+                    $('#id_panos_snippet_op_parse_result').val(snippet_def['parse_result']);
                     break;
             }
         }
@@ -1929,6 +1935,12 @@
                         <label for="id_panos_snippet_cmd_op">Operational Command XML:</label>
                         <input type="text" value="" class="form-control" id="id_panos_snippet_cmd_op"
                                data-modal_source="id_panos_snippet_cmd" data-modal_value="op">
+                        <label for="id_panos_snippet_op_parse_result">Parse Result:</label>
+                        <select id="id_panos_snippet_op_parse_result" class="form-control"
+                            title="Attempt to parse the returned XML document">
+                            <option selected>True</option>
+                            <option>False</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="id_panos_snippet_variable">Parsed Variable:</label>
