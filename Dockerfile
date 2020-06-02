@@ -25,7 +25,7 @@ RUN groupadd -g 999 cnc_group && \
 ADD requirements.txt /app/requirements.txt
 
 RUN apt-get update && \
-    apt-get install -y --no-install-recommends git build-essential libffi-dev curl unzip && \
+    apt-get install -y --no-install-recommends git build-essential libffi-dev curl unzip openssh-client && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
     rm -rf /var/lib/apt/lists/*
 
