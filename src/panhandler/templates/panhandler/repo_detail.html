@@ -3,32 +3,6 @@
 {% block head %}
     <script type="text/javascript">
 
-    function show_public_key() {
-
-        let pub_input = $('#id_deploy_key_pub');
-
-        let data = {
-            'name': '{{ repo_name }}',
-        }
-
-        $.ajax({
-                method: "POST",
-                url: "/panhandler/generate_key",
-                headers: {'X-CSRFToken': '{{ csrf_token }}'},
-                contentType: "application/json",
-                dataType: "json",
-                data: JSON.stringify(data)
-            })
-                .fail(function (message) {
-                    alert('error');
-                    console.log(message)
-                })
-                .done(function (data) {
-                    pub_input.val(data['pub']);
-                    $('#deploy_key_modal').modal();
-                });
-    }
-
     function push_local_changes() {
 
         let doc = $(document.documentElement);
@@ -102,12 +76,9 @@
                    class="btn btn-primary mr-2">Update To Latest</a>
                 <a href="/panhandler/remove_repo/{{ repo_name }}" class="btn btn-danger mr-2">Remove Repository</a>
                 <a href="/panhandler/repos" class="btn btn-secondary mr-2">Repositories</a>
-                {% if repo_detail.public_key_path|default:''|default_if_none:'' != ''  %}
-
-                    <a href="#" onclick="push_local_changes()" class="btn btn-success mr-2"
+                {% if 'git@' in repo_detail.url %}
+                <a href="#" onclick="push_local_changes()" class="btn btn-success mr-2"
                     title="{{ status }}">Push Local Changes</a>
-
-                    <a href="#" onclick="show_public_key()" class="btn btn-primary mr-2">Show SSH Deploy Key</a>
                 {% endif %}
             </p>
             <h5 class="card-title">Latest Updates</h5>

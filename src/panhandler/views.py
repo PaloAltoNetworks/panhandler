@@ -59,6 +59,7 @@ from pan_cnc.lib import git_utils
 from pan_cnc.lib import snippet_utils
 from pan_cnc.lib import task_utils
 from pan_cnc.lib.exceptions import ImportRepositoryException
+from pan_cnc.lib.exceptions import RepositoryPermissionsException
 from pan_cnc.lib.exceptions import SnippetRequiredException
 from pan_cnc.lib.validators import FqdnOrIp
 from pan_cnc.views import CNCBaseAuth
@@ -90,6 +91,8 @@ class WelcomeView(CNCView):
         context['update_required'] = update_required
 
         db_utils.initialize_default_repositories('panhandler')
+
+        self.request.session['app_dir'] = 'panhandler'
 
         return context
 
@@ -167,6 +170,19 @@ class ImportRepoView(PanhandlerAppFormView):
 
         # where to clone from
         clone_url = url.strip()
+
+        # if this is an SSH based url, ensure the host key is known
+        if clone_url.startswith('git@') or clone_url.startswith('ssh'):
+            is_known, message = git_utils.ensure_known_host(clone_url)
+            if not is_known:
+                messages.add_message(self.request, messages.ERROR,
+                                     f'Could not verify SSH Host Key! {message}')
+
+                return HttpResponseRedirect('/ssh_key')
+            else:
+                messages.add_message(self.request, messages.INFO, 'Added the following SSH Host key to known_hosts: '
+                                                                  f'{message}')
+
         if 'github' in url.lower():
             details = git_utils.get_repo_upstream_details(repo_name, url, self.app_dir)
             if 'clone_url' in details:
@@ -175,8 +191,15 @@ class ImportRepoView(PanhandlerAppFormView):
         try:
             message = git_utils.clone_repository(repo_dir, repo_name, clone_url)
             print(message)
+        except RepositoryPermissionsException:
+            messages.add_message(self.request, messages.ERROR,
+                                 'SSH Permissions Error. Please add your SSH Public key to the upstream repository')
+
+            return HttpResponseRedirect('/ssh_key')
+
         except ImportRepositoryException as ire:
             messages.add_message(self.request, messages.ERROR, f'Could not Import Repository: {ire}')
+
         else:
             repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
 
@@ -184,7 +207,13 @@ class ImportRepoView(PanhandlerAppFormView):
             if repos is None:
                 repos = list()
 
-            repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+            try:
+                repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+            except RepositoryPermissionsException:
+                messages.add_message(self.request, messages.ERROR,
+                                     'SSH Permissions Error. Please add the Deploy key to the upstream repository')
+                return HttpResponseRedirect('/ssh_key')
+
             repos.append(repo_detail)
             cnc_utils.set_long_term_cached_value(self.app_dir, 'imported_repositories', repos, 604800,
                                                  'imported_git_repos')
@@ -1582,11 +1611,6 @@ class PushGitRepositoryView(CNCBaseAuth, View):
         user_dir = os.path.expanduser('~/.pan_cnc')
         snippets_dir = os.path.join(user_dir, 'panhandler/repositories')
         repo_dir = os.path.join(snippets_dir, repo_name)
-
-        if repo.deploy_key_path == '':
-            deploy_key_path = git_utils.get_ssh_priv_key_path(repo_name)
-            repo.deploy_key_path = deploy_key_path
-            repo.save()
 
         (success, msg) = git_utils.push_local_changes(repo_dir, repo.deploy_key_path)
 
