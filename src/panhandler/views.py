@@ -301,7 +301,7 @@ class ListReposView(CNCView):
         repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
 
         if repos is not None:
-            print(f'Returning cached repos')
+            print('Returning cached repos')
             context['repos'] = repos
 
         else:
@@ -631,7 +631,7 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
         db_utils.update_skillet_cache()
 
         messages.add_message(self.request, messages.SUCCESS, 'Repo Successfully Removed')
-        return f'/panhandler/repos'
+        return '/panhandler/repos'
 
 
 class CreateSkilletView(PanhandlerAppFormView):
@@ -730,7 +730,7 @@ class CreateSkilletView(PanhandlerAppFormView):
 
         git_utils.commit_local_changes(repo_dir, commit_message, skillet_file_path)
 
-        messages.add_message(self.request, messages.SUCCESS, f'Skillet Created!')
+        messages.add_message(self.request, messages.SUCCESS, 'Skillet Created!')
 
         # go ahead and refresh all the found skillet
         db_utils.refresh_skillets_from_repo(repo_name)
@@ -858,7 +858,7 @@ class UpdateSkilletView(PanhandlerAppFormView):
 
         git_utils.commit_local_changes(repo_dir, commit_message, skillet_file_path)
 
-        messages.add_message(self.request, messages.SUCCESS, f'Skillet updated!')
+        messages.add_message(self.request, messages.SUCCESS, 'Skillet updated!')
 
         db_utils.refresh_skillets_from_repo(repo_name)
 
@@ -1268,7 +1268,7 @@ class ViewValidationResultsView(EditTargetView):
             context['results'] = validation_output
 
         except SkilletLoaderException:
-            print(f"Could not load it for some reason")
+            print("Could not load it for some reason")
             return render(self.request, 'pan_cnc/results.html', context)
 
         return render(self.request, 'panhandler/validation-results.html', context)
