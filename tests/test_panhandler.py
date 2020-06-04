@@ -27,16 +27,9 @@ Use at your own risk.
 
 import urllib3
 
-urllib3.disable_warnings()
-
-
-def test_with_client(client):
-    response = client.get('/')
-    print(response.status_code)
-    assert response.status_code == 302
-
 
 def test_with_authenticated_client(client, django_user_model):
+    urllib3.disable_warnings()
     username = "paloalto"
     password = "panhandlertest"
     django_user_model.objects.create_user(username=username, password=password)
