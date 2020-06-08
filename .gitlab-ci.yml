@@ -1,0 +1,31 @@
+image: python:3.7-slim
+
+stages:
+    - test
+
+variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+    paths:
+        - .cache/pip
+        - venv/
+
+before_script:
+    - python -V  # Print out python version for debugging
+    - python3 -m venv env
+    - source env/bin/activate
+    - apt-get update
+    - apt-get install -y git
+
+    - git submodule init
+    - git submodule update
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+
+
+
+test:
+    stage: test
+    script:
+        - tox -e py37, flake8-ph, flake8-cnc
