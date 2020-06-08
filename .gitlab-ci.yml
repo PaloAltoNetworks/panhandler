@@ -22,7 +22,7 @@ before_script:
     - git submodule update
     - pip install --upgrade pip
     - pip install -r requirements.txt
-
+    - pip install tox flake8
 
 
 test:
