@@ -10,4 +10,3 @@ class Collection(models.Model):
     description = models.CharField(max_length=200)
     categories = models.CharField(max_length=64, default="[]")
     skillets = models.ManyToManyField(Favorite)
-
