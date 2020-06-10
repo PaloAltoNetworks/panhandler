@@ -1,69 +1,69 @@
 image: docker:latest
 services:
-    - docker:dind
+  - docker:dind
 
 stages:
-    - build
-    - test
-    - push
+  - build
+  - test
+  - push
 
 variables:
-    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
 
 cache:
-    paths:
-        - .cache/pip
-        - venv/
+  paths:
+    - .cache/pip
+    - venv/
 
 before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
 
 docker-build-master:
-    # Official docker image.
-    stage: build
-    script:
-      - docker build --pull -t "$CI_REGISTRY_IMAGE" .
-    only:
-      - master
-  
-docker-build-dev:
-    # Official docker image.
-    stage: build
+  # Official docker image.
+  stage: build
+  script:
+    - docker build --pull -t "$CI_REGISTRY_IMAGE" .
+  only:
+    - master
 
-    script:
-        - docker build --pull -t "$CI_REGISTRY_IMAGE:dev" .
-    only:
-        - dev
+docker-build-dev:
+  # Official docker image.
+  stage: build
+
+  script:
+    - docker build --pull -t "$CI_REGISTRY_IMAGE:dev" .
+  only:
+    - develop
 
 test:
-    image: python:3.8-slim
-    stage: test
-    before_script:
-        - python -V
-        - python3 -m venv env
-        - source env/bin/activate
-        - apt-get update
-        - apt-get install -y git
-        - git submodule init
-        - git submodule update
-        - pip install --upgrade pip
-        - pip install -r requirements.txt
-        - pip install tox flake8
+  image: python:3.8-slim
+  stage: test
+  before_script:
+    - python -V
+    - python3 -m venv env
+    - source env/bin/activate
+    - apt-get update
+    - apt-get install -y git
+    - git submodule init
+    - git submodule update
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+    - pip install tox flake8
 
-    script:
-        - tox -e py38, flake8-ph, flake8-cnc
+  script:
+    - tox -e py38, flake8-ph, flake8-cnc
 
 push_dev:
-    stage: push
-    script:
-        - docker push "$CI_REGISTRY_IMAGE:dev"
-    only:
-        - dev
+  stage: push
+  script:
+    - docker push "$CI_REGISTRY_IMAGE:dev"
+  only:
+    - develop
 
 push_master:
-    stage: push
-    script:
-        - docker push "$CI_REGISTRY_IMAGE"
-    only:
-        - master
+  stage: push
+  script:
+    - docker push "$CI_REGISTRY_IMAGE"
+  only:
+    - master
 
