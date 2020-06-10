@@ -92,10 +92,12 @@
 
             let snippet_name_input = $('#id_panos_snippet_name');
             let snippet_cmd_input = $('#id_panos_snippet_cmd');
+            let snippet_when_input = $('#id_panos_snippet_when');
 
             let snippet_name = snippet_name_input.val();
             let cmd = snippet_cmd_input.val();
-
+            
+            let when_conditional = snippet_when_input.val();
             let snippet_def = get_snippet_definition(snippet_name);
             // let snippet_def = {};
             // snippet_def['name'] = snippet_name;
@@ -109,6 +111,10 @@
                         snippet_def[attribute_name] = z.val();
                     }
                 }
+            }
+
+            if (when_conditional !== '') {
+                snippet_def['when'] = when_conditional;
             }
 
             // set options for the given cmd
@@ -712,6 +718,12 @@
             } else {
                 $('#id_panos_snippet_output_type').val('xml');
             }
+            
+            if ((typeof snippet_def['when'] !== 'undefined') && (snippet_def['when'] !== '')) {
+                $('#id_panos_snippet_when').val(snippet_def['when']);
+            } else {
+                $('#id_panos_snippet_when').val('');
+            }
 
             setup_snippet_modal(snippet_def, 'panos');
 
@@ -723,6 +735,8 @@
             // set output capture type to list by default
             $('#id_panos_output_name').val('full_output_as_object');
 
+            // always start with the main tab
+            $('#panos_main_tab').tab('show');
             // set options for the given cmd
             switch (snippet_def['cmd']) {
                 case 'set':
@@ -1885,125 +1899,186 @@
                     </button>
                 </div>
                 <div class="modal-body" style="overflow-y: auto">
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="id_panos_snippet_name">Name:</label>
-                            <input type="text" value="" class="form-control" id="id_panos_snippet_name" disabled>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="id_panos_snippet_cmd">Command:</label>
-                            <select class="form-control" id="id_panos_snippet_cmd" title="cmd">
-                                <option>set</option>
-                                <option>get</option>
-                                <option>cli</option>
-                                <option>op</option>
-                                <option>parse</option>
-                                <option>move</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_panos_snippet_set_xpath">XPath:</label>
-                        <input type="text" value="" class="form-control" id="id_panos_snippet_set_xpath"
-                               data-modal_source="id_panos_snippet_cmd" data-modal_value="set">
-                        <label for="id_panos_snippet_set_element">Element:</label>
-                        <textarea class="form-control" id="id_panos_snippet_set_element"></textarea>
-                        <p class="small muted text-right m-0">
-                            <a href="#" onclick="enlarge_text_area('id_panos_snippet_set_element')">
-                                <i class="fa fa-edit"></i>
-                            </a>
-                        </p>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_panos_snippet_move_xpath">XPath:</label>
-                        <input type="text" value="" class="form-control" id="id_panos_snippet_move_xpath"
-                               data-modal_source="id_panos_snippet_cmd" data-modal_value="move">
-                        <label for="id_panos_snippet_move_where">Where:</label>
-                        <input type="text" value="" class="form-control" id="id_panos_snippet_move_where">
-                    </div>
-                    <div class="form-group">
-                        <label for="id_panos_snippet_get_xpath">XPath:</label>
-                        <input type="text" value="" class="form-control" id="id_panos_snippet_get_xpath"
-                               data-modal_source="id_panos_snippet_cmd" data-modal_value="get">
-                    </div>
-                    <div class="form-group">
-                        <label for="id_panos_snippet_cmd_cmd_str">CLI:</label>
-                        <input type="text" value="" class="form-control" id="id_panos_snippet_cmd_cmd_str"
-                               data-modal_source="id_panos_snippet_cmd" data-modal_value="cli">
-                    </div>
-                    <div class="form-group">
-                        <label for="id_panos_snippet_cmd_op">Operational Command XML:</label>
-                        <input type="text" value="" class="form-control" id="id_panos_snippet_cmd_op"
-                               data-modal_source="id_panos_snippet_cmd" data-modal_value="op">
-                        <label for="id_panos_snippet_op_parse_result">Parse Result:</label>
-                        <select id="id_panos_snippet_op_parse_result" class="form-control"
-                            title="Attempt to parse the returned XML document">
-                            <option selected>True</option>
-                            <option>False</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_panos_snippet_variable">Parsed Variable:</label>
-                        <input type="text" value="" class="form-control" id="id_panos_snippet_variable"
-                               data-modal_source="id_panos_snippet_cmd" data-modal_value="parse">
-                    </div>
-                    <hr/>
-                    <div class="form-group">
-                        <label for="id_panos_snippet_output_type">Output Type:</label>
-                        <select id="id_panos_snippet_output_type" class="form-control">
-                            <option selected>xml</option>
-                            <option>json</option>
-                            <option>text</option>
-                        </select>
-                    </div>
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="panos_main_tab" data-toggle="tab" href="#panos_main" role="tab"
+                               aria-controls="panos_main"
+                               aria-selected="true">Snippet</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="panos_when_tab" data-toggle="tab" href="#panos_when" role="tab"
+                               aria-controls="panos_when"
+                               aria-selected="false">When</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="panos_outputs_tab" data-toggle="tab" href="#panos_outputs" role="tab"
+                               aria-controls="panos_outputs"
+                               aria-selected="false">Outputs</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="panos_snippet_tab">
+                        <div class="tab-pane fade show active" id="panos_main" role="tabpanel" aria-labelledby="panos_main_tab">
 
-                    <!-- Outputs -->
-                    <div class="form-group">
-                        <label for="all_panos_output_options">Outputs:</label>
-                        <div class="input-group" id="all_panos_output_options"></div>
-                    </div>
-                    <a href="#panos_outputs_add" data-toggle="collapse" data-target="#panos_outputs_add"
-                       aria-expanded="true" aria-controls="panos_outputs_add">
-                        <i class="fa fa-plus"></i>Add Output
-                    </a>
-                    <div id="panos_outputs_add" class="collapse">
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="id_panos_output_name">Variable Name:</label>
-                                <input type="text" value="" placeholder="" class="form-control"
-                                       id="id_panos_output_name">
-                            </div>
-                            <div class="form-group col-md-6">
-                                <label for="id_panos_output_key">Capture Type:</label>
-                                <select id="id_panos_output_key" class="form-control">
-                                    <option value="capture_list" selected="selected">Capture List</option>
-                                    <option value="capture_pattern">Capture Pattern</option>
-                                    <option value="capture_value">Capture Value</option>
-                                    <option value="capture_object">Capture Object</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="id_panos_output_filter">Filter Items:</label>
-                            <input type="text" value="" class="form-control" id="id_panos_output_filter"
-                                   data-modal_source="id_panos_output_key" data-modal_value="capture_list"
-                                   placeholder="item == 'some_value'"
-                                   title="Boolean Expression where only passing items will be added to the captured list">
-                        </div>
-                        <div class="form-group">
-                            <label for="id_panos_output_value">XPath Query:</label>
-                            <div class="input-group">
-                                <input type="text" value="" placeholder="" class="form-control"
-                                       id="id_panos_output_value"
-                                       title="Query used to find and return values from the output of this snippet.">
-                                <div class="input-group-append">
-                                    <span class="input-group-text">
-                                        <a href="#" onclick="add_new_output('panos');">
-                                            <i class="fa fa-plus"></i>
-                                        </a>
-                                    </span>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="id_panos_snippet_name">Name:</label>
+                                    <input type="text" value="" class="form-control" id="id_panos_snippet_name" disabled>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="id_panos_snippet_cmd">Command:</label>
+                                    <select class="form-control" id="id_panos_snippet_cmd" title="cmd">
+                                        <option>set</option>
+                                        <option>get</option>
+                                        <option>cli</option>
+                                        <option>op</option>
+                                        <option>parse</option>
+                                        <option>move</option>
+                                    </select>
                                 </div>
                             </div>
+
+                            <div class="form-group">
+                                <label for="id_panos_snippet_set_xpath">XPath:</label>
+                                <input type="text" value="" class="form-control" id="id_panos_snippet_set_xpath"
+                                       data-modal_source="id_panos_snippet_cmd" data-modal_value="set">
+                                <label for="id_panos_snippet_set_element">Element:</label>
+                                <textarea class="form-control" id="id_panos_snippet_set_element"></textarea>
+                                <p class="small muted text-right m-0">
+                                    <a href="#" onclick="enlarge_text_area('id_panos_snippet_set_element')">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                </p>
+                            </div>
+                            <div class="form-group">
+                                <label for="id_panos_snippet_move_xpath">XPath:</label>
+                                <input type="text" value="" class="form-control" id="id_panos_snippet_move_xpath"
+                                       data-modal_source="id_panos_snippet_cmd" data-modal_value="move">
+                                <label for="id_panos_snippet_move_where">Where:</label>
+                                <input type="text" value="" class="form-control" id="id_panos_snippet_move_where">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_panos_snippet_get_xpath">XPath:</label>
+                                <input type="text" value="" class="form-control" id="id_panos_snippet_get_xpath"
+                                       data-modal_source="id_panos_snippet_cmd" data-modal_value="get">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_panos_snippet_cmd_cmd_str">CLI:</label>
+                                <input type="text" value="" class="form-control" id="id_panos_snippet_cmd_cmd_str"
+                                       data-modal_source="id_panos_snippet_cmd" data-modal_value="cli">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_panos_snippet_cmd_op">Operational Command XML:</label>
+                                <input type="text" value="" class="form-control" id="id_panos_snippet_cmd_op"
+                                       data-modal_source="id_panos_snippet_cmd" data-modal_value="op">
+                                <label for="id_panos_snippet_op_parse_result">Parse Result:</label>
+                                <select id="id_panos_snippet_op_parse_result" class="form-control"
+                                    title="Attempt to parse the returned XML document">
+                                    <option selected>True</option>
+                                    <option>False</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="id_panos_snippet_variable">Parsed Variable:</label>
+                                <input type="text" value="" class="form-control" id="id_panos_snippet_variable"
+                                       data-modal_source="id_panos_snippet_cmd" data-modal_value="parse">
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="panos_when" role="tabpanel" aria-labelledby="panos_when_tab">
+                            <div class="text-right mt-1">
+                                <a href="#panos_when_help" data-toggle="collapse" title="When Conditional Help">
+                                    <i class="fa fa-question-circle"></i>
+                                </a>
+                            </div>
+                            <div class="card card-body collapse mt-2 mb-2 bg-light" id="panos_when_help">
+                                The 'when' conditional is a boolean jinja expression that determines whether this snippet
+                                should execute or not. Any expression evaluating to 'false' will cause this snippet
+                                to be skipped and execution to pass to the next snippet in line.
+                            </div>
+                            <div class="form-group">
+                                <label for="id_panos_snippet_when">When:</label>
+                                <textarea class="form-control" id="id_panos_snippet_when"></textarea>
+                                <p class="small muted text-right m-0">
+                                    <a href="#" title="Expand View" onclick="enlarge_text_area('id_panos_snippet_when')">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="panos_outputs" role="tabpanel" aria-labelledby="panos_outputs_tab">
+                            <div class="text-right mt-1">
+                                <a href="#panos_outputs_help" data-toggle="collapse" title="Outputs Help">
+                                    <i class="fa fa-question-circle"></i>
+                                </a>
+                                <div class="card card-body collapse mt-2 mb-2 bg-light" id="panos_outputs_help">
+                                    Outputs parse the data returned from the snippet. How that data is parsed depends on the
+                                    'Output Type'. The 'name' attribute will create a new variable with that name that can
+                                    then be referenced in later snippets. The 'capture_type' determines how the data will
+                                    be processed. For example, a 'capture_list' will always return a list with 0 or more
+                                    elements while 'capture_value' will always return a single value. The 'Query'
+                                    is the query that will be used to parse the returned data. For 'xml' type data, this is
+                                    an xpath query.
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="id_panos_snippet_output_type">Output Type:</label>
+                                <select id="id_panos_snippet_output_type" class="form-control">
+                                    <option selected>xml</option>
+                                    <option>json</option>
+                                    <option>text</option>
+                                </select>
+                            </div>
+
+                            <!-- Outputs -->
+                            <div class="form-group">
+                                <label for="all_panos_output_options">Outputs:</label>
+                                <div class="input-group" id="all_panos_output_options"></div>
+                            </div>
+                            <a href="#panos_outputs_add" data-toggle="collapse" data-target="#panos_outputs_add"
+                               aria-expanded="true" aria-controls="panos_outputs_add">
+                                <i class="fa fa-plus"></i>Add Output
+                            </a>
+                            <div id="panos_outputs_add" class="collapse">
+                                <div class="form-row">
+                                    <div class="form-group col-md-6">
+                                        <label for="id_panos_output_name">Variable Name:</label>
+                                        <input type="text" value="" placeholder="" class="form-control"
+                                               id="id_panos_output_name">
+                                    </div>
+                                    <div class="form-group col-md-6">
+                                        <label for="id_panos_output_key">Capture Type:</label>
+                                        <select id="id_panos_output_key" class="form-control">
+                                            <option value="capture_list" selected="selected">Capture List</option>
+                                            <option value="capture_pattern">Capture Pattern</option>
+                                            <option value="capture_value">Capture Value</option>
+                                            <option value="capture_object">Capture Object</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="id_panos_output_filter">Filter Items:</label>
+                                    <input type="text" value="" class="form-control" id="id_panos_output_filter"
+                                           data-modal_source="id_panos_output_key" data-modal_value="capture_list"
+                                           placeholder="item == 'some_value'"
+                                           title="Boolean Expression where only passing items will be added to the captured list">
+                                </div>
+                                <div class="form-group">
+                                                           <label for="id_panos_output_value">XPath Query:</label>
+                                                           <div class="input-group">
+                                                           <input type="text" value="" placeholder="" class="form-control"
+                                                           id="id_panos_output_value"
+                                                           title="Query used to find and return values from the output of this snippet.">
+                                                           <div class="input-group-append">
+                                                           <span class="input-group-text">
+                                                           <a href="#" onclick="add_new_output('panos');">
+                                                           <i class="fa fa-plus"></i>
+                                                           </a>
+                                                           </span>
+                                                           </div>
+                                                           </div>
+                                                           </div>
+                    </div>
                         </div>
                     </div>
                 </div>
