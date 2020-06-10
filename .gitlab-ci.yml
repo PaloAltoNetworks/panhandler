@@ -1,0 +1,64 @@
+image: python:3.7-slim
+
+variables:
+    PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+
+cache:
+    paths:
+        - .cache/pip
+        - venv/
+
+# This file is a template, and might need editing before it works on your project.
+docker-build-master:
+    # Official docker image.
+    image: docker:latest
+    stage: build
+    services:
+      - docker:dind
+    before_script:
+      - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    script:
+      - docker build --pull -t "$CI_REGISTRY_IMAGE" .
+      - docker push "$CI_REGISTRY_IMAGE"
+    only:
+      - master
+  
+docker-build:
+    # Official docker image.
+    image: docker:latest
+    stage: build
+    services:
+        - docker:dind
+    before_script:
+        - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    script:
+        - docker build --pull -t "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG" .
+        - docker push "$CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG"
+    except:
+        - master
+  
+
+before_script:
+    # Print out python version for debugging
+    - python -V
+    
+    # Build and activate virtual environment
+    - python3 -m venv env
+    - source env/bin/activate
+
+    - apt-get update
+    - apt-get install -y git
+
+    #Updating git submodule (cnc)
+    - git submodule init
+    - git submodule update
+
+    - pip install --upgrade pip
+    - pip install -r requirements.txt
+    - pip install tox flake8
+
+
+test:
+    stage: test
+    script:
+        - tox -e py37, flake8-ph, flake8-cnc
