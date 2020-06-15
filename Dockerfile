@@ -42,6 +42,8 @@ RUN curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraf
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install tox flake8
 
+RUN apt-get install -y git
+
 RUN git submodule init && \
     git submodule update
 
