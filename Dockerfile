@@ -48,6 +48,7 @@ RUN git submodule init && \
 
 COPY cnc /app/cnc
 COPY src /app/src
+COPY tests /app/tests
 
 RUN chown cnc_user /app/cnc
 RUN tox -e py38, flake8-ph, flake8-cnc
