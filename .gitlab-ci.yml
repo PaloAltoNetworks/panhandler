@@ -8,7 +8,7 @@ cache:
         - .cache/pip
         - venv/
 
-# This file is a template, and might need editing before it works on your project.
+
 docker-build-master:
     # Official docker image.
     image: docker:latest
