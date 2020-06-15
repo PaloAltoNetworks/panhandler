@@ -28,7 +28,7 @@ Use at your own risk.
 import pytest
 import urllib3
 
-
+@pytest.mark.scm
 def test_placeholder():
     assert True
 
