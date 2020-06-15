@@ -29,6 +29,9 @@ import pytest
 import urllib3
 
 
+def test_placeholder():
+    pass
+
 @pytest.mark.scm
 def test_with_authenticated_client(client, django_user_model):
     urllib3.disable_warnings()
