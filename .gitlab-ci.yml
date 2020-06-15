@@ -51,7 +51,7 @@ test:
     - pip install tox flake8
 
   script:
-    - tox -e py38, flake8-ph, flake8-cnc
+    - docker run "$CI_REGISTRY_IMAGE:dev"
 
 push_dev:
   stage: push

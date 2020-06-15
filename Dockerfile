@@ -43,6 +43,6 @@ COPY cnc /app/cnc
 COPY src /app/src
 
 RUN chown cnc_user /app/cnc
-
+RUN tox -e py38, flake8-ph, flake8-cnc
 EXPOSE 8080
 CMD ["/app/cnc/tools/ph.sh"]
