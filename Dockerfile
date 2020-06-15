@@ -25,12 +25,8 @@ RUN groupadd -g 999 cnc_group && \
 ADD requirements.txt /app/requirements.txt
 ADD tox.ini /app/tox.ini
 ADD .gitmodules /app/.gitmodules
+ADD .git /app/.git
 
-RUN apt-get install -y git
-
-RUN git submodule init && \
-    git submodule update
-    
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git build-essential libffi-dev curl unzip openssh-client && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
@@ -46,6 +42,9 @@ RUN curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraf
 
 RUN pip install --no-cache-dir -r requirements.txt && \
     pip install tox flake8
+
+RUN git submodule init && \
+    git submodule update
 
 COPY cnc /app/cnc
 COPY src /app/src
