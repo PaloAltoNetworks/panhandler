@@ -259,7 +259,7 @@ class ImportRepoView(PanhandlerAppFormView):
                             else:
                                 level = messages.ERROR
 
-                            messages.add_message(self.request, level, f'Skillet: {d["path"]}\n\nError: {e}')
+                            messages.add_message(self.request, level, 'Skillet: {d["path"]}\n\nError: {e}')
             else:
                 messages.add_message(self.request, messages.INFO, 'Imported Repository Successfully')
 

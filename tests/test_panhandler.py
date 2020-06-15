@@ -28,9 +28,6 @@ Use at your own risk.
 import pytest
 import urllib3
 
-@pytest.mark.scm
-def test_placeholder():
-    assert True
 
 @pytest.mark.scm
 def test_with_authenticated_client(client, django_user_model):
