@@ -23,6 +23,7 @@ RUN groupadd -g 999 cnc_group && \
     chown cnc_user:cnc_group /home/cnc_user/.pan_cnc
 
 ADD requirements.txt /app/requirements.txt
+ADD tox.ini /app/tox.ini
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git build-essential libffi-dev curl unzip openssh-client && \
