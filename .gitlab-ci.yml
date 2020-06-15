@@ -5,10 +5,12 @@ services:
 stages:
   - build
   - test
+  - docker_test
   - push
 
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  TEST_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH-test"
 
 cache:
   paths:
@@ -18,24 +20,11 @@ cache:
 before_script:
   - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
 
-docker-build-master:
-  # Official docker image.
+docker-build:
   stage: build
   script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE:test" .
-    - docker push "$CI_REGISTRY_IMAGE:test"
-  only:
-    - master
-
-docker-build-dev:
-  # Official docker image.
-  stage: build
-
-  script:
-    - docker build --pull -t "$CI_REGISTRY_IMAGE:test" .
-    - docker push "$CI_REGISTRY_IMAGE:test"
-  only:
-    - develop
+    - docker build --pull -t "$TEST_IMAGE" .
+    - docker push $TEST_IMAGE
 
 test:
   stage: test
@@ -43,11 +32,20 @@ test:
     - docker pull "$CI_REGISTRY_IMAGE:test"
     - docker run "$CI_REGISTRY_IMAGE:test"
 
+docker_test:
+  before_script:
+    - ''
+  image: $TEST_IMAGE
+  stage: docker_test
+  script:
+    - pip install tox
+    - tox -e docker_env
+
 push_dev:
   stage: push
   script:
-    - docker pull "$CI_REGISTRY_IMAGE:test"
-    - docker tag "$CI_REGISTRY_IMAGE:test" "$CI_REGISTRY_IMAGE:dev"
+    - docker pull $TEST_IMAGE
+    - docker tag $TEST_IMAGE "$CI_REGISTRY_IMAGE:dev"
     - docker push "$CI_REGISTRY_IMAGE:dev"
   only:
     - develop
@@ -55,9 +53,9 @@ push_dev:
 push_master:
   stage: push
   script:
-    - docker pull "$CI_REGISTRY_IMAGE:test"
-    - docker tag "$CI_REGISTRY_IMAGE:test" "$CI_REGISTRY_IMAGE"
-    - docker push "$CI_REGISTRY_IMAGE"
+    - docker pull $TEST_IMAGE
+    - docker tag $TEST_IMAGE "$CI_REGISTRY_IMAGE:latest"
+    - docker push "$CI_REGISTRY_IMAGE:latest"
   only:
     - master
 

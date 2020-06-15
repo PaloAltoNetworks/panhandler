@@ -25,9 +25,11 @@ This software is provided without support, warranty, or guarantee.
 Use at your own risk.
 """
 
+import pytest
 import urllib3
 
 
+@pytest.mark.scm
 def test_with_authenticated_client(client, django_user_model):
     urllib3.disable_warnings()
     username = "paloalto"
