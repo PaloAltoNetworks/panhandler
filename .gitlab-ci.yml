@@ -34,12 +34,11 @@ test:
 
 docker_test:
   before_script:
-    - ''
+    - git submodule init
+    - git submodule update
   image: $TEST_IMAGE
   stage: docker_test
   script:
-    - git submodule init
-    - git submodule update
     - pip install tox
     - tox -e docker_env
 

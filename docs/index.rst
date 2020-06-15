@@ -11,7 +11,11 @@ Panhandler
    :caption: Contents:
 
    overview
+<<<<<<< HEAD
    releae_history
+=======
+   release_history
+>>>>>>> 0ade9d3776da50cd2816d803a505bacec924d270
    running
    using
    switching_dev_latest

@@ -38,6 +38,7 @@ RUN curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraf
     sha256sum -c --status --quiet terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
     unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /bin && \
     rm -f terraform_${TERRAFORM_VERSION}_linux_amd64.zip  && \
+<<<<<<< HEAD
     rm -f terraform_${TERRAFORM_VERSION}_SHA256SUMS
 
 RUN pip install --no-cache-dir -r requirements.txt && \
@@ -53,5 +54,27 @@ COPY tests /app/tests
 RUN chown cnc_user /app/cnc
 RUN tox -e py38, flake8-ph, flake8-cnc
 
+=======
+    rm -f terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
+    apk del linux-headers python3-dev musl-dev && \
+    rm -rf /var/cache/apk/* && \
+    if [ -f /app/cnc/db.sqlite3 ]; then rm /app/cnc/db.sqlite3; fi
+
+RUN delgroup ping && \
+    addgroup -g 999 docker && \
+    addgroup -g 998 cnc_group && \
+    adduser -S cnc_user -G cnc_group -u 9001 -s /bin/sh && \
+    addgroup cnc_user root && \
+    addgroup cnc_user docker && \
+    mkdir /home/cnc_user/.pan_cnc && \
+    chown cnc_user:cnc_group /home/cnc_user/.pan_cnc && \
+    chgrp cnc_group /app/cnc && \
+    chgrp cnc_group /app/src/panhandler/snippets && \
+    chmod g+w /app/cnc && \
+    chmod g+w /app/src/panhandler/snippets && \
+    chmod +x -R /app/cnc/tools
+
+#USER cnc_user
+>>>>>>> 0ade9d3776da50cd2816d803a505bacec924d270
 EXPOSE 8080
 CMD ["/app/cnc/tools/ph.sh"]
