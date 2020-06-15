@@ -34,16 +34,10 @@ from typing import Any
 import yaml
 from django.conf import settings
 from django.contrib import messages
-<<<<<<< HEAD
 from django.forms import Form
 from django.forms import fields
 from django.forms import widgets
 from django.http import HttpResponse
-=======
-from django.forms import fields
-from django.forms import widgets
-from django.forms import Form
->>>>>>> 0ade9d3776da50cd2816d803a505bacec924d270
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.utils.safestring import mark_safe
@@ -791,47 +785,12 @@ class UpdateSkilletView(PanhandlerAppFormView):
 
         self.prepopulated_form_values['skillet_contents'] = skillet_contents
 
-<<<<<<< HEAD
         context = super().get_context_data(**kwargs)
         context['skillet_contents'] = skillet_contents
         context['skillet_json'] = skillet_json
         context['skillet'] = skillet
         context['title'] = 'Edit Skillet Metadata'
         context['header'] = 'Panhandler Skillet'
-=======
-        snippet_labels = dict()
-        snippet_labels['PAN-OS'] = 'panos'
-        snippet_labels['Panorama'] = 'panorama'
-        snippet_labels['Panorama-GPCS'] = 'panorama-gpcs'
-        snippet_labels['Templates'] = 'template'
-        snippet_labels['Terraform'] = 'terraform'
-
-        context['title'] = 'All Templates with type: %s' % snippet_type
-        context['header'] = 'Template Library'
-        services = snippet_utils.load_snippets_of_type(snippet_labels[snippet_type], self.app_dir)
-
-        form = context['form']
-
-        # we need to construct a new ChoiceField with the following basic format
-        # snippet_name = fields.ChoiceField(choices=(('gold', 'Gold'), ('silver', 'Silver'), ('bronze', 'Bronze')))
-        choices_list = list()
-        # grab each service and construct a simple tuple with name and label, append to the list
-        for service in services:
-            choice = (service['name'], service['label'])
-            choices_list.append(choice)
-
-        # let's sort the list by the label attribute (index 1 in the tuple)
-        choices_list = sorted(choices_list, key=lambda k: k[1])
-        # convert our list of tuples into a tuple itself
-        choices_set = tuple(choices_list)
-        # make our new field
-        new_choices_field = fields.ChoiceField(choices=choices_set, label='Choose Template:')
-        # set it on the original form, overwriting the hardcoded GSB version
-
-        form.fields['snippet_name'] = new_choices_field
-
-        context['form'] = form
->>>>>>> 0ade9d3776da50cd2816d803a505bacec924d270
         return context
 
     def form_valid(self, form):
@@ -1043,13 +1002,8 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
         help_text = 'Online mode will pull configuration directly from an accessible PAN-OS device. Offline ' \
                     'allows an XML configuration file to be uploaded.'
         dynamic_form.fields['mode'] = fields.ChoiceField(choices=choices_list,
-<<<<<<< HEAD
                                                          label=description, initial=default,
                                                          required=required, help_text=help_text)
-=======
-                                                        label=description, initial=default,
-                                                        required=required, help_text=help_text)
->>>>>>> 0ade9d3776da50cd2816d803a505bacec924d270
 
         # Uncomment when skilletlib can take a config_source
         # choices_list = list()
@@ -1181,20 +1135,12 @@ class ViewValidationResultsView(EditTargetView):
             target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
 
             target_ip_field = fields.CharField(label=target_ip_label, initial=target_ip, required=True,
-<<<<<<< HEAD
                                                validators=[FqdnOrIp])
             target_username_field = fields.CharField(label=target_username_label, initial=target_username,
                                                      required=True)
             target_password_field = fields.CharField(widget=widgets.PasswordInput(render_value=True), required=True,
                                                      label=target_password_label,
                                                      initial=target_password)
-=======
-                                              validators=[FqdnOrIp])
-            target_username_field = fields.CharField(label=target_username_label, initial=target_username, required=True)
-            target_password_field = fields.CharField(widget=widgets.PasswordInput(render_value=True), required=True,
-                                                    label=target_password_label,
-                                                    initial=target_password)
->>>>>>> 0ade9d3776da50cd2816d803a505bacec924d270
 
             form.fields['TARGET_IP'] = target_ip_field
             form.fields['TARGET_USERNAME'] = target_username_field
@@ -1207,13 +1153,8 @@ class ViewValidationResultsView(EditTargetView):
             initial = self.get_value_from_workflow('config', '<xml></xml>')
             help_text = 'Paste the full XML configuration file to validate here.'
             config_field = fields.CharField(label=label, initial=initial, required=True,
-<<<<<<< HEAD
                                             help_text=help_text,
                                             widget=widgets.Textarea(attrs={'cols': 40}))
-=======
-                                           help_text=help_text,
-                                           widget=widgets.Textarea(attrs={'cols': 40}))
->>>>>>> 0ade9d3776da50cd2816d803a505bacec924d270
             form.fields['config'] = config_field
 
         return form
