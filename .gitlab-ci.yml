@@ -38,6 +38,7 @@ docker-build-dev:
 test:
   stage: test
   script:
+    - docker pull "$CI_REGISTRY_IMAGE:dev"
     - docker run "$CI_REGISTRY_IMAGE:dev"
 
 push_dev:
