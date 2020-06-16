@@ -1011,7 +1011,7 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
         # running = ('running', 'Running')
         # choices_list.append(candidate)
         # choices_list.append(running)
-        # dynamic_form.fields['config_source'] = fields.ChoiceField(widget=forms.Select, choices=tuple(choices_list),
+        # dynamic_form.fields['config_source'] = forms.ChoiceField(widget=forms.Select, choices=tuple(choices_list),
         #                                                          label='Configuration Source',
         #                                                          initial='running', required=True,
         #                                                          help_text='Which configuration file to use '
