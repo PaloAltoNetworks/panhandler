@@ -11,11 +11,13 @@ stages:
 variables:
   PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
   TEST_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH-test"
+  GIT_SUBMODULE_STRATEGY: recursive
 
 cache:
   paths:
     - .cache/pip
-    - venv/
+    - env/
+    - .tox/
 
 before_script:
   - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
@@ -23,7 +25,8 @@ before_script:
 docker-build:
   stage: build
   script:
-    - docker build --pull -t "$TEST_IMAGE" .
+    - docker pull $TEST_IMAGE || true
+    - docker build --pull --cache-from $TEST_IMAGE -t "$TEST_IMAGE" .
     - docker push $TEST_IMAGE
 
 test:
@@ -33,10 +36,7 @@ test:
     - python -V
     - python3 -m venv env
     - source env/bin/activate
-    - apt-get update
-    - apt-get install -y git
-    - git submodule init
-    - git submodule update
+    - apt update && apt-get install -y --no-install-recommends git
     - pip install --upgrade pip
     - pip install -r requirements.txt
     - pip install tox flake8
@@ -45,12 +45,18 @@ test:
     - tox -e py38, flake8-ph, flake8-cnc
 
 docker_test:
+  variables:
+    GIT_STRATEGY: none
+
   image: $TEST_IMAGE
   stage: docker_test
   before_script:
+    - source env/bin/activate
     - pip install tox
   script:
-    - tox -e docker_env
+    - cd /app
+    - ls -al
+    - tox -e docker_env --workdir=$CI_PROJECT_DIR/.tox
 
 push_dev:
   stage: push
@@ -69,4 +75,3 @@ push_master:
     - docker push "$CI_REGISTRY_IMAGE:latest"
   only:
     - master
-
