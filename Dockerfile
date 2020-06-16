@@ -40,9 +40,6 @@ RUN curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraf
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN git submodule init && \
-    git submodule update
-
 COPY cnc /app/cnc
 COPY src /app/src
 COPY tests /app/tests
