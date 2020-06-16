@@ -22,8 +22,6 @@ RUN groupadd -g 999 cnc_group && \
     mkdir /home/cnc_user/.pan_cnc && \
     chown cnc_user:cnc_group /home/cnc_user/.pan_cnc
 
-ADD requirements.txt /app/requirements.txt
-
 RUN apt-get update && \
     apt-get install -y --no-install-recommends git build-essential libffi-dev curl unzip openssh-client && \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
@@ -37,12 +35,10 @@ RUN curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraf
     rm -f terraform_${TERRAFORM_VERSION}_linux_amd64.zip  && \
     rm -f terraform_${TERRAFORM_VERSION}_SHA256SUMS
 
+COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY cnc /app/cnc
-COPY src /app/src
-
-RUN chown cnc_user /app/cnc
+COPY --chown=cnc_user cnc src tests tox.ini /app/
 
 EXPOSE 8080
 CMD ["/app/cnc/tools/ph.sh"]

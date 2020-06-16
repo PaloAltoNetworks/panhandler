@@ -47,8 +47,9 @@ test:
 docker_test:
   image: $TEST_IMAGE
   stage: docker_test
-  script:
+  before_script:
     - pip install tox
+  script:
     - tox -e docker_env
 
 push_dev:
