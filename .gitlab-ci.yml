@@ -40,6 +40,7 @@ test:
     - pip install --upgrade pip
     - pip install -r requirements.txt
     - pip install tox flake8
+    - pip freeze | grep tox >> requirements.txt
 
   script:
     - tox -e py38, flake8-ph, flake8-cnc
