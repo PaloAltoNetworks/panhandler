@@ -38,7 +38,7 @@ RUN curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraf
     rm -f terraform_${TERRAFORM_VERSION}_linux_amd64.zip  && \
     rm -f terraform_${TERRAFORM_VERSION}_SHA256SUMS
 
-RUN pip install --no-cache-dir -r requirements.txt &&
+RUN pip install --no-cache-dir -r requirements.txt
 
 RUN git submodule init && \
     git submodule update
