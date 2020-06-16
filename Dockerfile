@@ -38,7 +38,10 @@ RUN curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraf
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY --chown=cnc_user:cnc_group cnc src tests tox.ini /app/
+COPY --chown=cnc_user:cnc_group tox.ini /app/
+COPY --chown=cnc_user:cnc_group tests /app/tests/
+COPY --chown=cnc_user:cnc_group cnc /app/cnc/
+COPY --chown=cnc_user:cnc_group src /app/src/
 
 EXPOSE 8080
 CMD ["/app/cnc/tools/ph.sh"]
