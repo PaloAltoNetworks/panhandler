@@ -468,7 +468,15 @@
             let new_snippet = snippet_base.clone();
             let new_snippet_key = new_snippet.find('[data-snippet_attribute="name"]');
 
+            let snippet = get_snippet_definition(key);
             new_snippet_key.val(key);
+            let new_snippet_type = new_snippet.find('[data-snippet_attribute="type"]');
+
+            if ((is_pan_type_skillet()) || (skillet['type'] === 'pan_validation')) {
+                new_snippet_type.val(snippet['cmd']);
+            } else {
+                new_snippet_type.val('');
+            }
 
             all_snippets.append(new_snippet);
 
@@ -1397,9 +1405,16 @@
             $.each(skillet_snippets, function (index, snippet) {
                 let snippet_base = $('#snippet_base');
                 let new_snippet = snippet_base.clone();
-                let new_snippet_key = new_snippet.find('[data-snippet_attribute="name"]')
-
+                let new_snippet_key = new_snippet.find('[data-snippet_attribute="name"]');
+                let new_snippet_type = new_snippet.find('[data-snippet_attribute="type"]');
                 new_snippet_key.val(snippet['name']);
+
+                if ((is_pan_type_skillet()) || (skillet['type'] === 'pan_validation')) {
+                    new_snippet_type.val(snippet['cmd']);
+                } else {
+                    new_snippet_type.val('');
+                }
+
                 new_snippet.attr('id', 'snippet_' + new_snippet_key.val());
 
                 all_snippets.append(new_snippet);
@@ -1588,6 +1603,9 @@
         </div>
         <input type="text" value=""
                data-snippet_attribute="name" class="form-control bg-light" disabled="disabled"/>
+        <div class="input-group-append"><span class="input-group-text">:</span></div>
+        <input type="text" value=""
+               data-snippet_attribute="type" class="form-control bg-light" disabled/>
         <div class="input-group-append">
             <span class="input-group-text" title="Remove Snippet">
                 <a href="#" onclick="remove_snippet(this);">
