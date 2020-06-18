@@ -1901,7 +1901,8 @@
                 <div class="modal-body" style="overflow-y: auto">
                     <ul class="nav nav-tabs" id="myTab" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="panos_main_tab" data-toggle="tab" href="#panos_main" role="tab"
+                            <a class="nav-link active" id="panos_main_tab" data-toggle="tab" href="#panos_main"
+                               role="tab"
                                aria-controls="panos_main"
                                aria-selected="true">Snippet</a>
                         </li>
@@ -1911,18 +1912,21 @@
                                aria-selected="false">When</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="panos_outputs_tab" data-toggle="tab" href="#panos_outputs" role="tab"
+                            <a class="nav-link" id="panos_outputs_tab" data-toggle="tab" href="#panos_outputs"
+                               role="tab"
                                aria-controls="panos_outputs"
                                aria-selected="false">Outputs</a>
                         </li>
                     </ul>
                     <div class="tab-content" id="panos_snippet_tab">
-                        <div class="tab-pane fade show active" id="panos_main" role="tabpanel" aria-labelledby="panos_main_tab">
+                        <div class="tab-pane fade show active" id="panos_main" role="tabpanel"
+                             aria-labelledby="panos_main_tab">
 
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label for="id_panos_snippet_name">Name:</label>
-                                    <input type="text" value="" class="form-control" id="id_panos_snippet_name" disabled>
+                                    <input type="text" value="" class="form-control" id="id_panos_snippet_name"
+                                           disabled>
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label for="id_panos_snippet_cmd">Command:</label>
@@ -1972,7 +1976,7 @@
                                        data-modal_source="id_panos_snippet_cmd" data-modal_value="op">
                                 <label for="id_panos_snippet_op_parse_result">Parse Result:</label>
                                 <select id="id_panos_snippet_op_parse_result" class="form-control"
-                                    title="Attempt to parse the returned XML document">
+                                        title="Attempt to parse the returned XML document">
                                     <option selected>True</option>
                                     <option>False</option>
                                 </select>
@@ -1991,7 +1995,8 @@
                                 </a>
                             </div>
                             <div class="card card-body collapse mt-2 mb-2 bg-light" id="panos_when_help">
-                                The 'when' conditional is a boolean jinja expression that determines whether this snippet
+                                The 'when' conditional is a boolean jinja expression that determines whether this
+                                snippet
                                 should execute or not. Any expression evaluating to 'false' will cause this snippet
                                 to be skipped and execution to pass to the next snippet in line.
                             </div>
@@ -1999,25 +2004,31 @@
                                 <label for="id_panos_snippet_when">When:</label>
                                 <textarea class="form-control" id="id_panos_snippet_when"></textarea>
                                 <p class="small muted text-right m-0">
-                                    <a href="#" title="Expand View" onclick="enlarge_text_area('id_panos_snippet_when')">
+                                    <a href="#" title="Expand View"
+                                       onclick="enlarge_text_area('id_panos_snippet_when')">
                                         <i class="fa fa-edit"></i>
                                     </a>
                                 </p>
                             </div>
                         </div>
 
-                        <div class="tab-pane fade" id="panos_outputs" role="tabpanel" aria-labelledby="panos_outputs_tab">
+                        <div class="tab-pane fade" id="panos_outputs" role="tabpanel"
+                             aria-labelledby="panos_outputs_tab">
                             <div class="text-right mt-1">
                                 <a href="#panos_outputs_help" data-toggle="collapse" title="Outputs Help">
                                     <i class="fa fa-question-circle"></i>
                                 </a>
                                 <div class="card card-body collapse mt-2 mb-2 bg-light" id="panos_outputs_help">
-                                    Outputs parse the data returned from the snippet. How that data is parsed depends on the
-                                    'Output Type'. The 'name' attribute will create a new variable with that name that can
-                                    then be referenced in later snippets. The 'capture_type' determines how the data will
+                                    Outputs parse the data returned from the snippet. How that data is parsed depends on
+                                    the
+                                    'Output Type'. The 'name' attribute will create a new variable with that name that
+                                    can
+                                    then be referenced in later snippets. The 'capture_type' determines how the data
+                                    will
                                     be processed. For example, a 'capture_list' will always return a list with 0 or more
                                     elements while 'capture_value' will always return a single value. The 'Query'
-                                    is the query that will be used to parse the returned data. For 'xml' type data, this is
+                                    is the query that will be used to parse the returned data. For 'xml' type data, this
+                                    is
                                     an xpath query.
                                 </div>
                             </div>
@@ -2064,28 +2075,29 @@
                                            title="Boolean Expression where only passing items will be added to the captured list">
                                 </div>
                                 <div class="form-group">
-                                                           <label for="id_panos_output_value">XPath Query:</label>
-                                                           <div class="input-group">
-                                                           <input type="text" value="" placeholder="" class="form-control"
-                                                           id="id_panos_output_value"
-                                                           title="Query used to find and return values from the output of this snippet.">
-                                                           <div class="input-group-append">
+                                    <label for="id_panos_output_value">XPath Query:</label>
+                                    <div class="input-group">
+                                        <input type="text" value="" placeholder="" class="form-control"
+                                               id="id_panos_output_value"
+                                               title="Query used to find and return values from the output of this snippet.">
+                                        <div class="input-group-append">
                                                            <span class="input-group-text">
                                                            <a href="#" onclick="add_new_output('panos');">
                                                            <i class="fa fa-plus"></i>
                                                            </a>
                                                            </span>
-                                                           </div>
-                                                           </div>
-                                                           </div>
-                    </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary"
-                            onclick="show_test_snippet()" data-dismiss="modal">Debug Snippet</button>
+                            onclick="show_test_snippet()" data-dismiss="modal">Debug Snippet
+                    </button>
                     <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" onclick="update_panos_snippet()"
                             data-dismiss="modal">Update
@@ -2302,107 +2314,158 @@
                     </button>
                 </div>
                 <div class="modal-body" style="overflow-y: auto">
-                    <div class="form-row">
-                        <div class="form-group col-md-6">
-                            <label for="id_pan_validation_snippet_name">Name:</label>
-                            <input type="text" value="" class="form-control" id="id_pan_validation_snippet_name" disabled>
-                        </div>
-                        <div class="form-group col-md-6">
-                            <label for="id_pan_validation_snippet_cmd">Cmd:</label>
-                            <select id="id_pan_validation_snippet_cmd" class="form-control">
-                                <option selected>validate</option>
-                                <option>validate_xml</option>
-                                <option>parse</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_pan_validation_snippet_when">When:</label>
-                        <textarea class="form-control" rows="1" id="id_pan_validation_snippet_when"></textarea>
-                        <p class="small muted text-right m-0">
-                            <a href="#" onclick="enlarge_text_area('id_pan_validation_snippet_when')">
-                                <i class="fa fa-edit"></i>
-                            </a>
-                        </p>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_pan_validation_snippet_label">Label:</label>
-                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_label">
-                        <label for="id_pan_validation_snippet_severity">Severity:</label>
-                        <select id="id_pan_validation_snippet_severity" class="form-control">
-                            <option selected>low</option>
-                            <option>medium</option>
-                            <option>high</option>
-                        </select>
-                        <label for="id_pan_validation_snippet_fail_message">Fail Message:</label>
-                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_fail_message">
-                        <label for="id_pan_validation_snippet_pass_message">Pass Message:</label>
-                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_pass_message">
-                        <label for="id_pan_validation_snippet_documentation_link">Documentation Link:</label>
-                        <input type="text" value="" class="form-control"
-                               id="id_pan_validation_snippet_documentation_link">
-                        <label for="id_pan_validation_snippet_test">Test:</label>
-                        <textarea class="form-control" rows="2" id="id_pan_validation_snippet_test"
-                                  data-modal_source="id_pan_validation_snippet_cmd"
-                                  data-modal_value="validate"></textarea>
-                        <p class="small muted text-right m-0">
-                            <a href="#" onclick="enlarge_text_area('id_pan_validation_snippet_test')">
-                                <i class="fa fa-edit"></i>
-                            </a>
-                        </p>
-                    </div>
-                    <!-- Outputs -->
-                    <div class="form-group">
-                        <label for="id_pan_validation_snippet_variable">Parsed Variable:</label>
-                        <input type="text" value="" class="form-control" id="id_pan_validation_snippet_variable"
-                               data-modal_source="id_pan_validation_snippet_cmd" data-modal_value="parse">
-                        <label for="all_pan_validation_output_options">Outputs:</label>
-                        <div class="input-group" id="all_pan_validation_output_options"></div>
-                        <a href="#pan_validation_outputs_add" data-toggle="collapse"
-                           data-target="#pan_validation_outputs_add"
-                           aria-expanded="true" aria-controls="pan_validation_outputs_add">
-                            <i class="fa fa-plus"></i>Add Output
-                        </a>
-                        <div id="pan_validation_outputs_add" class="collapse">
-                        <div class="form-row">
-                            <div class="form-group col-md-6">
-                                <label for="id_pan_validation_output_name">Variable Name:</label>
-                                <input type="text" value="" placeholder="" class="form-control"
-                                       id="id_pan_validation_output_name">
+                    <ul class="nav nav-tabs" id="id_pan_validation_tab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="pan_validation_main_tab" data-toggle="tab"
+                               href="#pan_validation_main" role="tab"
+                               aria-controls="pan_validation_main"
+                               aria-selected="true">Snippet</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="pan_validation_when_tab" data-toggle="tab"
+                               href="#pan_validation_when" role="tab"
+                               aria-controls="pan_validation_when"
+                               aria-selected="false">When</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="pan_validation_messsages_tab" data-toggle="tab"
+                               href="#pan_validation_messages" role="tab"
+                               aria-controls="pan_validation_messages"
+                               aria-selected="false">Messages</a>
+                        </li>
+                    </ul>
+                    <div class="tab-content" id="pan_validation_snippet_tab">
+                        <div class="tab-pane fade show active" id="pan_validation_main" role="tabpanel"
+                             aria-labelledby="pan_validation_main_tab">
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label for="id_pan_validation_snippet_name">Name:</label>
+                                    <input type="text" value="" class="form-control" id="id_pan_validation_snippet_name"
+                                           disabled>
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label for="id_pan_validation_snippet_cmd">Cmd:</label>
+                                    <select id="id_pan_validation_snippet_cmd" class="form-control">
+                                        <option selected>validate</option>
+                                        <option>validate_xml</option>
+                                        <option>parse</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div class="form-group col-md-6">
-                                <label for="id_pan_validation_output_key">Capture Type:</label>
-                                <select id="id_pan_validation_output_key" class="form-control">
-                                        <option value="capture_list" selected="selected">Capture List</option>
-                                        <option value="capture_pattern">Capture Pattern</option>
-                                        <option value="capture_value">Capture Value</option>
-                                        <option value="capture_object">Capture Object</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label for="id_pan_validation_output_filter">Filter Items:</label>
-                            <input type="text" value="" class="form-control" id="id_pan_validation_output_filter"
-                                   placeholder="item == 'some_value'"
-                                   data-modal_source="id_pan_validation_output_key" data-modal_value="capture_list"
-                                   title="Boolean Expression where only passing items will be added to the captured list">
-                        </div>
-                        <div class="form-group">
-                            <label for="id_pan_validation_output_value">Pattern:</label>
-                            <div class="input-group">
-                                <input type="text" value="" placeholder="" class="form-control"
-                                       id="id_pan_validation_output_value">
-                                <div class="input-group-append">
-                                    <span class="input-group-text">
-                                    <a href="#"
-                                       onclick="add_new_output('pan_validation');">
-                                    <i class="fa fa-plus"></i>
+
+                            <div class="form-group">
+                                <label for="id_pan_validation_snippet_label">Label:</label>
+                                <input type="text" value="" class="form-control" id="id_pan_validation_snippet_label">
+
+
+                                <label for="id_pan_validation_snippet_documentation_link">Documentation Link:</label>
+                                <input type="text" value="" class="form-control"
+                                       id="id_pan_validation_snippet_documentation_link">
+                                <label for="id_pan_validation_snippet_test">Test:</label>
+                                <textarea class="form-control" rows="4" id="id_pan_validation_snippet_test"
+                                          data-modal_source="id_pan_validation_snippet_cmd"
+                                          data-modal_value="validate"></textarea>
+                                <p class="small muted text-right m-0">
+                                    <a href="#" onclick="enlarge_text_area('id_pan_validation_snippet_test')">
+                                        <i class="fa fa-edit"></i>
                                     </a>
-                                    </span>
+                                </p>
+                            </div>
+                            <!-- Outputs -->
+                            <div class="form-group">
+                                <label for="id_pan_validation_snippet_variable">Parsed Variable:</label>
+                                <input type="text" value="" class="form-control" id="id_pan_validation_snippet_variable"
+                                       data-modal_source="id_pan_validation_snippet_cmd" data-modal_value="parse">
+                                <label for="all_pan_validation_output_options">Outputs:</label>
+                                <div class="input-group" id="all_pan_validation_output_options"></div>
+                                <a href="#pan_validation_outputs_add" data-toggle="collapse"
+                                   data-target="#pan_validation_outputs_add"
+                                   aria-expanded="true" aria-controls="pan_validation_outputs_add">
+                                    <i class="fa fa-plus"></i>Add Output
+                                </a>
+                                <div id="pan_validation_outputs_add" class="collapse">
+                                    <div class="form-row">
+                                        <div class="form-group col-md-6">
+                                            <label for="id_pan_validation_output_name">Variable Name:</label>
+                                            <input type="text" value="" placeholder="" class="form-control"
+                                                   id="id_pan_validation_output_name">
+                                        </div>
+                                        <div class="form-group col-md-6">
+                                            <label for="id_pan_validation_output_key">Capture Type:</label>
+                                            <select id="id_pan_validation_output_key" class="form-control">
+                                                <option value="capture_list" selected="selected">Capture List</option>
+                                                <option value="capture_pattern">Capture Pattern</option>
+                                                <option value="capture_value">Capture Value</option>
+                                                <option value="capture_object">Capture Object</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="id_pan_validation_output_filter">Filter Items:</label>
+                                        <input type="text" value="" class="form-control"
+                                               id="id_pan_validation_output_filter"
+                                               placeholder="item == 'some_value'"
+                                               data-modal_source="id_pan_validation_output_key"
+                                               data-modal_value="capture_list"
+                                               title="Boolean Expression where only passing items will be added to the captured list">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="id_pan_validation_output_value">Pattern:</label>
+                                        <div class="input-group">
+                                            <input type="text" value="" placeholder="" class="form-control"
+                                                   id="id_pan_validation_output_value">
+                                            <div class="input-group-append">
+                                                       <span class="input-group-text">
+                                                       <a href="#"
+                                                          onclick="add_new_output('pan_validation');">
+                                                       <i class="fa fa-plus"></i>
+                                                       </a>
+                                                       </span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="tab-pane fade" id="pan_validation_when" role="tabpanel"
+                             aria-labelledby="pan_validation_when_tab">
+                            <div class="form-group">
+                                <label for="id_pan_validation_snippet_when">When:</label>
+                                <textarea class="form-control" rows="1" id="id_pan_validation_snippet_when"></textarea>
+                                <p class="small muted text-right m-0">
+                                    <a href="#" onclick="enlarge_text_area('id_pan_validation_snippet_when')">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="pan_validation_messages" role="tabpanel"
+                             aria-labelledby="pan_validation_messages_tab">
+                            <div class="form-group">
+                                <label for="id_pan_validation_snippet_severity">Severity:</label>
+                                <select id="id_pan_validation_snippet_severity" class="form-control"
+                                        data-modal_source="id_pan_validation_snippet_cmd"
+                                        data-modal_value="validate">
+                                    <option selected>low</option>
+                                    <option>medium</option>
+                                    <option>high</option>
+                                </select>
+                                <label for="id_pan_validation_snippet_fail_message">Fail Message:</label>
+                                <textarea class="form-control" rows="1" id="id_pan_validation_snippet_fail_message"></textarea>
+                                <p class="small muted text-right m-0">
+                                    <a href="#" onclick="enlarge_text_area('id_pan_validation_snippet_fail_message')">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                </p>
+                                <label for="id_pan_validation_snippet_pass_message">Pass Message:</label>
+                                <textarea class="form-control" rows="1" id="id_pan_validation_snippet_pass_message"></textarea>
+                                <p class="small muted text-right m-0">
+                                    <a href="#" onclick="enlarge_text_area('id_pan_validation_snippet_pass_message')">
+                                        <i class="fa fa-edit"></i>
+                                    </a>
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
