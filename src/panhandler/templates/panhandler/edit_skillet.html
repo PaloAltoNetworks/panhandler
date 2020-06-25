@@ -186,6 +186,54 @@
             $('#panos_outputs_add').removeClass('show');
         }
 
+        function edit_output(output_div) {
+            /**
+             * Called from the output_base div to edit this output definition. Will grab all the values and
+             * put them back in the 'add output' fields then delete itself
+             * See https://gitlab.com/panw-gse/as/panhandler/-/issues/24 GL #24
+             *
+             */
+
+            let output_type = skillet['type'];
+
+            let output_div_obj = $(output_div).closest('[id^=output_]');
+            let name_span = output_div_obj.find('[data-output_attribute_type="name"]');
+            let capture_type_span = output_div_obj.find('[data-output_attribute_type="key"]');
+            let capture_value_span = output_div_obj.find('[data-output_attribute_type="value"]');
+            let capture_filter_span = output_div_obj.find('[data-output_attribute_type="filter"]');
+
+            let name = name_span.html();
+            let capture_key = capture_type_span.html();
+            let capture_value = capture_value_span.html();
+            let capture_filter = capture_filter_span.html();
+
+            let outputs_add_el = $('#' + output_type + '_outputs_add')
+            outputs_add_el.show();
+
+            let opt_name_field = $('#id_' + output_type + '_output_name');
+            let opt_key_field = $('#id_' + output_type + '_output_key');
+            let opt_val_field = $('#id_' + output_type + '_output_value');
+            let opt_filter_field = $('#id_' + output_type + '_output_filter');
+
+            if (capture_key === 'capture_list') {
+                opt_filter_field.closest('.form-group').show();
+            } else {
+               opt_filter_field.closest('.form-group').hide();
+                opt_filter_field.val('');
+            }
+
+            opt_name_field.val(name);
+            opt_key_field.val(capture_key);
+            opt_val_field.val(capture_value);
+            opt_filter_field.val(capture_filter);
+
+            output_div_obj.remove();
+
+            opt_name_field.effect('highlight');
+            opt_key_field.effect('highlight');
+            opt_val_field.effect('highlight');
+        }
+
         function add_update_variable() {
             /**
              * Add or update the variable entry in the global skillet_variables variable
@@ -1670,33 +1718,31 @@
 
     <!-- Output Definitions Clone -->
     <div id="output_base" style="display: none" class="bg-light mb-0 w-100 mt-1 p-1">
-        <a href="#" class="float-right" onclick="remove_output(this);">
-            <i class="fa fa-times"></i>
-        </a>
+        <div class="float-right">
+             <a href="#" class="p2" onclick="edit_output(this);">
+                <i class="fa fa-edit"></i>
+            </a>
+            <a href="#" class="p2" onclick="remove_output(this);">
+                <i class="fa fa-times"></i>
+            </a>
+        </div>
         <pre class="mb-0"><code class="yaml"> - name: <span data-output_attribute_type="name"></span>
    <span data-output_attribute_type="key"></span>: <span data-output_attribute_type="value"></span></code></pre>
     </div>
 
     <!-- Filtered Output Definitions Clone OLD -->
     <div id="filtered_output_base" style="display: none" class="bg-light mb-0 w-100 mt-1 p-1">
-        <a href="#" class="float-right" onclick="remove_output(this);">
-            <i class="fa fa-times"></i>
-        </a>
+        <div class="float-right">
+             <a href="#" class="p2" onclick="edit_output(this);">
+                <i class="fa fa-edit"></i>
+            </a>
+            <a href="#" class="p2" onclick="remove_output(this);">
+                <i class="fa fa-times"></i>
+            </a>
+        </div>
         <pre class="mb-0"><code class="yaml"> - name: <span data-output_attribute_type="name"></span>
    <span data-output_attribute_type="key"></span>: <span data-output_attribute_type="value"></span>
    <span>filter_items</span>: <span data-output_attribute_type="filter"></span></code></pre>
-    </div>
-
-    <!-- output definitions Clone OLD -->
-    <div class="input-group mb-3" id="output_base_old" style="display: none">
-        <input type="text" value="" class="form-control" data-output_attribute_type="name"
-               disabled="disabled"/>
-        <div class="input-group-append"><span class="input-group-text">:</span></div>
-        <input type="text" value="" class="form-control" data-output_attribute_type="key"
-               disabled="disabled"/>
-        <div class="input-group-append"><span class="input-group-text">:</span></div>
-        <input type="text" value="" class="form-control" data-output_attribute_type="value"
-               disabled="disabled"/>
     </div>
 
     <!-- Add Label Modal -->
@@ -2036,6 +2082,7 @@
                                 <a href="#panos_outputs_help" data-toggle="collapse" title="Outputs Help">
                                     <i class="fa fa-question-circle"></i>
                                 </a>
+                            </div>
                                 <div class="card card-body collapse mt-2 mb-2 bg-light" id="panos_outputs_help">
                                     Outputs parse the data returned from the snippet. How that data is parsed depends on
                                     the
@@ -2049,7 +2096,6 @@
                                     is
                                     an xpath query.
                                 </div>
-                            </div>
                             <div class="form-group">
                                 <label for="id_panos_snippet_output_type">Output Type:</label>
                                 <select id="id_panos_snippet_output_type" class="form-control">
