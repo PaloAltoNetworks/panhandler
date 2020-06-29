@@ -50,6 +50,7 @@ from skilletlib.exceptions import PanoplyException
 from skilletlib.exceptions import SkilletLoaderException
 from skilletlib.skillet.pan_validation import PanValidationSkillet
 from skilletlib.skillet.template import TemplateSkillet
+from skilletlib.snippet.panos import PanosSnippet
 from yaml.scanner import ScannerError
 
 from cnc.models import RepositoryDetails
@@ -1531,14 +1532,42 @@ class SkilletTestView(CNCBaseAuth, View):
             return response
 
         results = dict()
+        output = dict()
 
-        try:
+        if len(skillet_dict['snippets']) == 1:
+            # this is a single snippet execution - check for dangerous commands
+            snippet = skillet.get_snippets().pop()
+            if not snippet.should_execute(context):
+                # skip initialize_context which will contact the device
+                skillet.context = context
+                output['debug'] = 'This snippet was skipped due to when conditional'
+                output['metadata'] = dict()
+                output['metadata']['name'] = snippet.metadata['name']
+                output['metadata']['when'] = snippet.metadata['when']
 
-            output = skillet.execute(context)
+            elif 'cmd' in snippet.metadata and \
+                    snippet.metadata['cmd'] in ('op', 'set', 'edit', 'override', 'move', 'rename', 'clone', 'delete'):
+                skillet.initialize_context(context)
+                metadata = snippet.render_metadata(context)
+                output['debug'] = 'Destructive action that would have been taken captured as metadata instead'
+                output['metadata'] = metadata
 
-        except PanoplyException as pe:
-            print(pe)
-            output = str(pe)
+            else:
+                try:
+
+                    output = skillet.execute(context)
+
+                except PanoplyException as pe:
+                    print(pe)
+                    output = str(pe)
+        else:
+            try:
+
+                output = skillet.execute(context)
+
+            except PanoplyException as pe:
+                print(pe)
+                output = str(pe)
 
         results['output'] = output
         results['context'] = dict()

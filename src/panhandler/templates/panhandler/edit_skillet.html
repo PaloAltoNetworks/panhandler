@@ -1235,11 +1235,30 @@
                 });
         }
 
+        function step_over_restart_skillet() {
+            /**
+             * Reset the current snippet to test in the test_skillet modal
+             */
+            current_snippet_index = 0;
+            let id_test_skillet_next_input = $('#id_test_skillet_next');
+            let next_snippet = skillet_snippets[current_snippet_index];
+            id_test_skillet_next_input.val(next_snippet['name']);
+
+            let outputs_input = $('#id_test_skillet_outputs');
+            outputs_input.val('');
+        }
+
         function step_over_skillet() {
             /**
              * Post the skillet to app server to execute and test the skillet. Only works on 'pan' type skillets
              * for now.
              */
+
+            let id_test_skillet_next_input = $('#id_test_skillet_next');
+            if (id_test_skillet_next_input.val() === 'running...') {
+                console.log('skipping running check');
+                return;
+            }
 
             let doc = $(document.documentElement);
             doc.css('cursor', 'progress');
@@ -1263,7 +1282,6 @@
 
             current_snippet_index += 1;
 
-            let id_test_skillet_next_input = $('#id_test_skillet_next');
 
             let next_snippet = skillet_snippets[current_snippet_index];
 
@@ -1272,8 +1290,11 @@
                 id_test_skillet_next_input.val('Completed');
                 current_snippet_index = 0;
             } else {
-                id_test_skillet_next_input.val(next_snippet['name']);
+                id_test_skillet_next_input.val('running...');
             }
+
+            let outputs_input = $('#id_test_skillet_outputs');
+            outputs_input.val('debugging...');
 
             $.ajax({
                 method: "POST",
@@ -1295,6 +1316,7 @@
                     {#if (Object.keys(data['output']['snippets']).length === 0) {#}
                     {#    output = 'Snippet was skipped due to when conditional';#}
                     {#}#}
+                    id_test_skillet_next_input.val(next_snippet['name']);
                     console.log(context);
                     let context_input = $('#id_test_skillet_context');
                     let outputs_input = $('#id_test_skillet_outputs');
@@ -2237,9 +2259,6 @@
                 </div>
 
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary"
-                            onclick="show_test_snippet()" data-dismiss="modal">Debug Snippet
-                    </button>
                     <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" onclick="update_panos_snippet()"
                             data-dismiss="modal">Update
@@ -2660,7 +2679,9 @@
                 </div>
                 <div class="modal-body" style="overflow-y: auto">
                     <p class="card-text">
-                        This will execute the skillet using the provided context. This is a great place to
+                        This tool will allow you to step through the execution of this skillet snippet by snippet
+                        using the provided context. Each snippet can add to the context which will be
+                        passed to the next skillet. This is a great place to
                         explore output capturing and other syntax options before saving your skillet.
                     </p>
                     <div class="form-row">
@@ -2671,6 +2692,10 @@
                                 <a href="#" onclick="enlarge_text_area('id_test_skillet_context')">
                                     <i class="fa fa-edit"></i>
                                 </a>
+                            </p>
+                            <p class="small text-muted">
+                                *Note the device configuration is always added to the context as the 'config' variable,
+                                however it is filtered out in this view for brevity.
                             </p>
                             <input type="hidden" id="id_test_skillet_results"/>
                         </div>
@@ -2689,6 +2714,13 @@
                         <div class="input-group mb-3">
                         <input type="text" value="" disabled="disabled"
                               class="form-control disabled" id="id_test_skillet_next">
+                        <div class="input-group-append" id="start_over_skillet_button">
+                            <span class="input-group-text" title="Start Over">
+                                <a href="#" onclick="step_over_restart_skillet();">
+                                    <i class="fa fa-redo"></i>
+                                </a>
+                            </span>
+                        </div>
                         <div class="input-group-append" id="step_over_skillet_button">
                             <span class="input-group-text" title="Execute Next Snippet">
                                 <a href="#" onclick="step_over_skillet();">
