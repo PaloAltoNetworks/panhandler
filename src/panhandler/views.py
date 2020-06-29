@@ -1536,7 +1536,7 @@ class SkilletTestView(CNCBaseAuth, View):
 
         if len(skillet_dict['snippets']) == 1:
             # this is a single snippet execution - check for dangerous commands
-            snippet = skillet.get_snippets().pop()
+            snippet = skillet.get_snippets()[0]
             if not snippet.should_execute(context):
                 # skip initialize_context which will contact the device
                 skillet.context = context
@@ -1556,6 +1556,9 @@ class SkilletTestView(CNCBaseAuth, View):
                 try:
 
                     output = skillet.execute(context)
+                    if skillet_dict['type'] == 'pan_validation':
+                        if snippet.name in skillet.context:
+                            output['pan_validation'][snippet.name] = skillet.context[snippet.name]
 
                 except PanoplyException as pe:
                     print(pe)
