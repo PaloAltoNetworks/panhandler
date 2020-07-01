@@ -1248,6 +1248,34 @@
             outputs_input.val('');
         }
 
+        function step_over_skillet_next() {
+            /**
+             * Skip the 'next' snippet in the skillet debugger
+             */
+            current_snippet_index += 1;
+            let id_test_skillet_next_input = $('#id_test_skillet_next');
+
+            if (id_test_skillet_next_input.val() === 'running...') {
+                console.log('skipping running check');
+                return;
+            }
+            let current_snippet = id_test_skillet_next_input.val();
+
+            let next_snippet = skillet_snippets[current_snippet_index];
+
+            if (typeof next_snippet === 'undefined') {
+                $('#step_over_skillet_button').hide();
+                id_test_skillet_next_input.val('Completed');
+                current_snippet_index = 0;
+                return;
+            }
+
+            id_test_skillet_next_input.val(next_snippet['name']);
+
+            let outputs_input = $('#id_test_skillet_outputs');
+            outputs_input.val('Skipped ' + current_snippet);
+        }
+
         function step_over_skillet() {
             /**
              * Post the skillet to app server to execute and test the skillet. Only works on 'pan' type skillets
@@ -1313,9 +1341,6 @@
                     doc.css('cursor', '');
                     let context = JSON.stringify(data['context'], null, '  ');
                     let output = JSON.stringify(data['output'], null, '  ');
-                    {#if (Object.keys(data['output']['snippets']).length === 0) {#}
-                    {#    output = 'Snippet was skipped due to when conditional';#}
-                    {#}#}
                     id_test_skillet_next_input.val(next_snippet['name']);
                     console.log(context);
                     let context_input = $('#id_test_skillet_context');
@@ -2714,6 +2739,13 @@
                             <span class="input-group-text" title="Start Over">
                                 <a href="#" onclick="step_over_restart_skillet();">
                                     <i class="fa fa-redo"></i>
+                                </a>
+                            </span>
+                        </div>
+                        <div class="input-group-append" id="step_over_next_button">
+                            <span class="input-group-text" title="Skip Next Snippet">
+                                <a href="#" onclick="step_over_skillet_next();">
+                                    <i class="fa fa-forward"></i>
                                 </a>
                             </span>
                         </div>
