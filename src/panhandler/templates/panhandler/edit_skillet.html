@@ -2240,19 +2240,15 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="id_panos_output_value">XPath Query:</label>
-                                    <div class="input-group">
                                         <input type="text" value="" placeholder="" class="form-control"
                                                id="id_panos_output_value"
                                                title="Query used to find and return values from the output of this snippet.">
-                                        <div class="input-group-append">
-                                                           <span class="input-group-text">
-                                                           <a href="#" onclick="add_new_output('panos');">
-                                                           <i class="fa fa-plus"></i>
-                                                           </a>
-                                                           </span>
-                                        </div>
-                                    </div>
                                 </div>
+                                <button class="float-right btn btn-outline-primary"
+                                        title="Add Output Definition"
+                                        onclick="add_new_output('panos')">
+                                    <i class="fa fa-plus"></i>
+                                </button>
                             </div>
                         </div>
                     </div>
