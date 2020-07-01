@@ -1547,7 +1547,11 @@ class SkilletTestView(CNCBaseAuth, View):
 
             elif 'cmd' in snippet.metadata and \
                     snippet.metadata['cmd'] in ('op', 'set', 'edit', 'override', 'move', 'rename', 'clone', 'delete'):
-                skillet.initialize_context(context)
+                try:
+                    skillet.initialize_context(context)
+                except PanoplyException as pe:
+                    output['error'] = str(pe)
+
                 metadata = snippet.render_metadata(context)
                 output['debug'] = 'Destructive action that would have been taken captured as metadata instead'
                 output['metadata'] = metadata
@@ -1562,7 +1566,7 @@ class SkilletTestView(CNCBaseAuth, View):
 
                 except PanoplyException as pe:
                     print(pe)
-                    output = str(pe)
+                    output['error'] = str(pe)
         else:
             try:
 
@@ -1570,7 +1574,7 @@ class SkilletTestView(CNCBaseAuth, View):
 
             except PanoplyException as pe:
                 print(pe)
-                output = str(pe)
+                output['error'] = str(pe)
 
         results['output'] = output
         results['context'] = dict()
