@@ -1102,6 +1102,17 @@
             id_test_skillet_next_input.val(next_snippet['name']);
             $('#step_over_skillet_button').show();
 
+            // set up the skip ahead dropdown
+            let id_test_skillet_skip = $('#id_test_skillet_skip_to');
+            id_test_skillet_skip.empty();
+
+            $.each(skillet_snippets, function (i, item) {
+                $('#id_test_skillet_skip_to').append($('<option>', {
+                    value: item.name,
+                    text : item.name,
+                }));
+            });
+
             $('#show_test_skillet_modal').modal();
 
         }
@@ -1276,6 +1287,21 @@
             outputs_input.val('Skipped ' + current_snippet);
         }
 
+        function step_over_snippet_skip_to() {
+            let id_test_skillet_skip_to = $('#id_test_skillet_skip_to');
+            let id_test_skillet_next_input = $('#id_test_skillet_next');
+
+            let desired_snippet = id_test_skillet_skip_to.val();
+
+            current_snippet_index = skillet_snippets.findIndex(i => i.name === desired_snippet);
+            let next_snippet = skillet_snippets[current_snippet_index];
+            id_test_skillet_next_input.val(next_snippet['name']);
+
+            let outputs_input = $('#id_test_skillet_outputs');
+            outputs_input.val('Skipped ahead to ' + next_snippet['name']);
+            $('#step_over_skillet_button').show();
+        }
+
         function step_over_skillet() {
             /**
              * Post the skillet to app server to execute and test the skillet. Only works on 'pan' type skillets
@@ -1341,7 +1367,9 @@
                     doc.css('cursor', '');
                     let context = JSON.stringify(data['context'], null, '  ');
                     let output = JSON.stringify(data['output'], null, '  ');
-                    id_test_skillet_next_input.val(next_snippet['name']);
+                    if (typeof(next_snippet) !== 'undefined') {
+                        id_test_skillet_next_input.val(next_snippet['name']);
+                    }
                     console.log(context);
                     let context_input = $('#id_test_skillet_context');
                     let outputs_input = $('#id_test_skillet_outputs');
@@ -2731,7 +2759,15 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label for="id_test_skillet_next">Next Snippet:</label>
+                        <label for="id_test_skillet_skip_to">Skip Ahead to Snippet:</label>
+                        <div class="input-group mb-3">
+                            <select id="id_test_skillet_skip_to" onchange="step_over_snippet_skip_to();">
+                                <option>None</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="id_test_skillet_next">Step Through Snippets:</label>
                         <div class="input-group mb-3">
                         <input type="text" value="" disabled="disabled"
                               class="form-control disabled" id="id_test_skillet_next">
@@ -2759,7 +2795,9 @@
                     </div>
 
                 </div>
-                <div class="modal-footer">
+
+
+                    <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-dismiss="modal">Dismiss</button>
                 </div>
             </div>
