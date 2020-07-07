@@ -180,6 +180,19 @@
                 snippet_def['outputs'] = new_outputs;
             }
 
+            // capture all configured tags
+            let new_tags = [];
+            $('#all_panos_tags').find('[id^="tag_panos_"]').each(function (index, tag_div) {
+                let tag_div_obj = $(tag_div);
+                let tag_input = tag_div_obj.find('[data-tag_type="tag"]');
+                let tag_value = tag_input.val();
+                new_tags.push(tag_value);
+            });
+
+            if (new_tags.length > 0) {
+                snippet_def['tags'] = new_tags;
+            }
+
             console.log(snippet_def);
 
             // old_snippet_def = snippet_def;
@@ -540,6 +553,13 @@
             option_to_remove.remove();
         }
 
+        function remove_tag(tag_object) {
+            event.preventDefault();
+            let tag_to_remove_link = $(tag_object);
+            let tag_to_remove = tag_to_remove_link.closest('.input-group');
+            tag_to_remove.remove();
+        }
+        
         function remove_snippet(option_object) {
             remove_option(option_object);
             update_all_snippets();
@@ -670,6 +690,9 @@
             // remove all existing output options, if any
             $('#all_' + skillet_type + '_output_options').empty();
 
+            // remove all existing tags, if any
+            $('#all_' + skillet_type + '_tags').empty();
+
             // set the snippet name
             $('#id_' + skillet_type + '_snippet_name').val(snippet_def['name']);
 
@@ -700,6 +723,11 @@
                     }
                 });
             }
+
+            // setup tags if present
+            $(snippet_def['tags']).each(function (index, tag_value) {
+               add_tag(tag_value, skillet_type);
+            });
 
             for (let attribute_name in snippet_def) {
                 let z = $('#id_' + skillet_type + '_snippet_' + attribute_name);
@@ -756,6 +784,20 @@
             // fix for #1 - do not add blank attributes
             if (snippet_def['outputs'] === []) {
                 delete snippet_def['outputs'];
+            }
+
+            // capture all configured tags
+            let new_tags = [];
+            $('#all_' + snippet_type + '_tags').find('[id^="tag_' + snippet_type + '_"]').each(
+                function (index, tag_div) {
+                    let tag_div_obj = $(tag_div);
+                    let tag_input = tag_div_obj.find('[data-tag_type="tag"]');
+                    let tag_value = tag_input.val();
+                    new_tags.push(tag_value);
+            });
+
+            if (new_tags.length > 0) {
+                snippet_def['tags'] = new_tags;
             }
         }
 
@@ -955,6 +997,36 @@
             opt_key_field.focus();
         }
 
+        function add_tag(tag_value, tag_type) {
+            let tag_base = $('#tag_base');
+            let all_tags = $('#all_' + tag_type + '_tags');
+            let new_tag = tag_base.clone();
+            let new_tag_value = new_tag.find('[data-tag_type="tag"]');
+
+            new_tag_value.val(tag_value);
+
+            all_tags.append(new_tag);
+
+            new_tag.prop('id', 'tag_' + tag_type + '_' + tag_value);
+            new_tag.css('display', '');
+        }
+
+        function add_new_tag(tag_type) {
+            /**
+             * Called from adding a new tag from the snippet modal 
+             */
+            event.preventDefault();
+            let tag_field = $('#id_' + tag_type + '_tag');
+
+            let tag_val = tag_field.val();
+
+            add_tag(tag_val, tag_type);
+
+            tag_field.val('');
+
+            tag_field.focus();
+        }
+        
         function add_output(output_name, output_key, output_value, output_type) {
             let output_base = $('#output_base');
             let all_outputs = $('#all_' + output_type + '_output_options');
@@ -1898,6 +1970,19 @@
    <span>filter_items</span>: <span data-output_attribute_type="filter"></span></code></pre>
     </div>
 
+    <!-- Tags Clone -->
+    <div class="input-group mb-3" id="tag_base" style="display: none">
+        <input type="text" value=""
+               data-tag_type="tag" class="form-control"/>
+        <div class="input-group-append">
+                <span class="input-group-text">
+                    <a href="#" onclick="remove_tag(this);">
+                        <i class="fa fa-minus"></i>
+                    </a>
+                </span>
+        </div>
+    </div>
+
     <!-- Add Label Modal -->
     <div class="modal fade" id="add_label_modal" tabindex="-1" role="dialog" aria-labelledby="add_label_label"
          aria-hidden="true">
@@ -2134,6 +2219,12 @@
                                aria-controls="panos_outputs"
                                aria-selected="false">Outputs</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="panos_tags_tab" data-toggle="tab" href="#panos_tags"
+                               role="tab"
+                               aria-controls="panos_tags"
+                               aria-selected="false">Tags</a>
+                        </li>
                     </ul>
                     <div class="tab-content" id="panos_snippet_tab">
                         <div class="tab-pane fade show active" id="panos_main" role="tabpanel"
@@ -2228,6 +2319,34 @@
                                 </p>
                             </div>
                         </div>
+
+                        <div class="tab-pane fade" id="panos_tags" role="tabpanel" aria-labelledby="panos_tags_tab">
+                            <div class="text-right mt-1">
+                                <a href="#panos_tags_help" data-toggle="collapse" title="Tags Help">
+                                    <i class="fa fa-question-circle"></i>
+                                </a>
+                            </div>
+                            <div class="card card-body collapse mt-2 mb-2 bg-light" id="panos_tags_help">
+                                Tags allow grouping like snippets together. This is useful for sorting outputs,
+                                including or excluding groups of snippets or adding additional information to the
+                                user.
+                            </div>
+                            <div class="form-group">
+                                <div class="input-group" id="all_panos_tags"></div>
+                                <div class="input-group" id="panos_tags_add_ui">
+                                    <input type="text" value="" placeholder="tag" class="form-control"
+                                           id="id_panos_tag">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">
+                                            <a href="#" onclick="add_new_tag('panos');">
+                                                <i class="fa fa-plus"></i>
+                                            </a>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
 
                         <div class="tab-pane fade" id="panos_outputs" role="tabpanel"
                              aria-labelledby="panos_outputs_tab">
@@ -2538,10 +2657,16 @@
                                aria-selected="false">When</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="pan_validation_messsages_tab" data-toggle="tab"
+                            <a class="nav-link" id="pan_validation_messages_tab" data-toggle="tab"
                                href="#pan_validation_messages" role="tab"
                                aria-controls="pan_validation_messages"
                                aria-selected="false">Messages</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="pan_validation_tags_tab" data-toggle="tab"
+                               href="#pan_validation_tags" role="tab"
+                               aria-controls="pan_validation_tags"
+                               aria-selected="false">Tags</a>
                         </li>
                     </ul>
                     <div class="tab-content" id="pan_validation_snippet_tab">
@@ -2676,6 +2801,34 @@
                                 </p>
                             </div>
                         </div>
+                        
+                        <div class="tab-pane fade" id="pan_validation_tags" role="tabpanel" aria-labelledby="pan_validation_tags_tab">
+                            <div class="text-right mt-1">
+                                <a href="#pan_validation_tags_help" data-toggle="collapse" title="Tags Help">
+                                    <i class="fa fa-question-circle"></i>
+                                </a>
+                            </div>
+                            <div class="card card-body collapse mt-2 mb-2 bg-light" id="pan_validation_tags_help">
+                                Tags allow grouping like snippets together. This is useful for sorting outputs,
+                                including or excluding groups of snippets or adding additional information to the
+                                user.
+                            </div>
+                            <div class="form-group">
+                                <div class="input-group" id="all_pan_validation_tags"></div>
+                                <div class="input-group" id="pan_validation_tags_add_ui">
+                                    <input type="text" value="" placeholder="tag" class="form-control"
+                                           id="id_pan_validation_tag">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">
+                                            <a href="#" onclick="add_new_tag('pan_validation');">
+                                                <i class="fa fa-plus"></i>
+                                            </a>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
                 <div class="modal-footer">
