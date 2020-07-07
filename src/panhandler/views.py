@@ -141,7 +141,8 @@ class ImportRepoView(PanhandlerAppFormView):
         url = workflow.get('url')
         repo_name = workflow.get('repo_name')
 
-        if not re.match(r'^[a-zA-Z0-9-_ \.]*$', repo_name):
+        # Fix for GL #34 - do not allow repo names that end in space . or _
+        if not re.match(r'^[a-zA-Z0-9-_ \.]*[a-zA-Z0-9]$', repo_name):
             print('Repository name is invalid!')
             messages.add_message(self.request, messages.ERROR, 'Invalid Repository Name')
             return HttpResponseRedirect('repos')
