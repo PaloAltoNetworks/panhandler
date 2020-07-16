@@ -1,0 +1,89 @@
+<!-- Test Skillet Modal -->
+<div class="modal fade" id="show_test_skillet_modal" tabindex="-1" role="dialog"
+     aria-labelledby="show_test_skillet_modal"
+     aria-hidden="true">
+    <div class="modal-dialog modal-xl" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="test_skillet_label">Test Skillet</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="overflow-y: auto">
+                <p class="card-text">
+                    This tool will allow you to step through the execution of this skillet snippet by snippet
+                    using the provided context. Each snippet can add to the context which will be
+                    passed to the next skillet. This is a great place to
+                    explore output capturing and other syntax options before saving your skillet.
+                </p>
+                <div class="form-row">
+                    <div class="form-group col-md-6">
+                        <label for="id_test_skillet_context">Context:</label>
+                        <textarea class="form-control" rows="10" id="id_test_skillet_context"></textarea>
+                        <p class="small muted text-right m-0">
+                            <a href="#" onclick="enlarge_text_area('id_test_skillet_context')">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                        </p>
+                        <p class="small text-muted">
+                            *Note the device configuration is always added to the context as the 'config' variable,
+                            however it is filtered out in this view for brevity.
+                        </p>
+                        <input type="hidden" id="id_test_skillet_results"/>
+                    </div>
+                    <div class="form-group col-md-6">
+                        <label for="id_test_skillet_outputs">Outputs:</label>
+                        <textarea class="form-control" rows="10" id="id_test_skillet_outputs"></textarea>
+                        <p class="small muted text-right m-0">
+                            <a href="#" onclick="enlarge_text_area('id_test_skillet_outputs')">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                        </p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_test_skillet_skip_to">Skip Ahead to Snippet:</label>
+                    <div class="input-group mb-3">
+                        <select id="id_test_skillet_skip_to" onchange="step_over_snippet_skip_to();">
+                            <option>None</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="id_test_skillet_next">Step Through Snippets:</label>
+                    <div class="input-group mb-3">
+                        <input type="text" value="" disabled="disabled"
+                               class="form-control disabled" id="id_test_skillet_next">
+                        <div class="input-group-append" id="start_over_skillet_button">
+                            <span class="input-group-text" title="Start Over">
+                                <a href="#" onclick="step_over_restart_skillet();">
+                                    <i class="fa fa-redo"></i>
+                                </a>
+                            </span>
+                        </div>
+                        <div class="input-group-append" id="step_over_next_button">
+                            <span class="input-group-text" title="Skip Next Snippet">
+                                <a href="#" onclick="step_over_skillet_next();">
+                                    <i class="fa fa-forward"></i>
+                                </a>
+                            </span>
+                        </div>
+                        <div class="input-group-append" id="step_over_skillet_button">
+                            <span class="input-group-text" title="Execute Next Snippet">
+                                <a href="#" onclick="step_over_skillet();">
+                                    <i class="fa fa-step-forward"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Dismiss</button>
+                </div>
+            </div>
+        </div>
+    </div>

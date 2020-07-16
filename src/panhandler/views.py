@@ -35,6 +35,7 @@ import yaml
 from django.conf import settings
 from django.contrib import messages
 from django.forms import Form
+from django.forms import HiddenInput
 from django.forms import fields
 from django.forms import widgets
 from django.http import HttpResponse
@@ -1063,7 +1064,7 @@ class ExecuteValidationSkilletView(ProvisionSnippetView):
 class ViewValidationResultsView(EditTargetView):
     header = 'Perform Validation - Step 2'
     title = 'Validation - Step 2'
-    template_name = 'pan_cnc/dynamic_form.html'
+    template_name = 'pan_cnc/panos_target_form.html'
 
     def get_header(self) -> str:
         workflow_name = self.request.session.get('workflow_name', None)
@@ -1144,9 +1145,13 @@ class ViewValidationResultsView(EditTargetView):
                                                      label=target_password_label,
                                                      initial=target_password)
 
+            debug_field = fields.CharField(initial='False', widget=HiddenInput())
+
             form.fields['TARGET_IP'] = target_ip_field
             form.fields['TARGET_USERNAME'] = target_username_field
             form.fields['TARGET_PASSWORD'] = target_password_field
+            form.fields['debug'] = debug_field
+
         else:
             self.title = 'PAN-OS XML Configuration to Validate'
             self.help_text = 'This form allows you to paste in a full configuration from a PAN-OS NGFW. This ' \
@@ -1195,6 +1200,8 @@ class ViewValidationResultsView(EditTargetView):
         # let's grab the current workflow values (values saved from ALL forms in this app
         jinja_context.update(self.get_workflow())
 
+        debug = self.request.POST.get('debug', False)
+
         if mode == 'online':
             # if we are in a workflow, then the input form was skipped and we are using the
             # values previously saved!
@@ -1233,6 +1240,9 @@ class ViewValidationResultsView(EditTargetView):
 
             if err_condition:
                 return self.form_invalid(form)
+
+            if debug == 'True':
+                return self.debug_skillet(target_ip, target_username, target_password, meta, form)
 
             try:
                 print(f'checking {target_ip} {target_username}')
