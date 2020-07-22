@@ -1538,14 +1538,19 @@ class SkilletTestView(CNCBaseAuth, View):
 
         skillet = sl.create_skillet(skillet_dict)
 
-        if not str(skillet.type).startswith('pan'):
+        if not str(skillet.type).startswith('pan') and not str(skillet.type) == 'template':
             response = HttpResponse(json.dumps({"error": "Invalid Skillet type"}), content_type="application/json")
             return response
 
         results = dict()
         output = dict()
 
-        if len(skillet_dict['snippets']) == 1:
+        # allow template type skillets in the debugger
+        if skillet.type == 'template':
+            output = skillet.execute(context)
+
+        # special handling for pan type skillets
+        elif str(skillet.type).startswith('pan') and len(skillet_dict['snippets']) == 1:
             # this is a single snippet execution - check for dangerous commands
             snippet = skillet.get_snippets()[0]
             if not snippet.should_execute(context):
@@ -1579,8 +1584,10 @@ class SkilletTestView(CNCBaseAuth, View):
                     print(pe)
                     output['error'] = str(pe)
         else:
-            try:
 
+            try:
+                # potentially dangerous to allow multi-snippet pan type skillets to execute
+                # FIXME - verify where this is actually useful :-/
                 output = skillet.execute(context)
 
             except PanoplyException as pe:

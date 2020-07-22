@@ -513,7 +513,11 @@
                 snippet_def['cmd'] = 'set';
                 snippet_def['xpath'] = '';
                 snippet_def['element'] = '';
+
+            } else if(skillet['type'] === 'template') {
+                snippet_def['element'] = '';
             }
+
             if (skillet_snippets.findIndex(i => i.name === snippet_name) === -1) {
                 skillet_snippets.push(snippet_def);
                 add_snippet(snippet_name);
@@ -746,7 +750,6 @@
             let snippet_name = snippet_name_input.val();
 
             let snippet_def = get_snippet_definition(snippet_name);
-
             for (let attribute_name in snippet_def) {
                 let z = $('#id_' + snippet_type + '_snippet_' + attribute_name);
                 if (z.length) {
@@ -1439,14 +1442,24 @@
                     doc.css('cursor', '');
                     let context = JSON.stringify(data['context'], null, '  ');
                     let output = JSON.stringify(data['output'], null, '  ');
+
                     if (typeof(next_snippet) !== 'undefined') {
                         id_test_skillet_next_input.val(next_snippet['name']);
                     }
+
                     console.log(context);
                     let context_input = $('#id_test_skillet_context');
                     let outputs_input = $('#id_test_skillet_outputs');
+
+                    let err = JSON.stringify(data['error'], null, '   ');
+
+                    if (typeof(err) !== 'undefined') {
+                        outputs_input.val(err);
+                    } else {
+                        outputs_input.val(output);
+                    }
+
                     context_input.val(context);
-                    outputs_input.val(output);
                     context_input.effect('highlight');
                     outputs_input.effect('highlight');
                 });
@@ -2527,7 +2540,7 @@
     <div class="modal fade" id="edit_template_snippet_modal" tabindex="-1" role="dialog"
          aria-labelledby="edit_template_snippet_label"
          aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="edit_template_snippet_modal_label">Edit Template Snippet</h5>
