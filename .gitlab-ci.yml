@@ -32,6 +32,10 @@ docker-build:
 test:
   image: python:3.8-slim
   stage: test
+
+  variables:
+    CNC_TEST: 'TRUE'
+
   before_script:
     - python -V
     - python3 -m venv env
