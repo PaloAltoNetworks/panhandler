@@ -42,7 +42,7 @@ test:
     - source env/bin/activate
     - apt update && apt-get install -y --no-install-recommends git
     - pip install --upgrade pip
-    - pip install -r requirements.txt
+    - pip install --upgrade -r requirements.txt
     - pip install tox flake8
 
   script:
