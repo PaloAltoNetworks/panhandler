@@ -807,7 +807,10 @@ class UpdateSkilletView(PanhandlerAppFormView):
 
         workflow = self.get_workflow()
         local_branch = workflow.get('local_branch_name', None)
-        skillet_json = workflow.get('skillet_contents', {})
+
+        # fix for https://gitlab.com/panw-gse/as/panhandler/-/issues/50
+        skillet_json = self.request.POST.get('skillet_contents', {})
+
         commit_message = workflow.get('commit_message', None)
 
         try:
