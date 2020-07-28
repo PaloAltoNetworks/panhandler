@@ -134,3 +134,14 @@ views:
   - name: push
     class: PushGitRepositoryView
 
+  - name: copy_skillet
+    class: CopySkilletView
+    parameters:
+      - repo_name
+      - skillet_name
+
+  - name: delete_skillet
+    class: DeleteSkilletView
+    parameters:
+      - repo_name
+      - skillet_name

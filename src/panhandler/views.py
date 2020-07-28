@@ -410,7 +410,7 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         repo_name = kwargs['repo_name']
-        branch = kwargs['branch']
+        branch = kwargs.get('branch', None)
         user_dir = os.path.expanduser('~')
         repo_dir = os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
@@ -657,30 +657,58 @@ class CreateSkilletView(PanhandlerAppFormView):
             return HttpResponseRedirect('/panhandler/repos')
 
         workflow = self.get_workflow()
+        create_method = workflow.get('skillet_create_method', 'menu')
+
         local_branch = workflow.get('local_branch_name', None)
         commit_message = workflow.get('commit_message', None)
-        skillet_name = workflow.get('skillet_name', None)
-        skillet_label = workflow.get('skillet_label', None)
-        skillet_type = workflow.get('skillet_type', None)
-        skillet_description = workflow.get('skillet_description', None)
 
-        # let's cheat and grab a snippets list from the context - Skillet Builder tools can populate this for us
-        skillet_snippets = workflow.get('snippets', list())
+        if create_method == 'menu':
+            skillet_name = workflow.get('skillet_name', None)
+            skillet_label = workflow.get('skillet_label', None)
+            skillet_type = workflow.get('skillet_type', None)
+            skillet_description = workflow.get('skillet_description', None)
 
-        collection_name = workflow.get('collection_name', 'Unknown')
+            # let's cheat and grab a snippets list from the context - Skillet Builder tools can populate this for us
+            skillet_snippets = workflow.get('snippets', list())
 
-        new_skillet = dict()
-        new_skillet['name'] = skillet_name
-        new_skillet['label'] = skillet_label
-        new_skillet['description'] = skillet_description
-        new_skillet['type'] = skillet_type
+            collection_name = workflow.get('collection_name', 'Unknown')
 
-        new_skillet['labels'] = {
-            'collection': collection_name
-        }
+            new_skillet = dict()
+            new_skillet['name'] = skillet_name
+            new_skillet['label'] = skillet_label
+            new_skillet['description'] = skillet_description
+            new_skillet['type'] = skillet_type
 
-        new_skillet['variables'] = list()
-        new_skillet['snippets'] = skillet_snippets
+            new_skillet['labels'] = {
+                'collection': collection_name
+            }
+
+            new_skillet['variables'] = list()
+            new_skillet['snippets'] = skillet_snippets
+
+        elif create_method == 'raw':
+            new_skillet_yaml = workflow.get('raw_skillet_content', None)
+            try:
+                if new_skillet_yaml is not None:
+                    new_skillet = yaml.safe_load(new_skillet_yaml)
+                    skillet_name = new_skillet.get('name', 'Unknown Skillet')
+
+                else:
+                    messages.add_message(self.request, messages.ERROR,
+                                         'Could not Create Skillet, Could not find YAML')
+                    return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+
+            except yaml.YAMLError as ye:
+                print(ye)
+                messages.add_message(self.request, messages.ERROR,
+                                     'Could not Create Skillet, Could not parse YAML')
+                return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+
+        else:
+            # unknown create skillet option ?
+            messages.add_message(self.request, messages.ERROR,
+                                 'Could not Create Skillet, Process Error')
+            return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
 
         user_dir = os.path.expanduser('~/.pan_cnc')
         snippets_dir = os.path.join(user_dir, 'panhandler/repositories')
@@ -815,6 +843,10 @@ class UpdateSkilletView(PanhandlerAppFormView):
 
         try:
             skillet_dict = json.loads(skillet_json)
+
+            # do not trust this coming from the user
+            skillet_dict['snippet_path'] = skillet_path
+
             skillet_content = yaml.safe_dump(skillet_dict)
 
         except (ScannerError, ValueError):
@@ -1680,3 +1712,82 @@ class PushGitRepositoryView(CNCBaseAuth, View):
         json_output = json.dumps(output)
         response = HttpResponse(json_output, content_type="application/json")
         return response
+
+
+class CopySkilletView(CNCBaseAuth, RedirectView):
+    app_dir = 'panhandler'
+
+    def get_redirect_url(self, *args, **kwargs):
+        skillet_name = kwargs['skillet_name']
+        repo_name = kwargs['repo_name']
+
+        skillet_dict = db_utils.load_skillet_by_name(skillet_name=skillet_name)
+
+        skillet_meta = snippet_utils.get_snippet_metadata(skillet_name, self.app_dir)
+
+        try:
+
+            self.save_value_to_workflow('skillet_name', f'{skillet_name}_duplicate')
+            self.save_value_to_workflow('skillet_label', skillet_dict['label'])
+            self.save_value_to_workflow('skillet_description', skillet_dict['description'])
+            self.save_value_to_workflow('skillet_type', skillet_dict['type'])
+
+            self.save_value_to_workflow('snippets', skillet_dict['snippets'])
+
+            self.save_value_to_workflow('raw_skillet_content', skillet_meta)
+
+        except KeyError as ke:
+            print(f'Error copying skillet into context: keyerror: {ke}')
+            messages.add_message(self.request, messages.ERROR, 'Could not copy skillet into context!')
+        except ValueError as ve:
+            print(f'Error copying skillet into context: JSON Error: {ve}')
+            messages.add_message(self.request, messages.ERROR, 'Could not copy skillet into context!')
+
+        messages.add_message(self.request, messages.SUCCESS, 'Skillet Copied successfully')
+        return f'/panhandler/repo_detail/{repo_name}'
+
+
+class DeleteSkilletView(UpdateRepoView):
+    app_dir = 'panhandler'
+
+    def get_redirect_url(self, *args, **kwargs):
+        skillet_name = kwargs['skillet_name']
+        repo_name = kwargs['repo_name']
+
+        redir_url = f'/panhandler/repo_detail/{repo_name}'
+
+        skillet = db_utils.load_skillet_by_name(skillet_name)
+
+        skillet_path_str = skillet.get('snippet_path', None)
+
+        if skillet_path_str is None:
+            print(f'Error deleting skillet!')
+            messages.add_message(self.request, messages.ERROR, 'Could not delete skillet!')
+            return redir_url
+
+        skillet_path = Path(skillet_path_str)
+
+        user_dir = os.path.expanduser('~/.pan_cnc')
+        snippets_dir = os.path.join(user_dir, 'panhandler/repositories')
+        repo_dir = os.path.join(snippets_dir, repo_name)
+
+        repo_path = Path(repo_dir)
+
+        if repo_path not in skillet_path.parents:
+            print(f'Error deleting skillet!')
+            messages.add_message(self.request, messages.ERROR, 'Could not delete skillet!')
+            return redir_url
+
+        # catch meta-cnc.yaml and .meta-cnc.yml
+        meta_name = '.meta-cnc.yaml'
+        for meta_file in skillet_path.glob('.meta-cnc.y*'):
+            meta_file.unlink()
+            meta_name = meta_file.name
+
+        messages.add_message(self.request, messages.SUCCESS, 'Skillet Deleted successfully')
+
+        db_utils.refresh_skillets_from_repo(repo_name)
+
+        git_utils.commit_local_changes(repo_dir, f'Deleted {skillet_name}', os.path.join(skillet_path_str, meta_name))
+
+        return super().get_redirect_url(*args, **kwargs)

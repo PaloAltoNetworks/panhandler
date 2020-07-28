@@ -1150,6 +1150,8 @@
             // always grab latest labels
             update_all_labels();
 
+            delete skillet['snippet_path'];
+
             skillet['variables'] = skillet_variables;
             skillet['snippets'] = skillet_snippets;
 
@@ -1187,6 +1189,7 @@
             let id_test_skillet_next_input = $('#id_test_skillet_next');
             id_test_skillet_next_input.val(next_snippet['name']);
             $('#step_over_skillet_button').show();
+            $('#step_over_next_button').show();
 
             // set up the skip ahead dropdown
             let id_test_skillet_skip = $('#id_test_skillet_skip_to');
@@ -1338,6 +1341,7 @@
              */
             current_snippet_index = 0;
             $('#step_over_skillet_button').show();
+            $('#step_over_next_button').show();
             let id_test_skillet_next_input = $('#id_test_skillet_next');
             let next_snippet = skillet_snippets[current_snippet_index];
             id_test_skillet_next_input.val(next_snippet['name']);
@@ -1363,6 +1367,7 @@
 
             if (typeof next_snippet === 'undefined') {
                 $('#step_over_skillet_button').hide();
+                $('#step_over_next_button').hide();
                 id_test_skillet_next_input.val('Completed');
                 current_snippet_index = 0;
                 return;
@@ -1387,6 +1392,7 @@
             let outputs_input = $('#id_test_skillet_outputs');
             outputs_input.val('Skipped ahead to ' + next_snippet['name']);
             $('#step_over_skillet_button').show();
+            $('#step_over_next_button').show();
         }
 
         function step_over_skillet() {
@@ -1427,6 +1433,7 @@
             let next_snippet = skillet_snippets[current_snippet_index];
 
             if (typeof next_snippet === 'undefined') {
+                $('#step_over_next_button').hide();
                 $('#step_over_skillet_button').hide();
                 id_test_skillet_next_input.val('Completed');
                 current_snippet_index = 0;
@@ -1614,6 +1621,22 @@
             });
         }
 
+        function save_raw_skillet() {
+            /**
+             *  Used to save raw skillet data from a text input instead of having to use the menu structures
+             */
+            let raw_skillet_input = $('#skillet_json_output');
+            let json_output_control = $('#id_skillet_contents');
+
+            json_output_control.val(raw_skillet_input.val());
+            let doc = $(document.documentElement);
+            doc.css('cursor', 'progress');
+
+            $('#raw_skillet_save_button').prop('disabled', true);
+            $('#submit_button').prop("disabled", true);
+            $('#dynamic_form').submit();
+
+        }
         function save_skillet() {
             /**
              * uploads the skillet json to Panhandler
@@ -1762,6 +1785,9 @@
         <div class="card-header">
             Skillet Editor
             <div class="float-right">
+                <a href="#" onclick="show_skillet();" title="Edit Raw Skillet">
+                    <i class="fas fa-edit text-primary mr-1"></i>
+                </a>
                 {% if view.help_text and view_help_text != '' %}
                     <a href="#" data-toggle="modal" data-target="#helpTextModal" title="Help">
                         <i class="fas fa-question-circle text-primary mr-1"></i>
@@ -2191,7 +2217,7 @@
     <div class="modal fade" id="show_skillet_modal" tabindex="-1" role="dialog"
          aria-labelledby="show_skillet_label"
          aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="show_skillet_label">Skillet JSON</h5>
@@ -2205,7 +2231,8 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="save_skillet()"
+                    <button type="button" id="raw_skillet_save_button" class="btn btn-primary"
+                            onclick="save_raw_skillet()"
                             data-dismiss="modal">Save
                     </button>
                 </div>

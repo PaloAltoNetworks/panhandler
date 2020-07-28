@@ -122,9 +122,9 @@
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Label</th>
-                    <th scope="col">View</th>
-                    <th scope="col">Description</th>
                     <th scope="col">Type</th>
+                    <th scope="col">Description</th>
+                    <th scope="col">Controls</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -138,21 +138,37 @@
                                 <a href="/panhandler/skillet/{{ s.name }}">{{ s.label }}</a>
                             {% endif %}
                         </td>
+                        <td>{{ s.type }}</td>
+                        <td>{{ s.description }}</td>
                         <td class="nowrap text-nowrap">
-                            <a href="/debug/{{ app_dir }}/{{ s.name }}" class="d-inline">
-                                <i class="fas fa-cog text-muted"></i>
-                            </a>
-                            &nbsp;
-                            <a href="/panhandler/edit_skillet/{{ repo_detail.name }}/{{ s.name }}" class="d-inline">
-                                <i class="fas fa-edit text-muted"></i>
-                            </a>
-                            &nbsp;
-                            <a href="/panhandler/favorite_skillet/{{ s.name }}" class="d-inline">
+                            <a href="/panhandler/favorite_skillet/{{ s.name }}" class="d-inline mr-1">
                                 <i class="fas fa-heart text-muted"></i>
                             </a>
+                            <a href="/debug/{{ app_dir }}/{{ s.name }}" class="d-inline mr-1"
+                               title="View Skillet YAML">
+                                <i class="fas fa-cog text-muted"></i>
+                            </a>
+                            <a href="/panhandler/edit_skillet/{{ repo_detail.name }}/{{ s.name }}"
+                               class="d-inline mr-1"
+                               title="Edit Skillet">
+                                <i class="fas fa-edit text-muted"></i>
+                            </a>
+                            <a href="/panhandler/copy_skillet/{{ repo_detail.name }}/{{ s.name }}"
+                               class="d-inline mr-1"
+                               title="Copy Skillet Contents into Context">
+                                <i class="fas fa-clone text-muted"></i>
+                            </a>
+                            <a href="/panhandler/favorite_skillet/{{ s.name }}" class="d-inline mr-1"
+                               title="Add to Favorites">
+                                <i class="fas fa-heart text-muted"></i>
+                            </a>
+                            <a href="/panhandler/delete_skillet/{{ repo_detail.name }}/{{ s.name }}"
+                               class="d-inline"
+                               title="Delete Skillet">
+                                <i class="fas fa-trash text-muted"></i>
+                            </a>
+
                         </td>
-                        <td>{{ s.description }}</td>
-                        <td>{{ s.type }}</td>
                     </tr>
                 {% endfor %}
                 </tbody>
