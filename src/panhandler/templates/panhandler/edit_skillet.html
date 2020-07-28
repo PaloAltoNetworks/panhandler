@@ -258,16 +258,19 @@
             let new_variable_value = $('#id_variable_type');
             let new_variable_default = $('#id_variable_default');
             let new_variable_description = $('#id_variable_description');
+            let new_variable_help = $('#id_variable_help_text');
 
             let var_name = new_variable_key.val();
             let var_type_hint = new_variable_value.val();
             let var_default = new_variable_default.val();
             let var_description = new_variable_description.val();
+            let var_help_text = new_variable_help.val();
 
             new_variable_key.val('');
             new_variable_value.val('text');
             new_variable_description.val('');
             new_variable_default.val('');
+            new_variable_help.val('');
 
             let edit_var_op = $('#id_variable_operation').val();
 
@@ -284,6 +287,7 @@
                     variable_def['default'] = var_default;
                     variable_def['description'] = var_description;
                     variable_def['type_hint'] = var_type_hint;
+                    variable_def['help_text'] = var_help_text;
 
                     get_variable_type_hint_options(variable_def);
                     return;
@@ -295,6 +299,7 @@
                     'type_hint': var_type_hint,
                     'description': var_description,
                     'default': var_default,
+                    'help_text': var_help_text,
                 }
             }
 
@@ -661,6 +666,7 @@
             $('#id_variable_description').val(variable_def['description']);
             $('#id_variable_default').val(variable_def['default']);
             $('#id_variable_type').val(variable_def['type_hint']);
+            $('#id_variable_help_text').val(variable_def['help_text']);
 
             let edit_variable_modal = $('#edit_variable_modal');
 
@@ -1173,6 +1179,11 @@
             current_snippet_index = 0;
             let next_snippet = skillet_snippets[current_snippet_index];
 
+            if (typeof(next_snippet) === 'undefined') {
+                alert('No Snippets found for debug');
+                return;
+            }
+
             let id_test_skillet_next_input = $('#id_test_skillet_next');
             id_test_skillet_next_input.val(next_snippet['name']);
             $('#step_over_skillet_button').show();
@@ -1326,6 +1337,7 @@
              * Reset the current snippet to test in the test_skillet modal
              */
             current_snippet_index = 0;
+            $('#step_over_skillet_button').show();
             let id_test_skillet_next_input = $('#id_test_skillet_next');
             let next_snippet = skillet_snippets[current_snippet_index];
             id_test_skillet_next_input.val(next_snippet['name']);
@@ -2954,7 +2966,7 @@
                         <div class="input-group-append" id="step_over_skillet_button">
                             <span class="input-group-text" title="Execute Next Snippet">
                                 <a href="#" onclick="step_over_skillet();">
-                                    <i class="fa fa-step-forward"></i>
+                                    <i class="fa fa-play"></i>
                                 </a>
                             </span>
                         </div>
