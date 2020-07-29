@@ -1481,7 +1481,7 @@ class AddSkilletToFavoritesView(PanhandlerAppFormView):
         workflow = self.get_workflow()
 
         try:
-            skillet_name = workflow['skillet_name']
+            skillet_name = self.request.POST['skillet_name']
             favorites = workflow['favorites']
 
             # FIXME - should no longer be deleting skillets due to no favorites ...
