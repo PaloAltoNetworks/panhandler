@@ -290,6 +290,11 @@
                     variable_def['help_text'] = var_help_text;
 
                     get_variable_type_hint_options(variable_def);
+
+                    // ensure we update the summary view as well in case description has changed
+                    let this_var_div = $('#variable_' + var_name);
+                    this_var_div.find('[data-variable_attribute="type"]').val(var_description);
+
                     return;
                 }
             } else {
