@@ -186,13 +186,10 @@ class ImportRepoView(PanhandlerAppFormView):
                 messages.add_message(self.request, messages.INFO, 'Added the following SSH Host key to known_hosts: '
                                                                   f'{message}')
 
-        if 'github' in url.lower():
-            details = git_utils.get_repo_upstream_details(repo_name, url, self.app_dir)
-            if 'clone_url' in details:
-                clone_url = details['clone_url']
-
         try:
-            message = git_utils.clone_repository(repo_dir, repo_name, clone_url)
+            # fix for $56 - do not use github api for clone_url as it always defaults to HTTPS
+            # instead just use the url supplied by the user
+            message = git_utils.clone_repository(repo_dir, repo_name, url)
             print(message)
         except RepositoryPermissionsException:
             messages.add_message(self.request, messages.ERROR,
@@ -212,9 +209,11 @@ class ImportRepoView(PanhandlerAppFormView):
 
             try:
                 repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+
             except RepositoryPermissionsException:
                 messages.add_message(self.request, messages.ERROR,
                                      'SSH Permissions Error. Please add the Deploy key to the upstream repository')
+
                 return HttpResponseRedirect('/ssh_key')
 
             repos.append(repo_detail)
