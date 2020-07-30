@@ -141,7 +141,8 @@
                         <td>{{ s.type }}</td>
                         <td>{{ s.description }}</td>
                         <td class="nowrap text-nowrap">
-                            <a href="/panhandler/favorite_skillet/{{ s.name }}" class="d-inline mr-1">
+                            <a href="/panhandler/favorite_skillet/{{ s.name }}" class="d-inline mr-1"
+                                title="Add to Favorites">
                                 <i class="fas fa-heart text-muted"></i>
                             </a>
                             <a href="/debug/{{ app_dir }}/{{ s.name }}" class="d-inline mr-1"
@@ -157,10 +158,6 @@
                                class="d-inline mr-1"
                                title="Copy Skillet Contents into Context">
                                 <i class="fas fa-clone text-muted"></i>
-                            </a>
-                            <a href="/panhandler/favorite_skillet/{{ s.name }}" class="d-inline mr-1"
-                               title="Add to Favorites">
-                                <i class="fas fa-heart text-muted"></i>
                             </a>
                             <a href="/panhandler/delete_skillet/{{ repo_detail.name }}/{{ s.name }}"
                                class="d-inline"
