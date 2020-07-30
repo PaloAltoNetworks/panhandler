@@ -51,7 +51,6 @@ from skilletlib.exceptions import PanoplyException
 from skilletlib.exceptions import SkilletLoaderException
 from skilletlib.skillet.pan_validation import PanValidationSkillet
 from skilletlib.skillet.template import TemplateSkillet
-from skilletlib.snippet.panos import PanosSnippet
 from yaml.scanner import ScannerError
 
 from cnc.models import RepositoryDetails
@@ -177,14 +176,14 @@ class ImportRepoView(PanhandlerAppFormView):
         # if this is an SSH based url, ensure the host key is known
         if clone_url.startswith('git@') or clone_url.startswith('ssh'):
             is_known, message = git_utils.ensure_known_host(clone_url)
-            if not is_known:
+            if is_known is False:
                 messages.add_message(self.request, messages.ERROR,
                                      f'Could not verify SSH Host Key! {message}')
 
                 return HttpResponseRedirect('/ssh_key')
-            else:
-                messages.add_message(self.request, messages.INFO, 'Added the following SSH Host key to known_hosts: '
-                                                                  f'{message}')
+            elif is_known is True:
+                messages.add_message(self.request, messages.SUCCESS, 'Added the following SSH Host key to known_hosts: '
+                                                                     f'{message}')
 
         try:
             # fix for $56 - do not use github api for clone_url as it always defaults to HTTPS
