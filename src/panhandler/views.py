@@ -1603,7 +1603,8 @@ class SkilletTestView(CNCBaseAuth, View):
                     output['error'] = str(pe)
 
                 metadata = snippet.render_metadata(context)
-                output['debug'] = 'Destructive action that would have been taken captured as metadata instead'
+                output['debug'] = 'No config changes pushed to the device during testing, ' \
+                                  'debug only showing rendered output'
                 output['metadata'] = metadata
 
             else:
