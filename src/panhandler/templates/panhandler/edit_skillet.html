@@ -90,6 +90,37 @@
             source_text_input.val(text_area_input.val());
         }
 
+        function update_pan_validation_snippet() {
+
+            let snippet_name_input = $('#id_pan_validation_snippet_name');
+            let snippet_cmd_input = $('#id_pan_validation_snippet_cmd');
+
+            let snippet_name = snippet_name_input.val();
+            let cmd = snippet_cmd_input.val();
+
+            let snippet_def = get_snippet_definition(snippet_name);
+
+            snippet_def['cmd'] = cmd;
+
+            // set options for the given cmd
+            switch (cmd) {
+
+                case 'cli':
+                    snippet_def['cmd_str'] = $('#id_pan_validation_snippet_cmd_cmd_str').val();
+
+                    extract_variables(snippet_def['cmd_str']);
+                    break;
+
+                case 'op':
+                    snippet_def['cmd_str'] = $('#id_pan_validation_snippet_cmd_op').val();
+                    snippet_def['parse_result'] = $('#id_pan_validation_snippet_op_parse_result').val();
+                    extract_variables(snippet_def['cmd_str']);
+                    break;
+            }
+
+            update_snippet('pan_validation');
+        }
+
         function update_panos_snippet() {
 
             let snippet_name_input = $('#id_panos_snippet_name');
@@ -98,7 +129,7 @@
 
             let snippet_name = snippet_name_input.val();
             let cmd = snippet_cmd_input.val();
-            
+
             let when_conditional = snippet_when_input.val();
             let snippet_def = get_snippet_definition(snippet_name);
             // let snippet_def = {};
@@ -233,7 +264,7 @@
             if (capture_key === 'capture_list') {
                 opt_filter_field.closest('.form-group').show();
             } else {
-               opt_filter_field.closest('.form-group').hide();
+                opt_filter_field.closest('.form-group').hide();
                 opt_filter_field.val('');
             }
 
@@ -525,7 +556,7 @@
                 snippet_def['xpath'] = '';
                 snippet_def['element'] = '';
 
-            } else if(skillet['type'] === 'template') {
+            } else if (skillet['type'] === 'template') {
                 snippet_def['element'] = '';
             }
 
@@ -574,7 +605,7 @@
             let tag_to_remove = tag_to_remove_link.closest('.input-group');
             tag_to_remove.remove();
         }
-        
+
         function remove_snippet(option_object) {
             remove_option(option_object);
             update_all_snippets();
@@ -742,7 +773,7 @@
 
             // setup tags if present
             $(snippet_def['tags']).each(function (index, tag_value) {
-               add_tag(tag_value, skillet_type);
+                add_tag(tag_value, skillet_type);
             });
 
             for (let attribute_name in snippet_def) {
@@ -757,6 +788,28 @@
             setup_snippet_modal(snippet_def, 'rest');
         }
 
+        function setup_pan_validation_snippet(snippet_def) {
+
+            setup_snippet_modal(snippet_def, 'pan_validation');
+            switch (snippet_def['cmd']) {
+
+                case 'cli':
+                    $('#id_pan_validation_snippet_cmd_cmd_str').val(snippet_def['cmd_str']);
+                    break;
+
+                case 'op':
+                    $('#id_pan_validation_snippet_cmd_op').val(snippet_def['cmd_str']);
+
+                    if (typeof snippet_def['parse_result'] === 'undefined') {
+                        snippet_def['parse_result'] = 'True';
+                    }
+
+                    $('#id_pan_validation_snippet_op_parse_result').val(snippet_def['parse_result']);
+                    break;
+            }
+
+        }
+
         function update_snippet(snippet_type) {
             let snippet_name_input = $('#id_' + snippet_type + '_snippet_name');
             let snippet_name = snippet_name_input.val();
@@ -765,7 +818,6 @@
             for (let attribute_name in snippet_def) {
                 let z = $('#id_' + snippet_type + '_snippet_' + attribute_name);
                 if (z.length) {
-                    let curent_value = z.val();
                     snippet_def[attribute_name] = z.val();
 
                     extract_variables(snippet_def[attribute_name]);
@@ -809,7 +861,7 @@
                     let tag_input = tag_div_obj.find('[data-tag_type="tag"]');
                     let tag_value = tag_input.val();
                     new_tags.push(tag_value);
-            });
+                });
 
             if (new_tags.length > 0) {
                 snippet_def['tags'] = new_tags;
@@ -833,7 +885,7 @@
             } else {
                 $('#id_panos_snippet_output_type').val('xml');
             }
-            
+
             if ((typeof snippet_def['when'] !== 'undefined') && (snippet_def['when'] !== '')) {
                 $('#id_panos_snippet_when').val(snippet_def['when']);
             } else {
@@ -894,6 +946,9 @@
             if (is_pan_type_skillet()) {
                 setup_panos_snippet(snippet_def);
                 $('#edit_panos_snippet_modal').modal();
+            } else if (skillet['type'] === 'pan_validation') {
+                setup_pan_validation_snippet(snippet_def);
+                $('#edit_pan_validation_snippet_modal').modal();
             } else if (skillet['type'] === 'rest') {
                 setup_rest_snippet(snippet_def);
                 $('#edit_rest_snippet_modal').modal();
@@ -1028,7 +1083,7 @@
 
         function add_new_tag(tag_type) {
             /**
-             * Called from adding a new tag from the snippet modal 
+             * Called from adding a new tag from the snippet modal
              */
             event.preventDefault();
             let tag_field = $('#id_' + tag_type + '_tag');
@@ -1041,7 +1096,7 @@
 
             tag_field.focus();
         }
-        
+
         function add_output(output_name, output_key, output_value, output_type) {
             let output_base = $('#output_base');
             let all_outputs = $('#all_' + output_type + '_output_options');
@@ -1104,7 +1159,7 @@
                     add_filtered_output(opt_name, opt_key, opt_val, filter_expression, output_type);
                     opt_filter_field.val('');
                 } else {
-                   add_output(opt_name, opt_key, opt_val, output_type);
+                    add_output(opt_name, opt_key, opt_val, output_type);
                 }
 
             } else {
@@ -1187,7 +1242,7 @@
             current_snippet_index = 0;
             let next_snippet = skillet_snippets[current_snippet_index];
 
-            if (typeof(next_snippet) === 'undefined') {
+            if (typeof (next_snippet) === 'undefined') {
                 alert('No Snippets found for debug');
                 return;
             }
@@ -1204,7 +1259,7 @@
             $.each(skillet_snippets, function (i, item) {
                 $('#id_test_skillet_skip_to').append($('<option>', {
                     value: item.name,
-                    text : item.name,
+                    text: item.name,
                 }));
             });
 
@@ -1220,7 +1275,7 @@
             if (context_object.val() !== '') {
                 try {
                     initial_context = JSON.parse(context_object.val());
-                } catch(e) {
+                } catch (e) {
                     initial_context = {};
                 }
             }
@@ -1243,7 +1298,7 @@
             }
 
             $.each(skillet_variables, function (index, v) {
-                console.log('checking ' + v.name );
+                console.log('checking ' + v.name);
                 initial_context[v.name] = v.default;
             });
 
@@ -1468,7 +1523,7 @@
                     let context = JSON.stringify(data['context'], null, '  ');
                     let output = JSON.stringify(data['output'], null, '  ');
 
-                    if (typeof(next_snippet) !== 'undefined') {
+                    if (typeof (next_snippet) !== 'undefined') {
                         id_test_skillet_next_input.val(next_snippet['name']);
                     }
 
@@ -1478,7 +1533,7 @@
 
                     let err = JSON.stringify(data['error'], null, '   ');
 
-                    if (typeof(err) !== 'undefined') {
+                    if (typeof (err) !== 'undefined') {
                         outputs_input.val(err);
                     } else {
                         outputs_input.val(output);
@@ -1502,7 +1557,7 @@
             let snippet_name = '';
             if (is_pan_type_skillet()) {
                 snippet_name = $('#id_panos_snippet_name').val();
-            } else if(skillet['type'] === 'pan-validation') {
+            } else if (skillet['type'] === 'pan-validation') {
                 snippet_name = $('#id_pan_validation_snippet_name').val();
             } else {
                 doc.css('cursor', '');
@@ -1530,7 +1585,7 @@
             let test_skillet = skillet;
             let snippet = get_snippet_definition(snippet_name);
 
-            if (! (['get', 'show', 'parse', 'op'].indexOf(snippet['cmd']) >= 0)) {
+            if (!(['get', 'show', 'parse', 'op'].indexOf(snippet['cmd']) >= 0)) {
                 doc.css('cursor', '');
                 alert('Snippet Debug only supported for get, show, and parse commands');
                 return false;
@@ -1567,11 +1622,10 @@
         function cancel_test_snippet() {
 
             let snippet_name = '';
-            if (is_pan_type_skillet())
-            {
+            if (is_pan_type_skillet()) {
                 snippet_name = $('#id_panos_snippet_name').val();
             } else {
-               snippet_name = $('id_pan_validation_snippet_name') .val();
+                snippet_name = $('id_pan_validation_snippet_name').val();
             }
 
             edit_snippet_by_name(snippet_name);
@@ -1643,6 +1697,7 @@
             $('#dynamic_form').submit();
 
         }
+
         function save_skillet() {
             /**
              * uploads the skillet json to Panhandler
@@ -2001,7 +2056,7 @@
     <!-- Output Definitions Clone -->
     <div id="output_base" style="display: none" class="bg-light mb-0 w-100 mt-1 p-1">
         <div class="float-right">
-             <a href="#" class="p2" onclick="edit_output(this);">
+            <a href="#" class="p2" onclick="edit_output(this);">
                 <i class="fa fa-edit"></i>
             </a>
             <a href="#" class="p2" onclick="remove_output(this);">
@@ -2015,7 +2070,7 @@
     <!-- Filtered Output Definitions Clone OLD -->
     <div id="filtered_output_base" style="display: none" class="bg-light mb-0 w-100 mt-1 p-1">
         <div class="float-right">
-             <a href="#" class="p2" onclick="edit_output(this);">
+            <a href="#" class="p2" onclick="edit_output(this);">
                 <i class="fa fa-edit"></i>
             </a>
             <a href="#" class="p2" onclick="remove_output(this);">
@@ -2413,19 +2468,19 @@
                                     <i class="fa fa-question-circle"></i>
                                 </a>
                             </div>
-                                <div class="card card-body collapse mt-2 mb-2 bg-light" id="panos_outputs_help">
-                                    Outputs parse the data returned from the snippet. How that data is parsed depends on
-                                    the
-                                    'Output Type'. The 'name' attribute will create a new variable with that name that
-                                    can
-                                    then be referenced in later snippets. The 'capture_type' determines how the data
-                                    will
-                                    be processed. For example, a 'capture_list' will always return a list with 0 or more
-                                    elements while 'capture_value' will always return a single value. The 'Query'
-                                    is the query that will be used to parse the returned data. For 'xml' type data, this
-                                    is
-                                    an xpath query.
-                                </div>
+                            <div class="card card-body collapse mt-2 mb-2 bg-light" id="panos_outputs_help">
+                                Outputs parse the data returned from the snippet. How that data is parsed depends on
+                                the
+                                'Output Type'. The 'name' attribute will create a new variable with that name that
+                                can
+                                then be referenced in later snippets. The 'capture_type' determines how the data
+                                will
+                                be processed. For example, a 'capture_list' will always return a list with 0 or more
+                                elements while 'capture_value' will always return a single value. The 'Query'
+                                is the query that will be used to parse the returned data. For 'xml' type data, this
+                                is
+                                an xpath query.
+                            </div>
                             <div class="form-group">
                                 <label for="id_panos_snippet_output_type">Output Type:</label>
                                 <select id="id_panos_snippet_output_type" class="form-control">
@@ -2470,9 +2525,9 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="id_panos_output_value">XPath Query:</label>
-                                        <input type="text" value="" placeholder="" class="form-control"
-                                               id="id_panos_output_value"
-                                               title="Query used to find and return values from the output of this snippet.">
+                                    <input type="text" value="" placeholder="" class="form-control"
+                                           id="id_panos_output_value"
+                                           title="Query used to find and return values from the output of this snippet.">
                                 </div>
                                 <button class="float-right btn btn-outline-primary"
                                         title="Add Output Definition"
@@ -2740,8 +2795,9 @@
                                     <label for="id_pan_validation_snippet_cmd">Cmd:</label>
                                     <select id="id_pan_validation_snippet_cmd" class="form-control">
                                         <option selected>validate</option>
-                                        <option>validate_xml</option>
                                         <option>parse</option>
+                                        <option>cli</option>
+                                        <option>op</option>
                                     </select>
                                 </div>
                             </div>
@@ -2764,6 +2820,29 @@
                                     </a>
                                 </p>
                             </div>
+
+                            <!-- cli cmd -->
+                            <div class="form-group">
+                                <label for="id_pan_validation_snippet_cmd_cmd_str">CLI:</label>
+                                <input type="text" value="" class="form-control"
+                                       id="id_pan_validation_snippet_cmd_cmd_str"
+                                       data-modal_source="id_pan_validation_snippet_cmd" data-modal_value="cli">
+                            </div>
+
+                            <!-- op cmd -->
+                            <div class="form-group">
+                                <label for="id_pan_validation_snippet_cmd_op">Operational Command XML:</label>
+                                <input type="text" value="" class="form-control"
+                                       id="id_pan_validation_snippet_cmd_op"
+                                       data-modal_source="id_pan_validation_snippet_cmd" data-modal_value="op">
+                                <label for="id_pan_validation_snippet_op_parse_result">Parse Result:</label>
+                                <select id="id_pan_validation_snippet_op_parse_result" class="form-control"
+                                        title="Attempt to parse the returned XML document">
+                                    <option selected>True</option>
+                                    <option>False</option>
+                                </select>
+                            </div>
+
                             <!-- Outputs -->
                             <div class="form-group">
                                 <label for="id_pan_validation_snippet_variable">Parsed Variable:</label>
@@ -2844,14 +2923,16 @@
                                     <option>high</option>
                                 </select>
                                 <label for="id_pan_validation_snippet_pass_message">Pass Message:</label>
-                                <textarea class="form-control" rows="2" id="id_pan_validation_snippet_pass_message"></textarea>
+                                <textarea class="form-control" rows="2"
+                                          id="id_pan_validation_snippet_pass_message"></textarea>
                                 <p class="small muted text-right m-0">
                                     <a href="#" onclick="enlarge_text_area('id_pan_validation_snippet_pass_message')">
                                         <i class="fa fa-edit"></i>
                                     </a>
                                 </p>
                                 <label for="id_pan_validation_snippet_fail_message">Fail Message:</label>
-                                <textarea class="form-control" rows="2" id="id_pan_validation_snippet_fail_message"></textarea>
+                                <textarea class="form-control" rows="2"
+                                          id="id_pan_validation_snippet_fail_message"></textarea>
                                 <p class="small muted text-right m-0">
                                     <a href="#" onclick="enlarge_text_area('id_pan_validation_snippet_fail_message')">
                                         <i class="fa fa-edit"></i>
@@ -2859,8 +2940,9 @@
                                 </p>
                             </div>
                         </div>
-                        
-                        <div class="tab-pane fade" id="pan_validation_tags" role="tabpanel" aria-labelledby="pan_validation_tags_tab">
+
+                        <div class="tab-pane fade" id="pan_validation_tags" role="tabpanel"
+                             aria-labelledby="pan_validation_tags_tab">
                             <div class="text-right mt-1">
                                 <a href="#pan_validation_tags_help" data-toggle="collapse" title="Tags Help">
                                     <i class="fa fa-question-circle"></i>
@@ -2891,7 +2973,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="update_snippet('pan_validation')"
+                    <button type="button" class="btn btn-primary" onclick="update_pan_validation_snippet()"
                             data-dismiss="modal">Update
                     </button>
                 </div>
@@ -2980,105 +3062,109 @@
                     <div class="form-group">
                         <label for="id_test_skillet_next">Step Through Snippets:</label>
                         <div class="input-group mb-3">
-                        <input type="text" value="" disabled="disabled"
-                              class="form-control disabled" id="id_test_skillet_next">
-                        <div class="input-group-append" id="start_over_skillet_button">
+                            <input type="text" value="" disabled="disabled"
+                                   class="form-control disabled" id="id_test_skillet_next">
+                            <div class="input-group-append" id="start_over_skillet_button">
                             <span class="input-group-text" title="Start Over">
                                 <a href="#" onclick="step_over_restart_skillet();">
                                     <i class="fa fa-redo"></i>
                                 </a>
                             </span>
-                        </div>
-                        <div class="input-group-append" id="step_over_next_button">
+                            </div>
+                            <div class="input-group-append" id="step_over_next_button">
                             <span class="input-group-text" title="Skip Next Snippet">
                                 <a href="#" onclick="step_over_skillet_next();">
                                     <i class="fa fa-forward"></i>
                                 </a>
                             </span>
-                        </div>
-                        <div class="input-group-append" id="step_over_skillet_button">
+                            </div>
+                            <div class="input-group-append" id="step_over_skillet_button">
                             <span class="input-group-text" title="Execute Next Snippet">
                                 <a href="#" onclick="step_over_skillet();">
                                     <i class="fa fa-play"></i>
                                 </a>
                             </span>
+                            </div>
                         </div>
-                    </div>
 
-                </div>
+                    </div>
 
 
                     <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-dismiss="modal">Dismiss</button>
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">Dismiss</button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Test Snippet Modal -->
-    <div class="modal fade" id="show_test_snippet_modal" tabindex="-1" role="dialog"
-         aria-labelledby="show_test_snippet_modal"
-         aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="test_snippet_label">Test Snippet</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="overflow-y: auto">
-                    <p class="card-text">
-                        This will execute the snippet using the provided context. This is a great place to
-                        explore output capturing and other syntax options before saving your snippet.
-                    </p>
-                    <label for="id_test_snippet_context">Context:</label>
-                    <textarea class="form-control" rows="5" id="id_test_snippet_context"></textarea>
-                    <p class="small muted text-right m-0">
-                        <a href="#" onclick="enlarge_text_area('id_test_snippet_context')">
-                            <i class="fa fa-edit"></i>
-                        </a>
-                    </p>
-                    <input type="hidden" id="id_test_snippet_results"/>
-                    <input type="hidden" id="id_test_snippet_snippet_name"/>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-danger" data-dismiss="modal"
-                        onclick="cancel_test_snippet();">Cancel</button>
-                    <button type="button" class="btn btn-primary" onclick="test_snippet()">Test
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Test Skillet Results Modal -->
-    <div class="modal fade" id="show_test_skillet_results_modal" tabindex="-1" role="dialog"
-         aria-labelledby="show_test_skillet_results_modal"
-         aria-hidden="true">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="test_skillet_results_label">Test Skillet Results</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="overflow-y: auto">
-                    <p class="card-text">
-                        Here are the results of the Skillet Test. There are two keys shown here: 'output' and 'context'.
-                        Output is the raw output from the Skillet itself, including any captured outputs. Context shows
-                        you the skillet context that was used during execution. This may include outputs and ephemeral
-                        computed values.
-                    </p>
-                    <label for="id_test_skillet_results_context">Skillet Output:</label>
-                    <pre><code class="json" id="id_test_skillet_results_code"></code></pre>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Done</button>
+        <!-- Test Snippet Modal -->
+        <div class="modal fade" id="show_test_snippet_modal" tabindex="-1" role="dialog"
+             aria-labelledby="show_test_snippet_modal"
+             aria-hidden="true">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="test_snippet_label">Test Snippet</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="overflow-y: auto">
+                        <p class="card-text">
+                            This will execute the snippet using the provided context. This is a great place to
+                            explore output capturing and other syntax options before saving your snippet.
+                        </p>
+                        <label for="id_test_snippet_context">Context:</label>
+                        <textarea class="form-control" rows="5" id="id_test_snippet_context"></textarea>
+                        <p class="small muted text-right m-0">
+                            <a href="#" onclick="enlarge_text_area('id_test_snippet_context')">
+                                <i class="fa fa-edit"></i>
+                            </a>
+                        </p>
+                        <input type="hidden" id="id_test_snippet_results"/>
+                        <input type="hidden" id="id_test_snippet_snippet_name"/>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal"
+                                onclick="cancel_test_snippet();">Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" onclick="test_snippet()">Test
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <!-- Test Skillet Results Modal -->
+        <div class="modal fade" id="show_test_skillet_results_modal" tabindex="-1" role="dialog"
+             aria-labelledby="show_test_skillet_results_modal"
+             aria-hidden="true">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="test_skillet_results_label">Test Skillet Results</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="overflow-y: auto">
+                        <p class="card-text">
+                            Here are the results of the Skillet Test. There are two keys shown here: 'output' and
+                            'context'.
+                            Output is the raw output from the Skillet itself, including any captured outputs. Context
+                            shows
+                            you the skillet context that was used during execution. This may include outputs and
+                            ephemeral
+                            computed values.
+                        </p>
+                        <label for="id_test_skillet_results_context">Skillet Output:</label>
+                        <pre><code class="json" id="id_test_skillet_results_code"></code></pre>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Done</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
 {% endblock %}
