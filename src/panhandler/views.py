@@ -44,11 +44,13 @@ from django.shortcuts import render
 from django.utils.safestring import mark_safe
 from django.views.generic import RedirectView
 from django.views.generic import View
+from skilletlib import Panoply
 from skilletlib import Panos
 from skilletlib import SkilletLoader
 from skilletlib.exceptions import LoginException
 from skilletlib.exceptions import PanoplyException
 from skilletlib.exceptions import SkilletLoaderException
+from skilletlib.exceptions import TargetConnectionException
 from skilletlib.skillet.pan_validation import PanValidationSkillet
 from skilletlib.skillet.template import TemplateSkillet
 from yaml.scanner import ScannerError
@@ -100,6 +102,8 @@ class WelcomeView(CNCView):
 
 class PanhandlerAppFormView(CNCBaseFormView):
 
+    required_session_vars = list()
+
     def get_snippet(self):
         return self.snippet
 
@@ -118,6 +122,24 @@ class PanhandlerAppFormView(CNCBaseFormView):
                 return skillet.skillet_dict
 
         return None
+
+    def get(self, request, *args, **kwargs) -> Any:
+        """
+        Quick check to ensure the required variables are indeed in the session and bail out if not
+
+        :param request: request object
+        :param args: supplied args
+        :param kwargs: supplied kwargs
+        :return: super().get Any
+        """
+
+        for v in self.required_session_vars:
+            if v not in self.request.session:
+                messages.add_message(self.request, messages.ERROR, f'Process Error')
+                return HttpResponseRedirect(self.request.session.get('last_page', '/'))
+
+        return super().get(request, *args, **kwargs)
+
 
 
 class ImportRepoView(PanhandlerAppFormView):
@@ -638,13 +660,8 @@ class RemoveRepoView(CNCBaseAuth, RedirectView):
 class CreateSkilletView(PanhandlerAppFormView):
     snippet = 'create_skillet'
     app_dir = 'panhandler'
-    title = "Skillet Generator"
-    header = "Create a New Skillet"
-
-    def get_context_data(self, **kwargs):
-        repo_name = self.kwargs.get('repo_name', None)
-        self.request.session['create_skillet_repo_name'] = repo_name
-        return super().get_context_data(**kwargs)
+    header = "Skillet Generator"
+    title = "Create a new Skillet"
 
     # once the form has been submitted and we have all the values placed in the workflow, execute this
     def form_valid(self, form):
@@ -743,7 +760,20 @@ class CreateSkilletView(PanhandlerAppFormView):
             return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
 
         try:
-            skillet_content = yaml.safe_dump(new_skillet)
+
+            # quick hack to add literal style to str with newlines
+            # source https://stackoverflow.com/a/45004775
+            yaml.SafeDumper.org_represent_str = yaml.SafeDumper.represent_str
+
+            def repr_str(dumper, data):
+                if '\n' in data:
+                    return dumper.represent_scalar(u'tag:yaml.org,2002:str', data, style='|')
+
+                return dumper.org_represent_str(data)
+
+            yaml.add_representer(str, repr_str, Dumper=yaml.SafeDumper)
+
+            skillet_content = yaml.safe_dump(new_skillet, indent=4)
 
         except (ScannerError, ValueError):
             messages.add_message(self.request, messages.ERROR,
@@ -1790,3 +1820,316 @@ class DeleteSkilletView(UpdateRepoView):
         git_utils.commit_local_changes(repo_dir, f'Deleted {skillet_name}', os.path.join(skillet_path_str, meta_name))
 
         return super().get_redirect_url(*args, **kwargs)
+
+
+class GenerateSkilletChooserView(CNCView):
+    template_name = 'panhandler/create_skillet_chooser.html'
+    app_dir = 'panhandler'
+
+    def get_context_data(self, **kwargs):
+
+        repo_name = self.kwargs['repo_name']
+
+        # save this value into the session so we do not need to pass it around via kwargs going further
+        self.request.session['create_skillet_repo_name'] = repo_name
+
+        context = super().get_context_data(**kwargs)
+        context['repo_name'] = repo_name
+
+        return context
+
+
+class GenerateSkilletConnectView(PanhandlerAppFormView):
+    snippet = 'generate_skillet_connect'
+    app_dir = 'panhandler'
+    header = "Skillet Generator"
+    title = "Connect to Device"
+    next_url = '/panhandler/generate_skillet_online'
+    required_session_vars = ['create_skillet_repo_name']
+
+    # once the form has been submitted and we have all the values placed in the workflow, execute this
+    def form_valid(self, form):
+        try:
+            workflow = self.get_workflow()
+            hostname = workflow['TARGET_IP']
+            username = workflow['TARGET_USERNAME']
+            password = workflow['TARGET_PASSWORD']
+            port = workflow['TARGET_PORT']
+
+        except KeyError as ke:
+            messages.add_message(self.request, messages.ERROR, f'Invalid Options: {ke}')
+            return self.form_invalid(form)
+
+        try:
+            panos = Panos(hostname=hostname, api_username=username, api_password=password, api_port=port)
+
+            # grab the list of all named / saved configuration files
+            saved_configs = panos.list_saved_configurations()
+
+            # create a pre_configs list so we can add a special item called 'Generate Baseline'
+            # we also do not want 'running_config.xml' here as it never makes sense as the 'before' config
+            pre_configs = list()
+            for config in saved_configs:
+                if config != 'running_config.xml':
+                    pre_configs.append(config)
+
+            pre_configs.insert(0, 'Generated Baseline')
+
+            # add an item called candidate config, this will be saved as post_configs
+            saved_configs.insert(0, 'Candidate Config')
+
+            # save these two lists to the session
+            self.save_value_to_workflow('pre_configs', pre_configs)
+            self.save_value_to_workflow('post_configs', saved_configs)
+
+            return HttpResponseRedirect(self.next_url)
+
+        except LoginException as le:
+            messages.add_message(self.request, messages.ERROR, f'Could not Authenticate to device: {le}')
+            return self.form_invalid(form)
+
+        except TargetConnectionException as tce:
+            messages.add_message(self.request, messages.ERROR, f'Could not connect to device: {tce}')
+            return self.form_invalid(form)
+
+
+class GenerateSkilletOnlineView(PanhandlerAppFormView):
+    snippet = 'generate_skillet_online'
+    app_dir = 'panhandler'
+    header = "Skillet Generator"
+    title = "Choose the pre and post configuration sources"
+    next_url = '/panhandler/create_skillet'
+    required_session_vars = ['create_skillet_repo_name']
+
+    def form_valid(self, form):
+        try:
+            workflow = self.get_workflow()
+            pre_config = workflow['pre_config']
+            post_config = workflow['post_config']
+
+            # these values should be here from the previous step
+            hostname = workflow['TARGET_IP']
+            username = workflow['TARGET_USERNAME']
+            password = workflow['TARGET_PASSWORD']
+            port = workflow['TARGET_PORT']
+
+        except KeyError as ke:
+            # any value that is not found on the workflow dict will throw an error
+            messages.add_message(self.request, messages.ERROR, f'Invalid Options: {ke}')
+            return self.form_invalid(form)
+
+        try:
+            panos = Panos(hostname=hostname, api_username=username, api_password=password, api_port=port)
+
+            if pre_config == 'Generated Baseline':
+                pre_config_str = panos.generate_baseline(reset_hostname=False)
+            else:
+                pre_config_str = panos.get_configuration(pre_config)
+
+            if post_config == 'Candidate Config':
+                post_config_str = panos.get_configuration(config_source='candidate')
+            else:
+                post_config_str = panos.get_saved_configuration(post_config)
+
+            snippets = panos.generate_skillet_from_configs(pre_config_str, post_config_str)
+
+            self.save_value_to_workflow('snippets', snippets)
+            self.save_value_to_workflow('skillet_description', f'Skillet Generated from {hostname} using {pre_config}'
+                                                               f' and {post_config}')
+
+            if panos.facts.get('model', 'panos') == 'Panorama':
+                self.save_value_to_workflow('skillet_type', 'panorama')
+            else:
+                self.save_value_to_workflow('skillet_type', 'panos')
+
+            return HttpResponseRedirect(self.next_url)
+
+        except LoginException as le:
+            messages.add_message(self.request, messages.ERROR, f'Could not Authenticate to device: {le}')
+            return self.form_invalid(form)
+
+        except TargetConnectionException as tce:
+            messages.add_message(self.request, messages.ERROR, f'Could not connect to device: {tce}')
+            return self.form_invalid(form)
+
+
+class GenerateSkilletOfflineView(PanhandlerAppFormView):
+    snippet = 'generate_skillet_offline'
+    app_dir = 'panhandler'
+    header = "Skillet Generator"
+    title = "Choose the pre and post configuration sources"
+    next_url = '/panhandler/create_skillet'
+    required_session_vars = ['create_skillet_repo_name']
+
+    def form_valid(self, form):
+        try:
+            workflow = self.get_workflow()
+            pre_config = workflow['pre_config']
+            post_config = workflow['post_config']
+
+        except KeyError as ke:
+            # any value that is not found on the workflow dict will throw an error
+            messages.add_message(self.request, messages.ERROR, f'Invalid Options: {ke}')
+            return self.form_invalid(form)
+
+        panoply = Panoply()
+
+        with open(pre_config, 'r') as pre_config_file:
+            pre_config_str = pre_config_file.read()
+
+        with open(post_config, 'r') as post_config_file:
+            post_config_str = post_config_file.read()
+
+        snippets = panoply.generate_skillet_from_configs(pre_config_str, post_config_str)
+
+        # attempt to remove temp files
+        try:
+            os.unlink(post_config)
+            os.unlink(pre_config)
+        except OSError as ose:
+            print('Error removing temporary uploaded files...')
+            print(ose)
+
+        # save results into the context
+        self.save_value_to_workflow('snippets', snippets)
+        self.save_value_to_workflow('skillet_description', f'Skillet Generated from uploaded configs')
+
+        return HttpResponseRedirect(self.next_url)
+
+
+class GenerateSkilletBlankView(CreateSkilletView):
+    required_session_vars = ['create_skillet_repo_name']
+
+    def get_context_data(self, **kwargs):
+        self.pop_value_from_workflow('local_branch_name')
+        self.pop_value_from_workflow('commit_message')
+        self.pop_value_from_workflow('skillet_name')
+        self.pop_value_from_workflow('skillet_label')
+        self.pop_value_from_workflow('skillet_description')
+        self.pop_value_from_workflow('skillet_type')
+        self.pop_value_from_workflow('collection_name')
+        self.pop_value_from_workflow('snippets')
+
+        self.save_value_to_workflow('skillet_create_method', 'menu')
+
+        context = super().get_context_data(**kwargs)
+        return context
+
+
+class GenerateSetSkilletConnectView(GenerateSkilletConnectView):
+    next_url = '/panhandler/generate_set_skillet_online'
+    required_session_vars = ['create_skillet_repo_name']
+
+
+class GenerateSetSkilletOnlineView(PanhandlerAppFormView):
+    snippet = 'generate_skillet_online'
+    app_dir = 'panhandler'
+    header = "Skillet Generator"
+    title = "Choose the pre and post configuration sources for set cli generation"
+    next_url = '/panhandler/create_skillet'
+    required_session_vars = ['create_skillet_repo_name']
+
+    def form_valid(self, form):
+        try:
+            workflow = self.get_workflow()
+            pre_config = workflow['pre_config']
+            post_config = workflow['post_config']
+
+            # these values should be here from the previous step
+            hostname = workflow['TARGET_IP']
+            username = workflow['TARGET_USERNAME']
+            password = workflow['TARGET_PASSWORD']
+            port = workflow['TARGET_PORT']
+
+        except KeyError as ke:
+            # any value that is not found on the workflow dict will throw an error
+            messages.add_message(self.request, messages.ERROR, f'Invalid Options: {ke}')
+            return self.form_invalid(form)
+
+        try:
+            panos = Panos(hostname=hostname, api_username=username, api_password=password, api_port=port)
+
+            if pre_config == 'Generated Baseline':
+                pre_config_str = panos.generate_baseline(reset_hostname=False)
+            else:
+                pre_config_str = panos.get_configuration(pre_config)
+
+            if post_config == 'Candidate Config':
+                post_config_str = panos.get_configuration(config_source='candidate')
+            else:
+                post_config_str = panos.get_saved_configuration(post_config)
+
+            set_cli_cmds = panos.generate_set_cli_from_configs(pre_config_str, post_config_str)
+
+            snippet = dict()
+            snippet['name'] = 'set_cli'
+            snippet['element'] = "\n".join(set_cli_cmds)
+
+            snippets = list()
+            snippets.append(snippet)
+
+            self.save_value_to_workflow('snippets', snippets)
+            self.save_value_to_workflow('skillet_description', f'Skillet Generated from {hostname} using {pre_config}'
+                                                               f'and {post_config}')
+            self.save_value_to_workflow('skillet_type', 'template')
+
+            return HttpResponseRedirect(self.next_url)
+
+        except LoginException as le:
+            messages.add_message(self.request, messages.ERROR, f'Could not Authenticate to device: {le}')
+            return self.form_invalid(form)
+
+        except TargetConnectionException as tce:
+            messages.add_message(self.request, messages.ERROR, f'Could not connect to device: {tce}')
+            return self.form_invalid(form)
+
+
+class GenerateSetSkilletOfflineView(PanhandlerAppFormView):
+    snippet = 'generate_skillet_offline'
+    app_dir = 'panhandler'
+    header = "Skillet Generator"
+    title = "Choose the pre and post configuration sources for set CLI generation"
+    next_url = '/panhandler/create_skillet'
+    required_session_vars = ['create_skillet_repo_name']
+
+    def form_valid(self, form):
+        try:
+            workflow = self.get_workflow()
+            pre_config = workflow['pre_config']
+            post_config = workflow['post_config']
+
+        except KeyError as ke:
+            # any value that is not found on the workflow dict will throw an error
+            messages.add_message(self.request, messages.ERROR, f'Invalid Options: {ke}')
+            return self.form_invalid(form)
+
+        panoply = Panoply()
+
+        with open(pre_config, 'r') as pre_config_file:
+            pre_config_str = pre_config_file.read()
+
+        with open(post_config, 'r') as post_config_file:
+            post_config_str = post_config_file.read()
+
+        set_cli_cmds = panoply.generate_set_cli_from_configs(pre_config_str, post_config_str)
+
+        snippet = dict()
+        snippet['name'] = 'set_cli'
+        snippet['element'] = "\n".join(set_cli_cmds)
+
+        snippets = list()
+        snippets.append(snippet)
+        # attempt to remove temp files
+
+        try:
+            os.unlink(post_config)
+            os.unlink(pre_config)
+        except OSError as ose:
+            print('Error removing temporary uploaded files...')
+            print(ose)
+
+        # save results into the context
+        self.save_value_to_workflow('snippets', snippets)
+        self.save_value_to_workflow('skillet_description', f'Skillet Generated from uploaded configs')
+
+        return HttpResponseRedirect(self.next_url)

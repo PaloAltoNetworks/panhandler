@@ -46,7 +46,6 @@ views:
 
   - name: create_skillet
     class: CreateSkilletView
-    parameter: repo_name
 
   - name: collections
     class: ListSkilletCollectionsView
@@ -145,3 +144,43 @@ views:
     parameters:
       - repo_name
       - skillet_name
+
+  - name: generate_skillet
+    class: GenerateSkilletChooserView
+    parameter: repo_name
+
+  - name: generate_skillet_connect
+    class: GenerateSkilletConnectView
+
+  - name: generate_skillet_online
+    class: GenerateSkilletOnlineView
+
+  - name: generate_skillet_offline
+    class: GenerateSkilletOfflineView
+
+  - name: generate_skillet_write
+    class: CreateSkilletView
+    attributes:
+      snippet: generate_skillet_write
+
+  - name: generate_skillet_blank
+    class: GenerateSkilletBlankView
+    attributes:
+      header: Skillet Generator
+      title: Create a new blank Skillet
+
+  - name: generate_skillet_copy
+    class: CreateSkilletView
+    attributes:
+      header: Skillet Generator
+      title: Create a Skillet using a Previously Copied Skillet
+
+  - name: generate_set_skillet_connect
+    class: GenerateSetSkilletConnectView
+
+  - name: generate_set_skillet_online
+    class: GenerateSetSkilletOnlineView
+
+  - name: generate_set_skillet_offline
+    class: GenerateSetSkilletOfflineView
+

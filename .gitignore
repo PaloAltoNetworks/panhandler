@@ -9,6 +9,9 @@ venv*
 !**/snippets/app/**
 !**/snippets/app/**/*
 
+# ignore all uploaded files
+.cnc_tmp_*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

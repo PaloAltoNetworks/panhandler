@@ -1,0 +1,27 @@
+name: generate_skillet_connect
+label: Skillet Generator Connect
+description: |
+  Gathers Device connection information in order to connect to and collect information.
+
+type: app
+
+variables:
+  - name: TARGET_IP
+    description: Hostname
+    default: 10.10.10.10
+    type_hint: fqdn_or_ip
+  - name: TARGET_PORT
+    description: Panorama port
+    default: 443
+    type_hint: number
+  - name: TARGET_USERNAME
+    description: Username
+    default: admin
+    type_hint: text
+  - name: TARGET_PASSWORD
+    description: Password
+    default:
+    type_hint: password
+
+snippets:
+

@@ -1,0 +1,45 @@
+name: generate_skillet_write
+label: Skillet Generator Tool
+description: |
+  This tool will generate an empty skillet of the given type. You may then edit this skillet to add
+  variables and snippets.
+
+type: app
+
+variables:
+  - name: skillet_create_method
+    description: Creation Method
+    type_hint: hidden
+    default: raw
+
+  - name: raw_skillet_content
+    description: Skillet YAML
+    type_hint: text_area
+    default: |
+      name: new_skillet
+      label: My New Skillet
+      description: This is what my new skillet does
+      type: panos
+      variables: []
+      snippets: []
+    help_text: Enter or paste skillet metadata in YAML format
+    attributes:
+      rows: 30
+      cols: 50
+
+  - name: local_branch_name
+    description: Branch
+    default: local
+    type_hint: text
+    allow_special_characters: false
+    help_text: Name of the branch in which to save these local changes
+
+  - name: commit_message
+    description: Commit Message
+    default: Create New Skillet
+    type_hint: text
+    allow_special_characters: false
+    help_text: Message to add to commit log for this edit
+
+snippets:
+

@@ -1,0 +1,21 @@
+name: generate_skillet_offline
+label: Skillet Generator Tool
+description: |
+  Allows the user to upload two configuration files used to generate a Skillet
+
+type: app
+
+variables:
+  - name: pre_config
+    description: Pre-Configuration
+    default:
+    type_hint: file
+    help_text: Initial XML configuration from before your changes are made
+  - name: post_config
+    description: Post-Configuration
+    default:
+    type_hint: file
+    help_text: XML configuration from after your changes were made
+
+snippets:
+

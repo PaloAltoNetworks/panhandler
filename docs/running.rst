@@ -16,6 +16,13 @@ with the latest released version.
     curl -s -k -L http://bit.ly/2xui5gM | bash
 
 
+If you don't trust running bit.ly links through Bash, then you can run this variant instead:
+
+.. code-block:: bash
+
+    curl -s -k -L https://raw.githubusercontent.com/PaloAltoNetworks/panhandler/master/ph | bash
+
+
 This command will install and or update Panhandler to the latest version using the default values.
 
 If you need special requirements, such as custom volume mounts, non-default username and password, or

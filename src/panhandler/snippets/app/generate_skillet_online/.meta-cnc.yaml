@@ -1,0 +1,23 @@
+name: generate_skillet_online
+label: Skillet Generator Tool
+description: |
+  This tool will generate an empty skillet of the given type. You may then edit this skillet to add
+  variables and snippets.
+
+type: app
+
+variables:
+  - name: pre_config
+    description: Pre-Configuration Source
+    type_hint: dropdown
+    source: pre_configs
+    help_text: This Configuration file will be used as the before state for the evaluation of differences
+
+  - name: post_config
+    description: Post-Configuratin Source
+    type_hint: dropdown
+    source: post_configs
+    help_text: This Configuration file will be used as the after state for the evaluation of differences
+
+snippets:
+

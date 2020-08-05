@@ -1730,6 +1730,43 @@
 
         }
 
+        function slugify(text) {
+            /**
+             * Clean up text
+             * modified from source: https://gist.github.com/mathewbyrne/1280286
+             */
+            return text.toString().toLowerCase()
+                .replace(/\s+/g, '_')           // Replace spaces with _
+                .replace(/[^\w\-]+/g, '')       // Remove all non-word chars
+                .replace(/\_\_+/g, '_')         // Replace multiple _ with single _
+                .replace(/^_+/, '')             // Trim _ from start of text
+                .replace(/_+$/, '');            // Trim _ from end of text
+        }
+
+        function text_area_find_replace() {
+            /**
+             * Text Edit Modal find and replace
+             */
+
+            let editor_text_input = $('#text_area_input');
+            let editor_text_find = $('#text_area_input_find');
+            let editor_text_replace = $('#text_area_input_replace');
+
+            let editor_text = editor_text_input.val();
+            let find_text = editor_text_find.val();
+            let replace_text_raw = slugify(editor_text_replace.val());
+            let replace_text = '{% templatetag openvariable %} ' + replace_text_raw +
+                ' {% templatetag closevariable %}';
+
+            editor_text_input.val(editor_text.replace(new RegExp(find_text, 'g'), replace_text));
+
+            editor_text_find.val('');
+            editor_text_replace.val('');
+
+            editor_text_input.effect('highlight');
+
+        }
+
         $(document).ready(function () {
             let label_vals = JSON.parse('{{ skillet.labels | tojson | safe }}');
             console.log(label_vals);
@@ -2367,7 +2404,8 @@
                                 <input type="text" value="" class="form-control" id="id_panos_snippet_set_xpath"
                                        data-modal_source="id_panos_snippet_cmd" data-modal_value="set">
                                 <label for="id_panos_snippet_set_element">Element:</label>
-                                <textarea class="form-control" id="id_panos_snippet_set_element"></textarea>
+                                <textarea class="form-control" id="id_panos_snippet_set_element"
+                                    rows="10"></textarea>
                                 <p class="small muted text-right m-0">
                                     <a href="#" onclick="enlarge_text_area('id_panos_snippet_set_element')">
                                         <i class="fa fa-edit"></i>
@@ -2727,9 +2765,24 @@
                 </div>
                 <div class="modal-body" style="overflow-y: auto">
                     <label for="text_area_input">Edit</label>
-                    <textarea class="form-control text-monospace small"
+                    <textarea class="form-control text-monospace small mb-3"
                               style="width: 1200px; font-size: 80%" rows="20" id="text_area_input"></textarea>
                     <input type="hidden" id="text_area_target" value=""/>
+                    <label for="text_area_input_find_replace">Create Variable from all occurrences of text</label>
+                    <div class="input-group mb-3" id="text_area_input_find_replace">
+                        <input type="text" placeholder="Text to Replace" id="text_area_input_find"
+                               class="form-control"/>
+                        <div class="input-group-append"><span class="input-group-text">:</span></div>
+                        <input type="text" placeholder="Variable Name" id="text_area_input_replace"
+                               class="form-control"/>
+                        <div class="input-group-append">
+                            <span class="input-group-text">
+                                <a href="#" onclick="text_area_find_replace();">
+                                    <i class="fa fa-exchange-alt"></i>
+                                </a>
+                            </span>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>

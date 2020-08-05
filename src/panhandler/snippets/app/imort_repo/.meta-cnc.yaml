@@ -12,12 +12,12 @@ variables:
     default: Example_Skillets
     type_hint: text
     allow_special_characters: false
-    help_text: The arbitrary name of this Repository.
+    help_text: The arbitrary name of this Repository. No special characters are allowed in this name.
   - name: url
-    description: Git Repository HTTPS URL
+    description: Git Repository HTTPS or SSH URL
     default: https://github.com/PaloAltoNetworks/Skillets.git
     type_hint: text
-    help_text: The 'git' link to the repository you would like to import.
+    help_text: The 'git' clone link to the repository you would like to import.
 
 snippets:
 

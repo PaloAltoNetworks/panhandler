@@ -9,30 +9,23 @@ type: app
 variables:
   - name: skillet_create_method
     description: Creation Method
-    type_hint: dropdown
-    dd_list:
-      - key: Menu Driven
-        value: menu
-      - key: Raw Text Input
-        value: raw
+    type_hint: hidden
+    default: menu
+
   - name: skillet_name
     description: Skillet ID
     default: new_skillet
     type_hint: text
     allow_special_characters: false
     help_text: Identifier of the Skillet to create
-    toggle_hint:
-      source: skillet_create_method
-      value: menu
+
   - name: skillet_label
     description: Skillet Label
     default: New Skillet
     type_hint: text
     allow_special_characters: false
     help_text: Human Friendly Name of this Skillet
-    toggle_hint:
-      source: skillet_create_method
-      value: menu
+
   - name: skillet_description
     description: Skillet Description
     default: |
@@ -43,9 +36,7 @@ variables:
     attributes:
       rows: 3
       cols: 50
-    toggle_hint:
-      source: skillet_create_method
-      value: menu
+
   - name: skillet_type
     description: Skillet Type
     default: panos
@@ -67,26 +58,7 @@ variables:
         key: Docker
       - value: terraform
         key: Terraform
-    toggle_hint:
-      source: skillet_create_method
-      value: menu
-  - name: raw_skillet_content
-    description: Skillet YAML
-    type_hint: text_area
-    default: |
-      name: new_skillet
-      label: My New Skillet
-      description: This is what my new skillet does
-      type: panos
-      variables: []
-      snippets: []
-    help_text: Enter or paste skillet metadata in YAML format
-    attributes:
-      rows: 30
-      cols: 50
-    toggle_hint:
-      source: skillet_create_method
-      value: raw
+
   - name: local_branch_name
     description: Branch
     default: local
