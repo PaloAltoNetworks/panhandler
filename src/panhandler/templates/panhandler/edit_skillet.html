@@ -991,17 +991,20 @@
              * and also sets up onchange listeners for each snippet option for the source object value
              * For example, panos type snippet cmd == 'set' should have 'xpath' shown, but not 'cmd_str'
              */
-            console.log('checking here');
-            console.log(object_id);
             let source_value = $('#' + object_id).val();
             $('[data-modal_source="' + object_id + '"]').each(function (i, e) {
                 let this_object = $(e);
                 let parent = $(e).closest('.form-group');
-                let data_value = this_object.attr('data-modal_value');
-                if (data_value !== source_value) {
+                let data_value_array = this_object.data('modal_value').split(',');
+                let found = false;
+                $(data_value_array).each(function (indx, data_value) {
+                    if (data_value === source_value) {
+                        parent.show();
+                        found = true;
+                    }
+                });
+                if (! found) {
                     parent.hide();
-                } else {
-                    parent.show();
                 }
             });
         }
@@ -1010,26 +1013,44 @@
             /**
              * Called each time a snippet modal is opened to ensure each field is properly display / hidden
              */
+
             $('[data-modal_source][data-modal_value]').each(function (i, e) {
-                console.log(e);
+                // hide everything at first
+                $(e).closest('.form-group').hide();
+            });
+
+
+            $('[data-modal_source][data-modal_value]').each(function (i, e) {
+                // iterate over all dom elements that have both a data-modal_source and data-modal_value attribute
+                // get this object as the input object
                 let input_object = $(e);
-
+                // get our source id, i.e. what triggers a change on this
                 let source_object_id = input_object.attr('data-modal_source');
-                let test_value = input_object.attr('data-modal_value');
-
+                // get the source object
                 let source_object = $('#' + source_object_id);
-                console.log(source_object);
+                // get it's current value
+                let source_value = source_object.val();
+
+                // set up event listeners on the source so trigger when things change
                 source_object.change(function () {
                     toggle_modal_options(this.id);
                 });
 
+                // get the closes dom element with a 'form-group' class
                 let parent = input_object.closest('.form-group');
-                if (source_object.val() === test_value) {
-                    parent.show();
-                    console.log('showing');
-                } else {
-                    parent.hide();
-                }
+
+                // get the modal_value data and split it on a ',' - this allows more than one input source to trigger
+                let data_value_array = input_object.data('modal_value').split(',');
+
+                // iterate over each item in the data_value_array
+                $(data_value_array).each(function (indx, data_value) {
+                    // if any match, show the parent form-group and break
+                    if (data_value === source_value) {
+                        parent.show();
+                        // .each does not have a break, but return false is the equivelent in jquery
+                        return false;
+                    }
+                });
             });
         }
 
@@ -2708,36 +2729,7 @@
                         </select>
                     </div>
 
-                    <!-- Outputs -->
-                    <div class="form-group">
-                        <label for="all_template_output_options">Outputs:</label>
-                        <div class="input-group" id="all_template_output_options"></div>
-                    </div>
-                    <a href="#template_outputs_add" data-toggle="collapse" data-target="#template_outputs_add"
-                       aria-expanded="true" aria-controls="template_outputs_add">
-                        <i class="fa fa-plus"></i>Add Output
-                    </a>
-                    <div id="template_outputs_add" class="form-group collapse">
-                        <label for="id_template_output_name">Variable Name:</label>
-                        <input type="text" value="" placeholder="" class="form-control"
-                               id="id_template_output_name">
-                        <label for="id_template_output_key">Capture Type:</label>
-                        <select id="id_template_output_key" class="form-control">
-                            <option value="capture_pattern">Capture Pattern</option>
-                        </select>
-                        <label for="id_template_output_value">Pattern:</label>
-                        <div class="input-group">
-                            <input type="text" value="" placeholder="" class="form-control"
-                                   id="id_template_output_value">
-                            <div class="input-group-append">
-                                <span class="input-group-text">
-                                    <a href="#" onclick="add_new_output('template');">
-                                        <i class="fa fa-plus"></i>
-                                    </a>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
 
                 <div class="modal-footer">
@@ -2896,11 +2888,15 @@
                                 </select>
                             </div>
 
-                            <!-- Outputs -->
+                            <!-- parse cmd -->
                             <div class="form-group">
                                 <label for="id_pan_validation_snippet_variable">Parsed Variable:</label>
                                 <input type="text" value="" class="form-control" id="id_pan_validation_snippet_variable"
                                        data-modal_source="id_pan_validation_snippet_cmd" data-modal_value="parse">
+                            </div>
+
+                            <!-- outputs -->
+                            <div class="form-group">
                                 <label for="all_pan_validation_output_options">Outputs:</label>
                                 <div class="input-group" id="all_pan_validation_output_options"></div>
                                 <a href="#pan_validation_outputs_add" data-toggle="collapse"
@@ -2910,12 +2906,14 @@
                                 </a>
                                 <div id="pan_validation_outputs_add" class="collapse">
                                     <div class="form-row">
-                                        <div class="form-group col-md-6">
+                                        <div class="col-md-6">
                                             <label for="id_pan_validation_output_name">Variable Name:</label>
                                             <input type="text" value="" placeholder="" class="form-control"
-                                                   id="id_pan_validation_output_name">
+                                                   id="id_pan_validation_output_name"
+                                                   data-modal_source="id_pan_validation_snippet_cmd"
+                                                   data-modal_value="parse,op,cli">
                                         </div>
-                                        <div class="form-group col-md-6">
+                                        <div class="col-md-6">
                                             <label for="id_pan_validation_output_key">Capture Type:</label>
                                             <select id="id_pan_validation_output_key" class="form-control">
                                                 <option value="capture_list" selected="selected">Capture List</option>
@@ -2925,7 +2923,7 @@
                                             </select>
                                         </div>
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-row">
                                         <label for="id_pan_validation_output_filter">Filter Items:</label>
                                         <input type="text" value="" class="form-control"
                                                id="id_pan_validation_output_filter"
@@ -2934,7 +2932,7 @@
                                                data-modal_value="capture_list"
                                                title="Boolean Expression where only passing items will be added to the captured list">
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-row">
                                         <label for="id_pan_validation_output_value">Pattern:</label>
                                         <div class="input-group">
                                             <input type="text" value="" placeholder="" class="form-control"
