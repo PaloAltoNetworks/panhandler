@@ -184,3 +184,8 @@ views:
   - name: generate_set_skillet_offline
     class: GenerateSetSkilletOfflineView
 
+  - name: generate_config_template_connect
+    class: GenerateConfigTemplateConnectView
+
+  - name: generate_config_template
+    class: GenerateConfigTemplateView

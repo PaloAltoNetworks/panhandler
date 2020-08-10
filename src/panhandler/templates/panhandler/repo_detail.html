@@ -76,6 +76,8 @@
                    class="btn btn-primary mr-2">Update To Latest</a>
                 <a href="/panhandler/remove_repo/{{ repo_name }}" class="btn btn-danger mr-2">Remove Repository</a>
                 <a href="/panhandler/repos" class="btn btn-secondary mr-2">Repositories</a>
+                <a href="/panhandler/generate_skillet/{{ repo_detail.name }}"
+                   class="btn btn-primary">Create Skillet</a>
                 {% if 'git@' in repo_detail.url %}
                 <a href="#" onclick="push_local_changes()" class="btn btn-success mr-2"
                     title="{{ status }}">Push Local Changes</a>

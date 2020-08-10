@@ -31,6 +31,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import lxml
 import yaml
 from django.conf import settings
 from django.contrib import messages
@@ -2133,3 +2134,95 @@ class GenerateSetSkilletOfflineView(PanhandlerAppFormView):
         self.save_value_to_workflow('skillet_description', f'Skillet Generated from uploaded configs')
 
         return HttpResponseRedirect(self.next_url)
+
+
+class GenerateConfigTemplateConnectView(PanhandlerAppFormView):
+    snippet = 'generate_skillet_connect'
+    app_dir = 'panhandler'
+    header = "Skillet Generator"
+    title = "Connect to Device"
+    next_url = '/panhandler/generate_config_template'
+    required_session_vars = ['create_skillet_repo_name']
+
+    # once the form has been submitted and we have all the values placed in the workflow, execute this
+    def form_valid(self, form):
+        try:
+            workflow = self.get_workflow()
+            hostname = workflow['TARGET_IP']
+            username = workflow['TARGET_USERNAME']
+            password = workflow['TARGET_PASSWORD']
+            port = workflow['TARGET_PORT']
+
+        except KeyError as ke:
+            messages.add_message(self.request, messages.ERROR, f'Invalid Options: {ke}')
+            return self.form_invalid(form)
+
+        try:
+            panos = Panos(hostname=hostname, api_username=username, api_password=password, api_port=port)
+
+            # grab the list of all named / saved configuration files
+            saved_configs = panos.list_saved_configurations()
+
+            self.save_value_to_workflow('saved_configs', saved_configs)
+
+            return HttpResponseRedirect(self.next_url)
+
+        except LoginException as le:
+            messages.add_message(self.request, messages.ERROR, f'Could not Authenticate to device: {le}')
+            return self.form_invalid(form)
+
+        except TargetConnectionException as tce:
+            messages.add_message(self.request, messages.ERROR, f'Could not connect to device: {tce}')
+            return self.form_invalid(form)
+
+
+class GenerateConfigTemplateView(PanhandlerAppFormView):
+    snippet = 'generate_config_template'
+    app_dir = 'panhandler'
+    header = "Skillet Generator"
+    title = "Choose a Saved configuration as a source for a config template"
+    next_url = '/panhandler/create_skillet'
+    required_session_vars = ['create_skillet_repo_name']
+
+    def form_valid(self, form):
+        try:
+            workflow = self.get_workflow()
+            config_source = workflow['config_source']
+
+            # these values should be here from the previous step
+            hostname = workflow['TARGET_IP']
+            username = workflow['TARGET_USERNAME']
+            password = workflow['TARGET_PASSWORD']
+            port = workflow['TARGET_PORT']
+
+        except KeyError as ke:
+            # any value that is not found on the workflow dict will throw an error
+            messages.add_message(self.request, messages.ERROR, f'Invalid Options: {ke}')
+            return self.form_invalid(form)
+
+        try:
+            panos = Panos(hostname=hostname, api_username=username, api_password=password, api_port=port)
+
+            config_str = panos.get_saved_configuration(config_source)
+
+            snippet = dict()
+            snippet['name'] = 'config_template'
+            snippet['element'] = config_str
+
+            snippets = list()
+            snippets.append(snippet)
+
+            self.save_value_to_workflow('snippets', snippets)
+            self.save_value_to_workflow('skillet_description', f'Config Template Generated from {hostname} using '
+                                                               f'{config_source}')
+            self.save_value_to_workflow('skillet_type', 'template')
+
+            return HttpResponseRedirect(self.next_url)
+
+        except LoginException as le:
+            messages.add_message(self.request, messages.ERROR, f'Could not Authenticate to device: {le}')
+            return self.form_invalid(form)
+
+        except TargetConnectionException as tce:
+            messages.add_message(self.request, messages.ERROR, f'Could not connect to device: {tce}')
+            return self.form_invalid(form)

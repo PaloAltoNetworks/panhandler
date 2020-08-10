@@ -1,0 +1,17 @@
+name: generate_config_template
+label: Skillet Generator Tool
+description: |
+  This allows the user to select a saved configuration file from the device to use as the basis for a configuration
+  template
+
+type: app
+
+variables:
+  - name: config_source
+    description: Configuration Template Source
+    type_hint: dropdown
+    source: saved_configs
+    help_text: This Configuration file will be used to generate a configuration template
+
+snippets:
+

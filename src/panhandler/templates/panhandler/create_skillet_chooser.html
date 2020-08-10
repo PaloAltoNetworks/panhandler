@@ -15,122 +15,129 @@
         There are several ways to create a Skillet. Choose the option below that best suites your needs.
     </p>
 
-    <div class="row mt-5">
-        <div class="col-sm-6">
-            <div class="card shadow">
-                <div class="card-header">
-                    Generate From PAN-OS
-                </div>
-                <div class="card-body">
-                    Query a PAN-OS NGFW or Panorama to generate a Skillet based on the differences between two
-                    configurations. You can compare any combination of running, candidate, baseline, or previously saved
-                    configurations.
-                </div>
-                <div class="card-footer text-right">
-                    <a href="/panhandler/generate_skillet_connect" class="btn btn-primary">Generate</a>
-                </div>
+    <div class="card-deck mt-5">
+        <div class="card shadow">
+            <div class="card-header">
+                Generate From PAN-OS
+            </div>
+            <div class="card-body">
+                Query a PAN-OS NGFW or Panorama to generate a Skillet based on the differences between two
+                configurations. You can compare any combination of running, candidate, baseline, or previously saved
+                configurations.
+            </div>
+            <div class="card-footer text-right">
+                <a href="/panhandler/generate_skillet_connect" class="btn btn-primary">Generate</a>
             </div>
         </div>
-        <div class="col-sm-6">
-            <div class="card shadow">
-                <div class="card-header">
-                    Generate From Uploaded Files
-                </div>
-                <div class="card-body">
-                    Generates a Skillet based on the differences between two uploaded configuration files. This option
-                    is very useful when you do not have API access to a given device. Simply export two configuration
-                    files
-                    and upload them into this tool to yield a repeatable Skillet.
-                </div>
-                <div class="card-footer text-right">
-                    <a href="/panhandler/generate_skillet_offline" class="btn btn-primary">Upload</a>
-                </div>
+
+        <div class="card shadow">
+            <div class="card-header">
+                Generate From Uploaded Files
+            </div>
+            <div class="card-body">
+                Generates a Skillet based on the differences between two uploaded configuration files. This option
+                is very useful when you do not have API access to a given device. Simply export two configuration
+                files
+                and upload them into this tool to yield a repeatable Skillet.
+            </div>
+            <div class="card-footer text-right">
+                <a href="/panhandler/generate_skillet_offline" class="btn btn-primary">Upload</a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="card-deck mt-5">
+        <div class="card shadow">
+            <div class="card-header">
+                Generate Set Commands From PAN-OS
+            </div>
+            <div class="card-body">
+                Query a PAN-OS NGFW or Panorama to generate a list of set commands based on the differences between
+                two configurations. You can compare any combination of running, candidate, baseline, or previously
+                saved configurations.
+            </div>
+            <div class="card-footer text-right">
+                <a href="/panhandler/generate_set_skillet_connect" class="btn btn-primary">Generate CLI</a>
+            </div>
+        </div>
+
+        <div class="card shadow">
+            <div class="card-header">
+                Generate Set Commands From Uploaded Files
+            </div>
+            <div class="card-body">
+                Generates a list of set commands based on the differences between two uploaded configuration files.
+                This option is very useful when you do not have API access to a given device. Simply export two
+                configuration files and upload them into this tool to yield a repeatable Set CLI Skillet.
+            </div>
+            <div class="card-footer text-right">
+                <a href="/panhandler/generate_set_skillet_offline" class="btn btn-primary">Upload</a>
             </div>
         </div>
     </div>
 
-    <div class="row mt-5">
-        <div class="col-sm-6">
-            <div class="card shadow">
-                <div class="card-header">
-                    Generate Set Commands From PAN-OS
-                </div>
-                <div class="card-body">
-                    Query a PAN-OS NGFW or Panorama to generate a list of set commands based on the differences between
-                    two configurations. You can compare any combination of running, candidate, baseline, or previously
-                    saved configurations.
-                </div>
-                <div class="card-footer text-right">
-                    <a href="/panhandler/generate_set_skillet_connect" class="btn btn-primary">Generate CLI</a>
-                </div>
+    <div class="card-deck mt-5">
+        <div class="card shadow">
+            <div class="card-header">
+                Configuration Template
+            </div>
+            <div class="card-body">
+                Use an existing saved configuration from a device as the basis for a new configuration template.
+                This is useful if you want to copy an entire configuration from one device and convert it to a
+                template that can be applied to other devices.
+            </div>
+            <div class="card-footer text-right">
+                <a href="/panhandler/generate_config_template_connect" class="btn btn-primary">Template</a>
             </div>
         </div>
-        <div class="col-sm-6">
-            <div class="card shadow">
-                <div class="card-header">
-                    Generate Set Commands From Uploaded Files
-                </div>
-                <div class="card-body">
-                    Generates a list of set commands based on the differences between two uploaded configuration files.
-                    This option is very useful when you do not have API access to a given device. Simply export two
-                    configuration files and upload them into this tool to yield a repeatable Set CLI Skillet.
-                </div>
-                <div class="card-footer text-right">
-                    <a href="/panhandler/generate_set_skillet_offline" class="btn btn-primary">Upload</a>
-                </div>
+
+        <div class="card shadow">
+            <div class="card-header">
+                Copy Skillet From Context
+            </div>
+            <div class="card-body">
+                You can copy an imported Skillet into the Panhandler Context using the
+                <i class="fas fa-clone text-muted"></i> icon. Use this option to create a new Skillet based on the
+                copied contents into the {{ repo_name }} repository.
+            </div>
+            <div class="card-footer text-right">
+                <a href="/panhandler/generate_skillet_copy" class="btn btn-primary">Copy</a>
             </div>
         </div>
+
     </div>
 
-    <div class="row mt-5">
-        <div class="col-sm-6">
-            <div class="card shadow">
-                <div class="card-header">
-                    Write Skillet
-                </div>
-                <div class="card-body">
-                    This option creates a new local Skillet by allowing you to directly enter the Skillet YAML metadata
-                    into a simple text field. This option is very good if you want to copy and modify an existing
-                    Skillet found online.
-                </div>
-                <div class="card-footer text-right">
-                    <a href="/panhandler/generate_skillet_write" class="btn btn-primary">Write</a>
-                </div>
+    <div class="card-deck mt-5">
+        <div class="card shadow">
+            <div class="card-header">
+                Write Skillet
+            </div>
+            <div class="card-body">
+                This option creates a new local Skillet by allowing you to directly enter the Skillet YAML metadata
+                into a simple text field. This option is very good if you want to copy and modify an existing
+                Skillet found online.
+            </div>
+            <div class="card-footer text-right">
+                <a href="/panhandler/generate_skillet_write" class="btn btn-primary">Write</a>
             </div>
         </div>
-        <div class="col-sm-6">
-            <div class="card shadow">
-                <div class="card-header">
-                    Copy Skillet From Context
-                </div>
-                <div class="card-body">
-                    You can copy an imported Skillet into the Panhandler Context using the
-                    <i class="fas fa-clone text-muted"></i> icon. Use this option to create a new Skillet based on the
-                    copied contents into the {{ repo_name }} repository.
-                </div>
-                <div class="card-footer text-right">
-                    <a href="/panhandler/generate_skillet_copy" class="btn btn-primary">Copy</a>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <div class="row mt-5">
-        <div class="col-sm-6">
-            <div class="card shadow">
-                <div class="card-header">
-                    Blank Skillet
-                </div>
-                <div class="card-body">
-                    Use a simple form to start with a blank Skillet. This option will yield the basic Skillet YAML
-                    structure with a user supplied name, label, description, etc. Use this option if you are going to
-                    create a very basic Skillet.
-                </div>
-                <div class="card-footer text-right">
-                    <a href="/panhandler/generate_skillet_blank" class="btn btn-primary">Create</a>
-                </div>
+
+        <div class="card shadow">
+            <div class="card-header">
+                Blank Skillet
+            </div>
+            <div class="card-body">
+                Use a simple form to start with a blank Skillet. This option will yield the basic Skillet YAML
+                structure with a user supplied name, label, description, etc. Use this option if you are going to
+                create a very basic Skillet.
+            </div>
+            <div class="card-footer text-right">
+                <a href="/panhandler/generate_skillet_blank" class="btn btn-primary">Create</a>
             </div>
         </div>
+
     </div>
 
 
