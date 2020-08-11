@@ -550,7 +550,7 @@
         function remove_output(output_object) {
             event.preventDefault();
             let output_to_remove_link = $(output_object);
-            let output_to_remove = output_to_remove_link.closest('div');
+            let output_to_remove = output_to_remove_link.closest('.bg-light');
             output_to_remove.remove();
         }
 
