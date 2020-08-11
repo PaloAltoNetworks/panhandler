@@ -130,25 +130,9 @@
             let snippet_name = snippet_name_input.val();
             let cmd = snippet_cmd_input.val();
 
-            let when_conditional = snippet_when_input.val();
             let snippet_def = get_snippet_definition(snippet_name);
-            // let snippet_def = {};
-            // snippet_def['name'] = snippet_name;
+
             snippet_def['cmd'] = cmd;
-
-            // catch all
-            for (let attribute_name in snippet_def) {
-                let z = $('#id_panos_snippet_' + attribute_name);
-                if (z.length) {
-                    if (z.val() !== '') {
-                        snippet_def[attribute_name] = z.val();
-                    }
-                }
-            }
-
-            if (when_conditional !== '') {
-                snippet_def['when'] = when_conditional;
-            }
 
             // set options for the given cmd
             switch (cmd) {
@@ -179,57 +163,9 @@
                     break;
             }
 
-            snippet_def['output_type'] = $('#id_panos_snippet_output_type').val();
-
-            let new_outputs = [];
-            $('#all_panos_output_options').find('[id^="output_"]').each(function (index, output_div) {
-                let output_div_obj = $(output_div);
-                let name_span = output_div_obj.find('[data-output_attribute_type="name"]');
-                let capture_type_span = output_div_obj.find('[data-output_attribute_type="key"]');
-                let capture_value_span = output_div_obj.find('[data-output_attribute_type="value"]');
-                let capture_filter_span = output_div_obj.find('[data-output_attribute_type="filter"]');
-
-                let name = name_span.html();
-                let capture_key = capture_type_span.html();
-                let capture_value = capture_value_span.html();
-                let capture_filter = capture_filter_span.html();
-
-                let output_def = {};
-                output_def['name'] = name;
-                output_def[capture_key] = capture_value;
-
-                if ((typeof capture_filter !== 'undefined') && (capture_filter !== '')) {
-                    output_def['filter_items'] = capture_filter;
-                }
-
-                new_outputs.push(output_def);
-
-            });
-
-            // fix for #1 - do not add empty attributes
-            if (new_outputs.length > 0) {
-                snippet_def['outputs'] = new_outputs;
-            }
-
-            // capture all configured tags
-            let new_tags = [];
-            $('#all_panos_tags').find('[id^="tag_panos_"]').each(function (index, tag_div) {
-                let tag_div_obj = $(tag_div);
-                let tag_input = tag_div_obj.find('[data-tag_type="tag"]');
-                let tag_value = tag_input.val();
-                new_tags.push(tag_value);
-            });
-
-            if (new_tags.length > 0) {
-                snippet_def['tags'] = new_tags;
-            }
-
-            console.log(snippet_def);
-
-            // old_snippet_def = snippet_def;
-            console.log('updated panos snippet');
-
             $('#panos_outputs_add').removeClass('show');
+
+            update_snippet('panos');
         }
 
         function edit_output(output_div) {
@@ -743,6 +679,12 @@
             // set the snippet name
             $('#id_' + skillet_type + '_snippet_name').val(snippet_def['name']);
 
+            // set up new_name field if found
+            let new_name_field = $('#id_' + skillet_type + '_snippet_new_name');
+            if (typeof(new_name_field) !== 'undefined') {
+                new_name_field.val(snippet_def['name']);
+            }
+
             // output type of text can only have 1 output defined and capture_type does not matter, just fill in
             // a default though it will be ignored anyway.
             if (snippet_def['output_type'] === 'text') {
@@ -865,6 +807,19 @@
 
             if (new_tags.length > 0) {
                 snippet_def['tags'] = new_tags;
+            }
+
+            let new_snippet_name_input = $('#id_' + snippet_type + '_snippet_new_name');
+            if (typeof(new_snippet_name_input) !== 'undefined') {
+                let new_snippet_name = new_snippet_name_input.val();
+
+                if (new_snippet_name !== snippet_name) {
+                    snippet_def['name'] = new_snippet_name;
+                    // ensure we update the summary view as well in case description has changed
+                    let this_snippet_div = $('#snippet_' + snippet_name);
+                    this_snippet_div.find('[data-snippet_attribute="name"]').val(new_snippet_name);
+                    this_snippet_div.attr('id', 'snippet_' + new_snippet_name);
+                }
             }
         }
 
@@ -2404,8 +2359,9 @@
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label for="id_panos_snippet_name">Name:</label>
-                                    <input type="text" value="" class="form-control" id="id_panos_snippet_name"
-                                           disabled>
+                                    <input type="hidden" value="" id="id_panos_snippet_name">
+                                    <input type="text" value="" class="form-control"
+                                           id="id_panos_snippet_new_name">
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label for="id_panos_snippet_cmd">Command:</label>
@@ -2623,7 +2579,9 @@
                 <div class="modal-body" style="overflow-y: auto">
                     <div class="form-group">
                         <label for="id_rest_snippet_name">Name:</label>
-                        <input type="text" value="" class="form-control" id="id_rest_snippet_name" disabled>
+                        <input type="hidden" value="" id="id_rest_snippet_name">
+                        <input type="text" value="" class="form-control"
+                            id="id_rest_snippet_new_name">
                         <label for="id_rest_snippet_path">Path:</label>
                         <input type="text" value="" class="form-control" id="id_rest_snippet_path">
                         <label for="id_rest_snippet_operation">Operation:</label>
@@ -2710,7 +2668,9 @@
                 <div class="modal-body" style="overflow-y: auto">
                     <div class="form-group">
                         <label for="id_template_snippet_name">Name:</label>
-                        <input type="text" value="" class="form-control" id="id_template_snippet_name" disabled>
+                        <input type="hidden" value="" id="id_template_snippet_name">
+                        <input type="text" value="" class="form-control"
+                            id="id_template_snippet_new_name">
                         <label for="id_template_snippet_element">Template:</label>
                         <textarea class="form-control" rows="7" id="id_template_snippet_element"></textarea>
                         <p class="small muted text-right m-0">
@@ -2833,8 +2793,9 @@
                             <div class="form-row">
                                 <div class="form-group col-md-6">
                                     <label for="id_pan_validation_snippet_name">Name:</label>
-                                    <input type="text" value="" class="form-control" id="id_pan_validation_snippet_name"
-                                           disabled>
+                                    <input type="hidden" value="" id="id_pan_validation_snippet_name">
+                                    <input type="text" value="" class="form-control"
+                                           id="id_pan_validation_snippet_new_name">
                                 </div>
                                 <div class="form-group col-md-6">
                                     <label for="id_pan_validation_snippet_cmd">Cmd:</label>
