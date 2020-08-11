@@ -142,7 +142,6 @@ class PanhandlerAppFormView(CNCBaseFormView):
         return super().get(request, *args, **kwargs)
 
 
-
 class ImportRepoView(PanhandlerAppFormView):
     # define initial dynamic form from this snippet metadata
     snippet = 'import_repo'
@@ -672,8 +671,11 @@ class CreateSkilletView(PanhandlerAppFormView):
             messages.add_message(self.request, messages.ERROR, 'Could not edit Skillet, malformed environment')
             return HttpResponseRedirect('/panhandler/repos')
 
+        # skillet_create_method is a hidden var, so we need to pull it directly from the POST
+        # or just use the default value from the skillet
+        create_method = self.request.POST.get('skillet_create_method', 'menu')
+
         workflow = self.get_workflow()
-        create_method = workflow.get('skillet_create_method', 'menu')
 
         local_branch = workflow.get('local_branch_name', None)
         commit_message = workflow.get('commit_message', None)
@@ -734,16 +736,22 @@ class CreateSkilletView(PanhandlerAppFormView):
 
         # ensure we can create the appropriate directory
         if os.path.exists(skillet_path):
-            messages.add_message(self.request, messages.ERROR,
-                                 'Could not Create Skillet, Directory already exists in repo')
-            return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+            p = Path(skillet_path)
+            children = [c for c in p.iterdir()]
 
-        try:
-            os.makedirs(skillet_path)
-        except OSError:
-            messages.add_message(self.request, messages.ERROR,
-                                 'Could not Create Skillet, Could not create directory!')
-            return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+            if len(children) != 0:
+                # do not create skillet if dir is non-empty
+                messages.add_message(self.request, messages.ERROR,
+                                     'Could not Create Skillet, Directory already exists in repo')
+                return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+
+        else:
+            try:
+                os.makedirs(skillet_path)
+            except OSError:
+                messages.add_message(self.request, messages.ERROR,
+                                     'Could not Create Skillet, Could not create directory!')
+                return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
 
         # check to ensure no skillet exists in the repo root, this will prevent snippet_utils from indexing any
         # child directories and this skillet will never been seen!
@@ -1813,6 +1821,12 @@ class DeleteSkilletView(UpdateRepoView):
         for meta_file in skillet_path.glob('.meta-cnc.y*'):
             meta_file.unlink()
             meta_name = meta_file.name
+
+        # remove blank directories that share the same name as the skillet
+        if skillet_path.name == skillet_name:
+            children = [c for c in skillet_path.iterdir()]
+            if len(children) == 0:
+                skillet_path.unlink()
 
         messages.add_message(self.request, messages.SUCCESS, 'Skillet Deleted successfully')
 
