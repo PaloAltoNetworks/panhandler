@@ -2190,6 +2190,8 @@
                     <div class="form-group">
                         <label for="all_dropdown_options">Dropdown Items:</label>
                         <div class="input-group" id="all_dropdown_options"></div>
+                        <hr/>
+                        <label for="dropdown_options_add_ui">New Dropdown List Item</label>
                         <div class="input-group" id="dropdown_options_add_ui">
                             <input type="text" value="" placeholder="key" class="form-control" id="id_dropdown_key"
                                    data-modal_source="id_variable_type" data-modal_value="dropdown"
@@ -2210,6 +2212,8 @@
                     <div class="form-group">
                         <label for="all_checkbox_options">Checkbox Items:</label>
                         <div class="input-group" id="all_checkbox_options"></div>
+                        <hr/>
+                        <label for="checkbox_options_add_ui">Add Item to Checkbox List:</label>
                         <div class="input-group" id="checkbox_options_add_ui">
                             <input type="text" value="" placeholder="key" class="form-control" id="id_checkbox_key"
                                    data-modal_source="id_variable_type" data-modal_value="checkbox">
@@ -2228,6 +2232,8 @@
                     <div class="form-group">
                         <label for="all_radio_options">Radio Items:</label>
                         <div class="input-group" id="all_radio_options"></div>
+                        <hr/>
+                        <label for="radio_options_add_ui">Add Item to Radio List:</label>
                         <div class="input-group" id="radio_options_add_ui">
                             <input type="text" value="" placeholder="key" class="form-control" id="id_radio_key"
                                    data-modal_source="id_variable_type" data-modal_value="radio">
@@ -2460,7 +2466,10 @@
                                 user.
                             </div>
                             <div class="form-group">
+                                <label for="all_panos_tags">Tag List</label>
                                 <div class="input-group" id="all_panos_tags"></div>
+                                <hr/>
+                                <label for="panos_tags_add_ui">Add New Tag To List</label>
                                 <div class="input-group" id="panos_tags_add_ui">
                                     <input type="text" value="" placeholder="tag" class="form-control"
                                            id="id_panos_tag">
@@ -2510,6 +2519,7 @@
                                 <label for="all_panos_output_options">Outputs:</label>
                                 <div class="input-group" id="all_panos_output_options"></div>
                             </div>
+                            <hr/>
                             <a href="#panos_outputs_add" data-toggle="collapse" data-target="#panos_outputs_add"
                                aria-expanded="true" aria-controls="panos_outputs_add">
                                 <i class="fa fa-plus"></i>Add Output
@@ -2547,7 +2557,7 @@
                                 <button class="float-right btn btn-outline-primary"
                                         title="Add Output Definition"
                                         onclick="add_new_output('panos')">
-                                    <i class="fa fa-plus"></i>
+                                    <i class="fa fa-plus"></i> Add Output to List
                                 </button>
                             </div>
                         </div>
