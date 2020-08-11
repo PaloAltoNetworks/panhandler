@@ -357,7 +357,7 @@ class RepoDetailsView(CNCView):
     app_dir = 'panhandler'
 
     @staticmethod
-    def __get_repo_dir(repo_name: str):
+    def __get_repo_dir(repo_name: str) -> str:
         user_dir = os.path.expanduser('~')
         return os.path.join(user_dir, '.pan_cnc', 'panhandler', 'repositories', repo_name)
 
