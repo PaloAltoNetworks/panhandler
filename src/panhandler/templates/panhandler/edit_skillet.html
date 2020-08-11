@@ -125,7 +125,6 @@
 
             let snippet_name_input = $('#id_panos_snippet_name');
             let snippet_cmd_input = $('#id_panos_snippet_cmd');
-            let snippet_when_input = $('#id_panos_snippet_when');
 
             let snippet_name = snippet_name_input.val();
             let cmd = snippet_cmd_input.val();
@@ -161,9 +160,17 @@
                     snippet_def['parse_result'] = $('#id_panos_snippet_op_parse_result').val();
                     extract_variables(snippet_def['cmd_str']);
                     break;
+
+                case 'parse':
+                    snippet_def['variable'] = $('#id_panos_snippet_variable').val();
+                    break;
             }
 
             $('#panos_outputs_add').removeClass('show');
+
+            // update the snippet UI list to have the new cmd
+            let this_snippet_div = $('#snippet_' + snippet_name);
+            this_snippet_div.find('[data-snippet_attribute="type"]').val(snippet_def['cmd']);
 
             update_snippet('panos');
         }
@@ -526,6 +533,7 @@
             all_snippets.append(new_snippet);
 
             new_snippet.css('display', '');
+            new_snippet.attr('id', 'snippet_' + key);
         }
 
         function remove_option(option_object) {
@@ -766,6 +774,8 @@
                 }
             }
 
+            snippet_def['when'] = $('#id_' + snippet_type + '_snippet_when').val();
+
             snippet_def['outputs'] = [];
             $('#all_' + snippet_type + '_output_options').find('[id^="output_"]').each(function (index, output_div) {
                 let output_div_obj = $(output_div);
@@ -793,6 +803,12 @@
             // fix for #1 - do not add blank attributes
             if (snippet_def['outputs'] === []) {
                 delete snippet_def['outputs'];
+            }
+
+            for (let attribute_name in snippet_def) {
+                if (snippet_def[attribute_name] === '') {
+                    delete snippet_def[attribute_name];
+                }
             }
 
             // capture all configured tags
