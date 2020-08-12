@@ -149,6 +149,18 @@
                     extract_variables(snippet_def['xpath']);
                     break;
 
+                case 'show':
+                    snippet_def['xpath'] = $('#id_panos_snippet_show_xpath').val();
+
+                    extract_variables(snippet_def['xpath']);
+                    break;
+
+                case 'delete':
+                    snippet_def['xpath'] = $('#id_panos_snippet_delete_xpath').val();
+
+                    extract_variables(snippet_def['xpath']);
+                    break;
+
                 case 'cli':
                     snippet_def['cmd_str'] = $('#id_panos_snippet_cmd_cmd_str').val();
 
@@ -760,6 +772,33 @@
 
         }
 
+        function update_and_edit_next_snippet(snippet_type) {
+            /**
+             *  Called by the Edit Snippet Modal. This will save the current snippet from the UI
+             *  find the next snippet and load that modal
+             */
+
+            if (is_pan_type_skillet(snippet_type)) {
+                update_panos_snippet();
+            } else if (snippet_type === 'pan-validation') {
+                update_pan_validation_snippet();
+            } else {
+                update_snippet(snippet_type);
+            }
+
+            let snippet_name_input = $('#id_' + snippet_type.replace('-', '_') + '_snippet_name');
+            let snippet_name = snippet_name_input.val();
+            let current_snippet_index = skillet_snippets.findIndex(i => i.name === snippet_name);
+            let next_snippet = skillet_snippets[current_snippet_index + 1];
+            if (typeof next_snippet === 'undefined') {
+                // no more snippets to edit, hide the modal and return here
+                $('#edit_' + snippet_type + '_snippet_modal').modal('hide');
+                return;
+            }
+
+            edit_snippet_by_name(next_snippet['name']);
+        }
+
         function update_snippet(snippet_type) {
             let snippet_name_input = $('#id_' + snippet_type + '_snippet_name');
             let snippet_name = snippet_name_input.val();
@@ -804,7 +843,7 @@
             if (snippet_def['outputs'] === []) {
                 delete snippet_def['outputs'];
             }
-
+            // don't add blank str attributes - this can happen when changing snippet cmd types
             for (let attribute_name in snippet_def) {
                 if (snippet_def[attribute_name] === '') {
                     delete snippet_def[attribute_name];
@@ -837,10 +876,6 @@
                     this_snippet_div.attr('id', 'snippet_' + new_snippet_name);
                 }
             }
-        }
-
-        function update_rest_snippet() {
-            update_snippet('rest');
         }
 
         function setup_panos_snippet(snippet_def) {
@@ -884,6 +919,14 @@
 
                 case 'get':
                     $('#id_panos_snippet_get_xpath').val(snippet_def['xpath']);
+                    break;
+
+                case 'show':
+                    $('#id_panos_snippet_show_xpath').val(snippet_def['xpath']);
+                    break;
+
+                case 'delete':
+                    $('#id_panos_snippet_delete_xpath').val(snippet_def['xpath']);
                     break;
 
                 case 'cli':
@@ -1241,6 +1284,10 @@
 
             let id_test_skillet_next_input = $('#id_test_skillet_next');
             id_test_skillet_next_input.val(next_snippet['name']);
+
+            let id_test_skillet_raw_json_input = $('#id_test_skillet_raw_json');
+            id_test_skillet_raw_json_input.val(JSON.stringify(next_snippet, null, '  '));
+
             $('#step_over_skillet_button').show();
             $('#step_over_next_button').show();
 
@@ -1399,6 +1446,9 @@
             let next_snippet = skillet_snippets[current_snippet_index];
             id_test_skillet_next_input.val(next_snippet['name']);
 
+            let id_test_skillet_raw_json_input = $('#id_test_skillet_raw_json');
+            id_test_skillet_raw_json_input.val(JSON.stringify(next_snippet, null, '  '));
+
             let outputs_input = $('#id_test_skillet_outputs');
             outputs_input.val('');
         }
@@ -1428,9 +1478,13 @@
 
             id_test_skillet_next_input.val(next_snippet['name']);
 
+            let id_test_skillet_raw_json_input = $('#id_test_skillet_raw_json');
+            id_test_skillet_raw_json_input.val(JSON.stringify(next_snippet, null, '  '));
+
             let outputs_input = $('#id_test_skillet_outputs');
             outputs_input.val('Skipped ' + current_snippet);
         }
+
 
         function step_over_snippet_skip_to() {
             let id_test_skillet_skip_to = $('#id_test_skillet_skip_to');
@@ -1441,6 +1495,9 @@
             current_snippet_index = skillet_snippets.findIndex(i => i.name === desired_snippet);
             let next_snippet = skillet_snippets[current_snippet_index];
             id_test_skillet_next_input.val(next_snippet['name']);
+
+            let id_test_skillet_raw_json_input = $('#id_test_skillet_raw_json');
+            id_test_skillet_raw_json_input.val(JSON.stringify(next_snippet, null, '  '));
 
             let outputs_input = $('#id_test_skillet_outputs');
             outputs_input.val('Skipped ahead to ' + next_snippet['name']);
@@ -1517,6 +1574,9 @@
 
                     if (typeof (next_snippet) !== 'undefined') {
                         id_test_skillet_next_input.val(next_snippet['name']);
+
+                        let id_test_skillet_raw_json_input = $('#id_test_skillet_raw_json');
+                        id_test_skillet_raw_json_input.val(JSON.stringify(next_snippet, null, '  '));
                     }
 
                     console.log(context);
@@ -2388,12 +2448,14 @@
                                 <div class="form-group col-md-6">
                                     <label for="id_panos_snippet_cmd">Command:</label>
                                     <select class="form-control" id="id_panos_snippet_cmd" title="cmd">
-                                        <option>set</option>
-                                        <option>get</option>
                                         <option>cli</option>
+                                        <option>delete</option>
+                                        <option>get</option>
+                                        <option>move</option>
                                         <option>op</option>
                                         <option>parse</option>
-                                        <option>move</option>
+                                        <option>set</option>
+                                        <option>show</option>
                                     </select>
                                 </div>
                             </div>
@@ -2422,6 +2484,16 @@
                                 <label for="id_panos_snippet_get_xpath">XPath:</label>
                                 <input type="text" value="" class="form-control" id="id_panos_snippet_get_xpath"
                                        data-modal_source="id_panos_snippet_cmd" data-modal_value="get">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_panos_snippet_show_xpath">XPath:</label>
+                                <input type="text" value="" class="form-control" id="id_panos_snippet_show_xpath"
+                                       data-modal_source="id_panos_snippet_cmd" data-modal_value="show">
+                            </div>
+                            <div class="form-group">
+                                <label for="id_panos_snippet_delete_xpath">XPath:</label>
+                                <input type="text" value="" class="form-control" id="id_panos_snippet_delete_xpath"
+                                       data-modal_source="id_panos_snippet_cmd" data-modal_value="delete">
                             </div>
                             <div class="form-group">
                                 <label for="id_panos_snippet_cmd_cmd_str">CLI:</label>
@@ -2582,6 +2654,9 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-outline-primary"
+                            onclick="update_and_edit_next_snippet('panos')">Update and Next
+                    </button>
                     <button type="button" class="btn btn-primary" onclick="update_panos_snippet()"
                             data-dismiss="modal">Update
                     </button>
@@ -2670,6 +2745,9 @@
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-outline-primary"
+                            onclick="update_and_edit_next_snippet('rest')">Update and Next
+                    </button>
                     <button type="button" class="btn btn-primary" onclick="update_snippet('rest')"
                             data-dismiss="modal">Update
                     </button>
@@ -3011,6 +3089,9 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-outline-primary"
+                            onclick="update_and_edit_next_snippet('pan-validation')">Update and Next
+                    </button>
                     <button type="button" class="btn btn-primary" onclick="update_pan_validation_snippet()"
                             data-dismiss="modal">Update
                     </button>
@@ -3066,8 +3147,13 @@
                     </p>
                     <div class="form-row">
                         <div class="form-group col-md-6">
-                            <label for="id_test_skillet_context">Context:</label>
-                            <textarea class="form-control" rows="10" id="id_test_skillet_context"></textarea>
+                            <label for="id_test_skillet_raw_json">Snippet:</label>
+                            <textarea class="form-control" rows="8" id="id_test_skillet_raw_json"></textarea>
+
+                        </div>
+                        <div class="form-group col-md-6">
+                           <label for="id_test_skillet_context">Context:</label>
+                            <textarea class="form-control" rows="8" id="id_test_skillet_context"></textarea>
                             <p class="small muted text-right m-0">
                                 <a href="#" onclick="enlarge_text_area('id_test_skillet_context')">
                                     <i class="fa fa-edit"></i>
@@ -3079,55 +3165,53 @@
                             </p>
                             <input type="hidden" id="id_test_skillet_results"/>
                         </div>
-                        <div class="form-group col-md-6">
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-6">
                             <label for="id_test_skillet_outputs">Outputs:</label>
-                            <textarea class="form-control" rows="10" id="id_test_skillet_outputs"></textarea>
+                            <textarea class="form-control" rows="8" id="id_test_skillet_outputs"></textarea>
                             <p class="small muted text-right m-0">
                                 <a href="#" onclick="enlarge_text_area('id_test_skillet_outputs')">
                                     <i class="fa fa-edit"></i>
                                 </a>
                             </p>
                         </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_test_skillet_skip_to">Skip Ahead to Snippet:</label>
-                        <div class="input-group mb-3">
-                            <select id="id_test_skillet_skip_to" onchange="step_over_snippet_skip_to();">
-                                <option>None</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label for="id_test_skillet_next">Step Through Snippets:</label>
-                        <div class="input-group mb-3">
-                            <input type="text" value="" disabled="disabled"
-                                   class="form-control disabled" id="id_test_skillet_next">
-                            <div class="input-group-append" id="start_over_skillet_button">
-                            <span class="input-group-text" title="Start Over">
-                                <a href="#" onclick="step_over_restart_skillet();">
-                                    <i class="fa fa-redo"></i>
-                                </a>
-                            </span>
+                        <div class="form-group col-md-6">
+                            <label for="id_test_skillet_next">Step Through Snippets:</label>
+                            <div class="input-group mb-3">
+                                <input type="text" value="" disabled="disabled"
+                                       class="form-control disabled" id="id_test_skillet_next">
+                                <div class="input-group-append" id="start_over_skillet_button">
+                                    <span class="input-group-text" title="Start Over">
+                                        <a href="#" onclick="step_over_restart_skillet();">
+                                            <i class="fa fa-redo"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                                <div class="input-group-append" id="step_over_next_button">
+                                    <span class="input-group-text" title="Skip Next Snippet">
+                                        <a href="#" onclick="step_over_skillet_next();">
+                                            <i class="fa fa-forward"></i>
+                                        </a>
+                                    </span>
+                                </div>
+                                <div class="input-group-append" id="step_over_skillet_button">
+                                    <span class="input-group-text" title="Execute Next Snippet">
+                                        <a href="#" onclick="step_over_skillet();">
+                                            <i class="fa fa-play"></i>
+                                        </a>
+                                    </span>
+                                </div>
                             </div>
-                            <div class="input-group-append" id="step_over_next_button">
-                            <span class="input-group-text" title="Skip Next Snippet">
-                                <a href="#" onclick="step_over_skillet_next();">
-                                    <i class="fa fa-forward"></i>
-                                </a>
-                            </span>
-                            </div>
-                            <div class="input-group-append" id="step_over_skillet_button">
-                            <span class="input-group-text" title="Execute Next Snippet">
-                                <a href="#" onclick="step_over_skillet();">
-                                    <i class="fa fa-play"></i>
-                                </a>
-                            </span>
+                             <label for="id_test_skillet_skip_to">Skip Ahead to Snippet:</label>
+                            <div class="input-group mb-3">
+                                <select id="id_test_skillet_skip_to" onchange="step_over_snippet_skip_to();">
+                                    <option>None</option>
+                                </select>
                             </div>
                         </div>
 
                     </div>
-
-
                     <div class="modal-footer">
                         <button type="button" class="btn btn-danger" data-dismiss="modal">Dismiss</button>
                     </div>
