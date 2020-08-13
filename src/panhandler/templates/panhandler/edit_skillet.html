@@ -2879,6 +2879,12 @@
                                aria-selected="false">When</a>
                         </li>
                         <li class="nav-item">
+                            <a class="nav-link" id="pan_validation_output_tab" data-toggle="tab"
+                               href="#pan_validation_output" role="tab"
+                               aria-controls="pan_validation_output"
+                               aria-selected="false">Outputs</a>
+                        </li>
+                        <li class="nav-item">
                             <a class="nav-link" id="pan_validation_messages_tab" data-toggle="tab"
                                href="#pan_validation_messages" role="tab"
                                aria-controls="pan_validation_messages"
@@ -2959,62 +2965,9 @@
                                 <input type="text" value="" class="form-control" id="id_pan_validation_snippet_variable"
                                        data-modal_source="id_pan_validation_snippet_cmd" data-modal_value="parse">
                             </div>
-
-                            <!-- outputs -->
-                            <div class="form-group">
-                                <label for="all_pan_validation_output_options">Outputs:</label>
-                                <div class="input-group" id="all_pan_validation_output_options"></div>
-                                <a href="#pan_validation_outputs_add" data-toggle="collapse"
-                                   data-target="#pan_validation_outputs_add"
-                                   aria-expanded="true" aria-controls="pan_validation_outputs_add">
-                                    <i class="fa fa-plus"></i>Add Output
-                                </a>
-                                <div id="pan_validation_outputs_add" class="collapse">
-                                    <div class="form-row">
-                                        <div class="col-md-6">
-                                            <label for="id_pan_validation_output_name">Variable Name:</label>
-                                            <input type="text" value="" placeholder="" class="form-control"
-                                                   id="id_pan_validation_output_name"
-                                                   data-modal_source="id_pan_validation_snippet_cmd"
-                                                   data-modal_value="parse,op,cli">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="id_pan_validation_output_key">Capture Type:</label>
-                                            <select id="id_pan_validation_output_key" class="form-control">
-                                                <option value="capture_list" selected="selected">Capture List</option>
-                                                <option value="capture_pattern">Capture Pattern</option>
-                                                <option value="capture_value">Capture Value</option>
-                                                <option value="capture_object">Capture Object</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <label for="id_pan_validation_output_filter">Filter Items:</label>
-                                        <input type="text" value="" class="form-control"
-                                               id="id_pan_validation_output_filter"
-                                               placeholder="item == 'some_value'"
-                                               data-modal_source="id_pan_validation_output_key"
-                                               data-modal_value="capture_list"
-                                               title="Boolean Expression where only passing items will be added to the captured list">
-                                    </div>
-                                    <div class="form-row">
-                                        <label for="id_pan_validation_output_value">Pattern:</label>
-                                        <div class="input-group">
-                                            <input type="text" value="" placeholder="" class="form-control"
-                                                   id="id_pan_validation_output_value">
-                                            <div class="input-group-append">
-                                                       <span class="input-group-text">
-                                                       <a href="#"
-                                                          onclick="add_new_output('pan_validation');">
-                                                       <i class="fa fa-plus"></i>
-                                                       </a>
-                                                       </span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
+
+                        <!-- pan_validation when tab -->
                         <div class="tab-pane fade" id="pan_validation_when" role="tabpanel"
                              aria-labelledby="pan_validation_when_tab">
                             <div class="form-group">
@@ -3027,6 +2980,71 @@
                                 </p>
                             </div>
                         </div>
+
+                        <!-- pan_validation output tab  -->
+                       <div class="tab-pane fade" id="pan_validation_output" role="tabpanel"
+                             aria-labelledby="pan_validation_output_tab">
+                           <div class="form-group">
+                               <p class="text-danger p-5 text-center"
+                                  data-modal_source="id_pan_validation_snippet_cmd"
+                                  data-modal_value="validate">
+                                   Outputs are not currently used for validate command.
+                               </p>
+                           </div>
+
+                           <div class="form-group">
+                               <label for="all_pan_validation_output_options">Outputs:</label>
+                               <div class="input-group" id="all_pan_validation_output_options"></div>
+                               <hr/>
+                               <a href="#pan_validation_outputs_add" data-toggle="collapse"
+                                  data-target="#pan_validation_outputs_add"
+                                  data-modal_source="id_pan_validation_snippet_cmd"
+                                  data-modal_value="cli,op,parse"
+                                  aria-expanded="true" aria-controls="pan_validation_outputs_add">
+                                   <i class="fa fa-plus"></i>Add Output
+                               </a>
+                           </div>
+
+                           <div id="pan_validation_outputs_add" class="collapse">
+                                    <div class="form-row">
+                                        <div class="col-md-6">
+                                            <label for="id_pan_validation_output_name">Variable Name:</label>
+                                            <input type="text" value="" placeholder="" class="form-control"
+                                                   id="id_pan_validation_output_name">
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="id_pan_validation_output_key">Capture Type:</label>
+                                            <select id="id_pan_validation_output_key" class="form-control">
+                                                <option value="capture_list" selected="selected">Capture List</option>
+                                                <option value="capture_pattern">Capture Pattern</option>
+                                                <option value="capture_value">Capture Value</option>
+                                                <option value="capture_object">Capture Object</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="id_pan_validation_output_filter">Filter Items:</label>
+                                        <input type="text" value="" class="form-control"
+                                               id="id_pan_validation_output_filter"
+                                               placeholder="item == 'some_value'"
+                                               data-modal_source="id_pan_validation_output_key"
+                                               data-modal_value="capture_list"
+                                               title="Boolean Expression where only passing items will be added to the captured list">
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="id_pan_validation_output_value">Pattern:</label>
+                                        <input type="text" value="" placeholder="" class="form-control"
+                                               id="id_pan_validation_output_value">
+                                    </div>
+                                    <button class="float-right btn btn-outline-primary"
+                                            title="Add Output Definition"
+                                            onclick="add_new_output('pan_validation')">
+                                        <i class="fa fa-plus"></i> Add Output to List
+                                    </button>
+                                </div>
+                        </div>
+                        
+                       <!-- pan_validation messages tag -->
                         <div class="tab-pane fade" id="pan_validation_messages" role="tabpanel"
                              aria-labelledby="pan_validation_messages_tab">
                             <div class="form-group">
@@ -3090,7 +3108,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-outline-primary"
-                            onclick="update_and_edit_next_snippet('pan-validation')">Update and Next
+                            onclick="update_and_edit_next_snippet('pan_validation')">Update and Next
                     </button>
                     <button type="button" class="btn btn-primary" onclick="update_pan_validation_snippet()"
                             data-dismiss="modal">Update
