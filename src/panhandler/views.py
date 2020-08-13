@@ -898,7 +898,16 @@ class UpdateSkilletView(PanhandlerAppFormView):
         for d in debug_errors:
             messages.add_message(self.request, messages.ERROR, f'Skillet Error: {d}')
 
-        skillet = skillet_loader.create_skillet(skillet_dict=skillet_dict)
+        # catch errors and log more verbose details for https://gitlab.com/panw-gse/as/panhandler/-/issues/65
+        try:
+            skillet = skillet_loader.create_skillet(skillet_dict=skillet_dict)
+
+        except SkilletLoaderException as sle:
+            print(sle)
+            print('Attempting to update skillet with the following invalid structure:')
+            print(skillet_json)
+            messages.add_message(self.request, messages.ERROR, f'Skillet Update Error: Invalid Structure')
+            return self.form_invalid(form)
 
         # FIXME - this has been reworked in skilletlib for all skillet types
         # FIXME - possibly need to ensure declared variables that are also outputs are not flagged here
