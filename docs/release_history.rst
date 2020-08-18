@@ -4,6 +4,30 @@
 Release History
 ===============
 
+
+V4.0
+~~~~
+
+* Released 9-2020
+
+New Features:
+
+* Skillet Editor
+    A new UI to edit all aspects of a Skillet.
+
+* Skillet Creation Tools
+    This feature allows you to build a skillet from scratch in a number of different ways. For example, you
+    can build a skillet from the differences between two saved configuration files.
+
+* Improved Terraform Support
+    Terraform now uses a docker image in the backend, which allows any arbitrary terraform version to be supported.
+    This allows the skillet builder to choose customized docker image containing any version of terraform and
+    supporting libraries.
+
+* Support for SSH based git repositories
+    This allows you to use private git repositories as well as push local changes back upstream.
+
+
 V3.1
 ~~~~
 
