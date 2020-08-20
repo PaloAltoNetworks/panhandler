@@ -1,0 +1,35 @@
+name: edit_skillet_yaml
+label: Skillet YAML Editor
+description: |
+  Skillet Editor will create or update a Skillet. This saved Skillet is then saved into a local branch in the parent
+  repository.
+
+type: app
+
+labels:
+  help_link: https://skilletbuilder.readthedocs.io
+  help_link_title: Skillet Builder Documentation
+
+variables:
+  - name: skillet_contents
+    description: Skillet YAML
+    default:
+    type_hint: text_area
+    help_text: Edit the raw YAML of the Skillet here
+
+  - name: local_branch_name
+    description: Branch
+    default: local
+    type_hint: text
+    allow_special_characters: false
+    help_text: Name of the branch in which to save these local changes
+  - name: commit_message
+    description: Commit Message
+    default: Update .meta-cnc from Panhandler
+    type_hint: text
+    allow_special_characters: false
+    help_text: Message to add to commit log for this edit
+
+
+snippets:
+

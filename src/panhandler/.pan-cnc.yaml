@@ -44,6 +44,12 @@ views:
       - repo_name
       - skillet
 
+  - name: edit_skillet_yaml
+    class: UpdateSkilletYamlView
+    parameters:
+      - repo_name
+      - skillet
+
   - name: create_skillet
     class: CreateSkilletView
 

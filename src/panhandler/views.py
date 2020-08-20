@@ -857,9 +857,26 @@ class UpdateSkilletView(PanhandlerAppFormView):
         context['skillet_contents'] = skillet_contents
         context['skillet_json'] = skillet_json
         context['skillet'] = skillet
+        context['repo_name'] = repo_name
         context['title'] = 'Edit Skillet Metadata'
         context['header'] = 'Panhandler Skillet'
         return context
+
+    def get_skillet_dict_to_edit(self, skillet_contents: str) -> (dict, None):
+        """
+        Returns a dictionary of the skillet from the request. In this class, the skillet data
+        will be a JSON encoded string. Subclasses can override this method to provide for other
+        encodings like YAML encoded string
+
+        :return: skillet dictionary object
+        """
+
+        # in the json case, we do not want to smoother error messages as the calling scope will handle it
+        # for non json cases, where we have an actual form, then we can return None here in the event of an error
+        # and it will cause a form_invalid event. However, we do not use a form here, so instead allow the exception
+        # to be raised here.
+        return json.loads(skillet_contents)
+
 
     def form_valid(self, form):
 
@@ -873,18 +890,21 @@ class UpdateSkilletView(PanhandlerAppFormView):
         workflow = self.get_workflow()
         local_branch = workflow.get('local_branch_name', None)
 
-        # fix for https://gitlab.com/panw-gse/as/panhandler/-/issues/50
-        skillet_json = self.request.POST.get('skillet_contents', {})
-
+        skillet_contents: str = self.request.POST.get('skillet_contents', '')
         commit_message = workflow.get('commit_message', None)
 
         try:
-            skillet_dict = json.loads(skillet_json)
+            # get the skillet dictionary object from the request
+            skillet_dict = self.get_skillet_dict_to_edit(skillet_contents)
+
+            # for the yaml case, return to the form to try again
+            if skillet_dict is None:
+                return self.form_invalid(form)
 
             # do not trust this coming from the user
             skillet_dict['snippet_path'] = skillet_path
 
-            skillet_content = yaml.safe_dump(skillet_dict)
+            skillet_yaml = yaml.safe_dump(skillet_dict)
 
         except (ScannerError, ValueError):
             messages.add_message(self.request, messages.ERROR,
@@ -905,7 +925,7 @@ class UpdateSkilletView(PanhandlerAppFormView):
         except SkilletLoaderException as sle:
             print(sle)
             print('Attempting to update skillet with the following invalid structure:')
-            print(skillet_json)
+            print(skillet_contents)
             messages.add_message(self.request, messages.ERROR, f'Skillet Update Error: Invalid Structure')
             return self.form_invalid(form)
 
@@ -938,7 +958,7 @@ class UpdateSkilletView(PanhandlerAppFormView):
         skillet_file_path = os.path.join(skillet_path, '.meta-cnc.yaml')
 
         with open(skillet_file_path, 'w') as skillet_file:
-            skillet_file.write(skillet_content)
+            skillet_file.write(skillet_yaml)
 
         git_utils.commit_local_changes(repo_dir, commit_message, skillet_file_path)
 
@@ -948,6 +968,27 @@ class UpdateSkilletView(PanhandlerAppFormView):
 
         cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
         return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
+
+
+class UpdateSkilletYamlView(UpdateSkilletView):
+    snippet = 'edit_skillet_yaml'
+    template_name = 'pan_cnc/dynamic_form.html'
+
+    def get_skillet_dict_to_edit(self, skillet_contents: str) -> (dict, None):
+        """
+        Returns a dictionary of the skillet from the request. This overrides the parent version
+        to return the skillet from a YAML encoded string
+
+        :return:
+        """
+
+        try:
+            return yaml.safe_load(skillet_contents)
+
+        except ScannerError as ve:
+            print('Could not load Skillet from request!')
+            print(ve)
+            return None
 
 
 class ListSkilletCollectionsView(CNCView):
