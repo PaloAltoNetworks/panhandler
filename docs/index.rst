@@ -16,6 +16,7 @@ Panhandler
    using
    switching_dev_latest
    importing_skillets
+   creating_panos_skillets
    environments
    skillets
    variables
