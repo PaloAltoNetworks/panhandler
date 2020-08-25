@@ -159,11 +159,11 @@ def test_repo_import(client, django_user_model):
 
     # test skillet deletion
     # url requires repo_name / skillet_name
-    response = client.get('/panhandler/delete_skillet/panhandler_test/another_test')
-    assert response.status_code == 200
+    del_response = client.get('/panhandler/delete_skillet/panhandler_test/another_test', follow=True)
+    assert del_response.status_code == 200
 
-    rendered_output = rendered_response.content.decode('utf-8')
-    assert 'Skillet Deleted successfully' in rendered_output
+    del_rendered_output = del_response.content.decode('utf-8')
+    assert 'Skillet Deleted successfully' in del_rendered_output
 
     # Now remove this repo again
     response = client.get('/panhandler/remove_repo/panhandler_test', follow=True)
