@@ -1992,7 +1992,7 @@ class GenerateSkilletOnlineView(PanhandlerAppFormView):
             if pre_config == 'Generated Baseline':
                 pre_config_str = panos.generate_baseline(reset_hostname=False)
             else:
-                pre_config_str = panos.get_configuration(pre_config)
+                pre_config_str = panos.get_saved_configuration(pre_config)
 
             if post_config == 'Candidate Config':
                 post_config_str = panos.get_configuration(config_source='candidate')
