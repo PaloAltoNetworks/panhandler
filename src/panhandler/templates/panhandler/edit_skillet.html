@@ -364,6 +364,20 @@
                 let snippet_group = $(obj);
                 let snippet_name = snippet_group.find('[data-snippet_attribute="name"]').val();
                 let snippet_def = get_snippet_definition(snippet_name);
+
+                // fix for #1 - do not add blank attributes
+                if (snippet_def['outputs'] === []) {
+                    delete snippet_def['outputs'];
+                }
+                // don't add blank str attributes - this can happen when changing snippet cmd types
+                for (let attribute_name in snippet_def) {
+                    if (snippet_def[attribute_name] === '') {
+                        delete snippet_def[attribute_name];
+                    }
+                }
+
+                delete snippet_def['full_xpath'];
+
                 all_snippets.push(snippet_def);
             });
 
@@ -1236,7 +1250,8 @@
                 delete skillet['depends'];
             }
 
-            console.log(skillet);
+            delete skillet['snippet_path'];
+
         }
 
         function show_skillet() {

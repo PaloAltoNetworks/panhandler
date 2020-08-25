@@ -689,6 +689,11 @@ class CreateSkilletView(PanhandlerAppFormView):
             # let's cheat and grab a snippets list from the context - Skillet Builder tools can populate this for us
             skillet_snippets = workflow.get('snippets', list())
 
+            # remove non-required snippet attribute if found. For #79
+            for snippet in skillet_snippets:
+                if type(snippet) is dict and 'full_xpath' in snippet:
+                    snippet.pop('full_xpath')
+
             collection_name = workflow.get('collection_name', 'Unknown')
 
             new_skillet = dict()
@@ -854,7 +859,7 @@ class UpdateSkilletView(PanhandlerAppFormView):
         self.prepopulated_form_values['skillet_contents'] = skillet_contents
 
         context = super().get_context_data(**kwargs)
-        context['skillet_contents'] = skillet_contents
+        context['skillet_contents'] = re.sub(r'snippet_path:.*$', '', skillet_contents)
         context['skillet_json'] = skillet_json
         context['skillet'] = skillet
         context['repo_name'] = repo_name
@@ -877,7 +882,6 @@ class UpdateSkilletView(PanhandlerAppFormView):
         # to be raised here.
         return json.loads(skillet_contents)
 
-
     def form_valid(self, form):
 
         try:
@@ -893,6 +897,8 @@ class UpdateSkilletView(PanhandlerAppFormView):
         skillet_contents: str = self.request.POST.get('skillet_contents', '')
         commit_message = workflow.get('commit_message', None)
 
+        skillet_loader = SkilletLoader()
+
         try:
             # get the skillet dictionary object from the request
             skillet_dict = self.get_skillet_dict_to_edit(skillet_contents)
@@ -904,23 +910,14 @@ class UpdateSkilletView(PanhandlerAppFormView):
             # do not trust this coming from the user
             skillet_dict['snippet_path'] = skillet_path
 
-            skillet_yaml = yaml.safe_dump(skillet_dict)
+            skillet = skillet_loader.create_skillet(skillet_dict=skillet_dict)
+
+            skillet_yaml = skillet.dump_yaml()
 
         except (ScannerError, ValueError):
             messages.add_message(self.request, messages.ERROR,
                                  'Syntax Error! Refusing to overwrite Skillet metadata file.')
             return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
-
-        skillet_loader = SkilletLoader()
-        debug_errors = skillet_loader.debug_skillet_structure(skillet_dict)
-
-        # debug skillet structure
-        for d in debug_errors:
-            messages.add_message(self.request, messages.ERROR, f'Skillet Error: {d}')
-
-        # catch errors and log more verbose details for https://gitlab.com/panw-gse/as/panhandler/-/issues/65
-        try:
-            skillet = skillet_loader.create_skillet(skillet_dict=skillet_dict)
 
         except SkilletLoaderException as sle:
             print(sle)
@@ -928,6 +925,12 @@ class UpdateSkilletView(PanhandlerAppFormView):
             print(skillet_contents)
             messages.add_message(self.request, messages.ERROR, f'Skillet Update Error: Invalid Structure')
             return self.form_invalid(form)
+
+        debug_errors = skillet_loader.debug_skillet_structure(skillet_dict)
+
+        # debug skillet structure
+        for d in debug_errors:
+            messages.add_message(self.request, messages.ERROR, f'Skillet Error: {d}')
 
         # FIXME - this has been reworked in skilletlib for all skillet types
         # FIXME - possibly need to ensure declared variables that are also outputs are not flagged here
