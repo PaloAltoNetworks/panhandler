@@ -1876,7 +1876,7 @@ class DeleteSkilletView(UpdateRepoView):
         if skillet_path.name == skillet_name:
             children = [c for c in skillet_path.iterdir()]
             if len(children) == 0:
-                skillet_path.unlink()
+                skillet_path.rmdir()
 
         messages.add_message(self.request, messages.SUCCESS, 'Skillet Deleted successfully')
 
