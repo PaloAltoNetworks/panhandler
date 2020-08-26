@@ -42,7 +42,6 @@ COPY --chown=cnc_user:cnc_group tox.ini /app/
 COPY --chown=cnc_user:cnc_group tests /app/tests/
 COPY --chown=cnc_user:cnc_group cnc /app/cnc/
 COPY --chown=cnc_user:cnc_group src /app/src/
-COPY --chown=cnc_user:cnc_group cnc/tools/.gitignore-cnc_user /home/cnc_user/.config/git/ignore
 
 EXPOSE 8080
 CMD ["/app/cnc/tools/ph.sh"]
