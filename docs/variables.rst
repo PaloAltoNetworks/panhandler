@@ -343,7 +343,9 @@ The resulting UI form will include 4 Text inputs. The item in the list will be a
 
   The optional 'toggle_hint' attribute will show a field only when the 'source' variable's value matches the
   configured 'value'. If the 'source' is not found, or it's current value does not match 'value', this form
-  control will be hidden. This is especially useful when paired with a 'dropdown' select control.
+  control will be hidden. This is especially useful when paired with a 'dropdown' select control. You may provide
+  more than one option for the 'value' by passing in a comma separated list. The field will be shown if any of the
+  values in the comma separated 'value' attribute match.
 
 .. code-block:: yaml
 

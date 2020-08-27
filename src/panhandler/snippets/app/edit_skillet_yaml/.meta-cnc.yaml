@@ -14,6 +14,8 @@ variables:
   - name: skillet_contents
     description: Skillet YAML
     default:
+    attributes:
+      rows: 20
     type_hint: text_area
     help_text: Edit the raw YAML of the Skillet here
 
