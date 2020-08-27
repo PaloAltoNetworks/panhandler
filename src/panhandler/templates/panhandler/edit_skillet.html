@@ -1825,7 +1825,17 @@
             let replace_text = '{% templatetag openvariable %} ' + replace_text_raw +
                 ' {% templatetag closevariable %}';
 
-            editor_text_input.val(editor_text.replace(new RegExp(find_text, 'g'), replace_text));
+            let find_text_regex = new RegExp(find_text, 'g');
+
+            editor_text_input.val(editor_text.replace(find_text_regex, replace_text));
+
+            // search and replace in all snippets for #86
+            $.each(skillet_snippets, function (index, snippet) {
+                if ("element" in snippet) {
+                    console.log('c')
+                    snippet['element'] = snippet['element'].replace(find_text_regex, replace_text);
+                }
+            });
 
             editor_text_find.val('');
             editor_text_replace.val('');
