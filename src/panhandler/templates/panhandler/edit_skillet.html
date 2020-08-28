@@ -176,6 +176,16 @@
                 case 'parse':
                     snippet_def['variable'] = $('#id_panos_snippet_variable').val();
                     break;
+
+                case 'move':
+                    $.each(['xpath', 'where', 'dst'], function (k, v) {
+                        let move_ui = $('#id_panos_snippet_move_' + v);
+                        let move_ui_val = move_ui.val();
+                        if (move_ui_val !== '') {
+                            snippet_def[v] = move_ui_val;
+                            extract_variables(snippet_def[v]);
+                        }
+                    });
             }
 
             $('#panos_outputs_add').removeClass('show');
@@ -956,6 +966,19 @@
 
                     $('#id_panos_snippet_op_parse_result').val(snippet_def['parse_result']);
                     break;
+
+                case 'move':
+                    // set all the 'where' type UI entries
+                    $.each(['xpath', 'where', 'dst'], function (k, v) {
+                        console.log(v);
+                        if (v in snippet_def) {
+                            let where_input = $('#id_panos_snippet_move_' + v);
+                            if (typeof where_input !== 'undefined') {
+                                where_input.val(snippet_def[v]);
+                            }
+                        }
+                    });
+                    break;
             }
         }
 
@@ -1370,7 +1393,7 @@
              */
 
             // skip if blank
-            if (template_str === '') {
+            if (! template_str) {
                 return;
             }
 
@@ -2503,7 +2526,17 @@
                                 <input type="text" value="" class="form-control" id="id_panos_snippet_move_xpath"
                                        data-modal_source="id_panos_snippet_cmd" data-modal_value="move">
                                 <label for="id_panos_snippet_move_where">Where:</label>
-                                <input type="text" value="" class="form-control" id="id_panos_snippet_move_where">
+                                <select class="form-control" id="id_panos_snippet_move_where" title="where">
+                                    <option>top</option>
+                                    <option>bottom</option>
+                                    <option selected="selected">before</option>
+                                    <option>after</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="id_panos_snippet_move_dst">Destination:</label>
+                                <input type="text" value="" class="form-control" id="id_panos_snippet_move_dst"
+                                       data-modal_source="id_panos_snippet_move_where" data-modal_value="before,after">
                             </div>
                             <div class="form-group">
                                 <label for="id_panos_snippet_get_xpath">XPath:</label>
