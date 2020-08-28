@@ -256,17 +256,25 @@
             let new_variable_description = $('#id_variable_description');
             let new_variable_help = $('#id_variable_help_text');
 
+            let new_toggle_source = $('#id_variable_toggle_source');
+            let new_toggle_value = $('#id_variable_toggle_value');
+
             let var_name = new_variable_key.val();
             let var_type_hint = new_variable_value.val();
             let var_default = new_variable_default.val();
             let var_description = new_variable_description.val();
             let var_help_text = new_variable_help.val();
 
+            let var_toggle_source = new_toggle_source.val();
+            let var_toggle_value = new_toggle_value.val();
+
             new_variable_key.val('');
             new_variable_value.val('text');
             new_variable_description.val('');
             new_variable_default.val('');
             new_variable_help.val('');
+            new_toggle_source.val('');
+            new_toggle_value.val('');
 
             let edit_var_op = $('#id_variable_operation').val();
 
@@ -285,6 +293,15 @@
                     variable_def['type_hint'] = var_type_hint;
                     variable_def['help_text'] = var_help_text;
 
+                    if ((var_toggle_source !== '') && (var_toggle_value !== '')) {
+                        variable_def['toggle_hint'] = {
+                            'source': var_toggle_source,
+                            'value': var_toggle_value
+                        }
+                    } else {
+                        delete variable_def['toggle_hint'];
+                    }
+
                     get_variable_type_hint_options(variable_def);
 
                     // ensure we update the summary view as well in case description has changed
@@ -302,6 +319,16 @@
                     'default': var_default,
                     'help_text': var_help_text,
                 }
+            }
+
+            // fixme - violation of the DRY principle here - dedupe this code
+            if ((var_toggle_source !== '') && (var_toggle_value !== '')) {
+                variable_def['toggle_hint'] = {
+                    'source': var_toggle_source,
+                    'value': var_toggle_value
+                }
+            } else {
+                delete variable_def['toggle_hint'];
             }
 
             // ensure we grab type specific items and add to the variable_definition
@@ -659,6 +686,9 @@
             // remove all previously set options, if any
             clean_up_variable_type_hint_options();
 
+            // show the main tab
+            $('#variable_main_tab').tab('show');
+
             edit_variable_modal.modal();
             setup_modal_options();
         }
@@ -672,9 +702,7 @@
             let var_group = variable_edit_link.closest('.input-group');
             let var_name_field = var_group.find('[data-variable_attribute="name"]');
             let var_name = var_name_field.val();
-            console.log(var_name);
             let variable_def = get_variable_definition(var_name);
-            console.log(variable_def);
 
             let var_modal_name_field = $('#id_variable_name');
             var_modal_name_field.prop('disabled', 'disabled');
@@ -695,7 +723,18 @@
             let submit_button = $('#edit_var_submit_btn');
             submit_button.html('Update');
 
+            if ('toggle_hint' in variable_def) {
+                $('#id_variable_toggle_source').val(variable_def['toggle_hint']['source']);
+                $('#id_variable_toggle_value').val(variable_def['toggle_hint']['value']);
+            } else {
+                $('#id_variable_toggle_source').val('');
+                $('#id_variable_toggle_value').val('');
+            }
+
             setup_variable_type_hint_options(variable_def);
+
+            // show the main tab
+            $('#variable_main_tab').tab('show');
 
             edit_variable_modal.modal();
             setup_modal_options();
@@ -2280,95 +2319,131 @@
                     </button>
                 </div>
                 <div class="modal-body" style="overflow-y: auto">
-                    <input type="hidden" value="update" class="form-control" id="id_variable_operation">
-                    <label for="id_variable_name">Name:</label>
-                    <input type="text" value="" class="form-control" id="id_variable_name">
-                    <label for="id_variable_description">Description:</label>
-                    <input type="text" value="" class="form-control" id="id_variable_description"
-                           title="Human friendly description for this variable.">
-                    <label for="id_variable_help_text">Help Text:</label>
-                    <input type="text" value="" class="form-control" id="id_variable_help_text"
-                           title="Contextual help information for this variable.">
-                    <label for="id_variable_default">Default:</label>
-                    <input type="text" value="" class="form-control" id="id_variable_default"
-                           title="Default value that will be used if no input is supplied by the user.">
-                    <label for="id_variable_type">Variable Type:</label>
-                    <select class="form-control" id="id_variable_type"
-                            title="This controls how this variable will be displayed to the user.">
-                        <option value="text">Text</option>
-                        <option value="text_area">Text Area</option>
-                        <option value="password">Password</option>
-                        <option value="dropdown">Dropdown Select</option>
-                        <option value="checkbox">Checkbox Select</option>
-                        <option value="radio">Radio Select</option>
-                        <option value="number">Integer</option>
-                        <option value="float">Float</option>
-                        <option value="fqdn_or_ip">FQDN</option>
-                        <option value="ip_address">IP Address</option>
-                        <option value="cidr">CIDR (IP with Netmask)</option>
-                        <option value="file">File Upload</option>
-                        <option value="hidden">Hidden</option>
-                        <option value="disabled">Disabled</option>
-                    </select>
-                    <!-- Dropdown Items -->
-                    <div class="form-group">
-                        <label for="all_dropdown_options">Dropdown Items:</label>
-                        <div class="input-group" id="all_dropdown_options"></div>
-                        <hr/>
-                        <label for="dropdown_options_add_ui">New Dropdown List Item</label>
-                        <div class="input-group" id="dropdown_options_add_ui">
-                            <input type="text" value="" placeholder="key" class="form-control" id="id_dropdown_key"
-                                   data-modal_source="id_variable_type" data-modal_value="dropdown"
-                                   title="This key will be what is set in the snippet context and available for templates.">
-                            <div class="input-group-append"><span class="input-group-text">:</span></div>
-                            <input type="text" value="" placeholder="value" class="form-control" id="id_dropdown_value"
-                                   title="This value is what will be shown to the user in the dropdown menu.">
-                            <div class="input-group-append">
-                                <span class="input-group-text">
-                                    <a href="#" onclick="add_new_option('dropdown');">
-                                        <i class="fa fa-plus"></i>
-                                    </a>
-                                </span>
+                    <ul class="nav nav-tabs" id="myTab" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="variable_main_tab" data-toggle="tab" href="#variable_main"
+                               role="tab"
+                               aria-controls="variable_main"
+                               aria-selected="true">Required</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="variable_advanced_tab" data-toggle="tab" href="#variable_advanced"
+                               role="tab"
+                               aria-controls="variable_advanced"
+                               aria-selected="false">Optional</a>
+                        </li>
+
+                    </ul>
+                    <div class="tab-content" id="variable_tab">
+                        <div class="tab-pane fade show active" id="variable_main" role="tabpanel"
+                             aria-labelledby="variable_main_tab">
+
+                            <input type="hidden" value="update" class="form-control" id="id_variable_operation">
+                            <label for="id_variable_name">Name:</label>
+                            <input type="text" value="" class="form-control" id="id_variable_name">
+                            <label for="id_variable_description">Description:</label>
+                            <input type="text" value="" class="form-control" id="id_variable_description"
+                                   title="Human friendly description for this variable.">
+
+                            <label for="id_variable_default">Default:</label>
+                            <input type="text" value="" class="form-control" id="id_variable_default"
+                                   title="Default value that will be used if no input is supplied by the user.">
+                            <label for="id_variable_type">Variable Type:</label>
+                            <select class="form-control" id="id_variable_type"
+                                    title="This controls how this variable will be displayed to the user.">
+                                <option value="text">Text</option>
+                                <option value="text_area">Text Area</option>
+                                <option value="password">Password</option>
+                                <option value="dropdown">Dropdown Select</option>
+                                <option value="checkbox">Checkbox Select</option>
+                                <option value="radio">Radio Select</option>
+                                <option value="number">Integer</option>
+                                <option value="float">Float</option>
+                                <option value="fqdn_or_ip">FQDN</option>
+                                <option value="ip_address">IP Address</option>
+                                <option value="cidr">CIDR (IP with Netmask)</option>
+                                <option value="file">File Upload</option>
+                                <option value="hidden">Hidden</option>
+                                <option value="disabled">Disabled</option>
+                            </select>
+                            <!-- Dropdown Items -->
+                            <div class="form-group">
+                                <label for="all_dropdown_options">Dropdown Items:</label>
+                                <div class="input-group" id="all_dropdown_options"></div>
+                                <hr/>
+                                <label for="dropdown_options_add_ui">New Dropdown List Item</label>
+                                <div class="input-group" id="dropdown_options_add_ui">
+                                    <input type="text" value="" placeholder="key" class="form-control" id="id_dropdown_key"
+                                           data-modal_source="id_variable_type" data-modal_value="dropdown"
+                                           title="This key will be what is set in the snippet context and available for templates.">
+                                    <div class="input-group-append"><span class="input-group-text">:</span></div>
+                                    <input type="text" value="" placeholder="value" class="form-control" id="id_dropdown_value"
+                                           title="This value is what will be shown to the user in the dropdown menu.">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">
+                                            <a href="#" onclick="add_new_option('dropdown');">
+                                                <i class="fa fa-plus"></i>
+                                            </a>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Checkbox items -->
+                            <div class="form-group">
+                                <label for="all_checkbox_options">Checkbox Items:</label>
+                                <div class="input-group" id="all_checkbox_options"></div>
+                                <hr/>
+                                <label for="checkbox_options_add_ui">Add Item to Checkbox List:</label>
+                                <div class="input-group" id="checkbox_options_add_ui">
+                                    <input type="text" value="" placeholder="key" class="form-control" id="id_checkbox_key"
+                                           data-modal_source="id_variable_type" data-modal_value="checkbox">
+                                    <div class="input-group-append"><span class="input-group-text">:</span></div>
+                                    <input type="text" value="" placeholder="value" class="form-control" id="id_checkbox_value">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">
+                                            <a href="#" onclick="add_new_option('checkbox');">
+                                                <i class="fa fa-plus"></i>
+                                            </a>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Radio items -->
+                            <div class="form-group">
+                                <label for="all_radio_options">Radio Items:</label>
+                                <div class="input-group" id="all_radio_options"></div>
+                                <hr/>
+                                <label for="radio_options_add_ui">Add Item to Radio List:</label>
+                                <div class="input-group" id="radio_options_add_ui">
+                                    <input type="text" value="" placeholder="key" class="form-control" id="id_radio_key"
+                                           data-modal_source="id_variable_type" data-modal_value="radio">
+                                    <div class="input-group-append"><span class="input-group-text">:</span></div>
+                                    <input type="text" value="" placeholder="value" class="form-control" id="id_radio_value">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text">
+                                            <a href="#" onclick="add_new_option('radio');">
+                                                <i class="fa fa-plus"></i>
+                                            </a>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <!-- Checkbox items -->
-                    <div class="form-group">
-                        <label for="all_checkbox_options">Checkbox Items:</label>
-                        <div class="input-group" id="all_checkbox_options"></div>
-                        <hr/>
-                        <label for="checkbox_options_add_ui">Add Item to Checkbox List:</label>
-                        <div class="input-group" id="checkbox_options_add_ui">
-                            <input type="text" value="" placeholder="key" class="form-control" id="id_checkbox_key"
-                                   data-modal_source="id_variable_type" data-modal_value="checkbox">
-                            <div class="input-group-append"><span class="input-group-text">:</span></div>
-                            <input type="text" value="" placeholder="value" class="form-control" id="id_checkbox_value">
-                            <div class="input-group-append">
-                                <span class="input-group-text">
-                                    <a href="#" onclick="add_new_option('checkbox');">
-                                        <i class="fa fa-plus"></i>
-                                    </a>
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Radio items -->
-                    <div class="form-group">
-                        <label for="all_radio_options">Radio Items:</label>
-                        <div class="input-group" id="all_radio_options"></div>
-                        <hr/>
-                        <label for="radio_options_add_ui">Add Item to Radio List:</label>
-                        <div class="input-group" id="radio_options_add_ui">
-                            <input type="text" value="" placeholder="key" class="form-control" id="id_radio_key"
-                                   data-modal_source="id_variable_type" data-modal_value="radio">
-                            <div class="input-group-append"><span class="input-group-text">:</span></div>
-                            <input type="text" value="" placeholder="value" class="form-control" id="id_radio_value">
-                            <div class="input-group-append">
-                                <span class="input-group-text">
-                                    <a href="#" onclick="add_new_option('radio');">
-                                        <i class="fa fa-plus"></i>
-                                    </a>
-                                </span>
+                        <div class="tab-pane fade" id="variable_advanced" role="tabpanel"
+                             aria-labelledby="variable_advanced_tab">
+                            <div class="form-group">
+                                <label for="id_variable_help_text">Help Text:</label>
+                                <input type="text" value="" class="form-control" id="id_variable_help_text"
+                                   title="Contextual help information for this variable.">
+                                <label for="id_variable_toggle_ui">Toggle Visibility:</label>
+                                <div class="input-group" id="id_variable_toggle_ui">
+                                    <input type="text" value="" class="form-control" id="id_variable_toggle_source"
+                                           placeholder="variable" title="Variable to check">
+                                    <div class="input-group-append"><span class="input-group-text">:</span></div>
+                                    <input type="text" value="" class="form-control" id="id_variable_toggle_value"
+                                           placeholder="value"
+                                           title="Value used to determine whether to show this field">
+                                </div>
                             </div>
                         </div>
                     </div>
