@@ -85,6 +85,12 @@ Then access the UI via http://localhost:9999
     This is useful for determining any skillets errors that write to terminal output.
 
 
+Using Panhandler with TLS
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Here is a project that adds TLS to Panhandler: https://github.com/fatofthelan/SecurePanHandler
+
+
 Stopping the docker container
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
