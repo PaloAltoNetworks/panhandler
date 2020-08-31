@@ -382,7 +382,7 @@ class RepoDetailsView(CNCView):
         repo_detail = db_utils.get_repository_details(repo_name)
         repo_dir = self.__get_repo_dir(repo_name)
 
-        if not repo_detail:
+        if not repo_detail or 'branches' not in repo_detail:
             # no db record exists or json is not parsable
             repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
 
