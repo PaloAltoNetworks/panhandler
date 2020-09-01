@@ -22,6 +22,7 @@ terraform 'outputs' will be automatically captured into the context for subseque
     type: terraform
 
     labels:
+      terraform_image: registry.gitlab.com/panw-gse/as/terraform_tools:0.11
       collection:
         - Example Skillets
 
@@ -130,4 +131,13 @@ Panhandler to backup the existing state and create a new state for this deployme
 
 
 
+Custom Terraform Images:
+~~~~~~~~~~~~~~~~~~~~~~~~
 
+Panhandler allows the use of any docker image for Terraform projects. It is often the case that
+terraform depends on external binaries or libraries for various plugins. For example, the Azure
+provider requires the 'az' binary to be available in the system. To avoid deploying Panhandler with
+every possible combination of such binaries, you can specify a docker image to use with your
+terraform project. This is done via a label called: `terraform_image`. This label should be
+where the docker engine can pull the image. The entry point must be the terraform binary. This
+also allows any Terraform version to be supported as well.
