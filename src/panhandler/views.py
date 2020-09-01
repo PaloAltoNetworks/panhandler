@@ -924,15 +924,25 @@ class UpdateSkilletView(PanhandlerAppFormView):
             skillet_yaml = skillet.dump_yaml()
 
         except (ScannerError, ValueError):
+
             messages.add_message(self.request, messages.ERROR,
-                                 'Syntax Error! Refusing to overwrite Skillet metadata file.')
+                                 mark_safe('Syntax Error! Refusing to overwrite Skillet metadata file. '
+                                           '<a href="/app_logs" '
+                                           'class="btn btn-outline-primary">'
+                                           '<li class="fa fa-bug"></li>View Application Logs for details</a>'))
+
             return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
 
         except SkilletLoaderException as sle:
-            print(sle)
             print('Attempting to update skillet with the following invalid structure:')
             print(skillet_contents)
-            messages.add_message(self.request, messages.ERROR, f'Skillet Update Error: Invalid Structure')
+            print(sle)
+            messages.add_message(self.request, messages.ERROR,
+                                 mark_safe('Skillet Update Error: Invalid Structure'
+                                           '<a href="/app_logs" '
+                                           'class="btn btn-outline-primary">'
+                                           '<li class="fa fa-bug"></li>View Application Logs for details</a>'))
+
             return self.form_invalid(form)
 
         debug_errors = skillet_loader.debug_skillet_structure(skillet_dict)
@@ -999,10 +1009,13 @@ class UpdateSkilletYamlView(UpdateSkilletView):
 
         except (ScannerError, ConstructorError) as ve:
             print('Could not load Skillet from request!')
-            print(skillet_contents)
             print(ve)
+
             messages.add_message(self.request, messages.ERROR,
-                                 'YAML Syntax Error! Refusing to overwrite metadata file.')
+                                 mark_safe('Syntax Error! Refusing to overwrite Skillet metadata file. '
+                                           '<a href="/app_logs" '
+                                           'class="btn btn-outline-primary">'
+                                           '<li class="fa fa-bug"></li>View Application Logs for details</a>'))
 
             return None
 
