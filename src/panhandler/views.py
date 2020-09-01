@@ -31,7 +31,6 @@ import shutil
 from pathlib import Path
 from typing import Any
 
-import lxml
 import yaml
 from django.conf import settings
 from django.contrib import messages
@@ -54,6 +53,7 @@ from skilletlib.exceptions import SkilletLoaderException
 from skilletlib.exceptions import TargetConnectionException
 from skilletlib.skillet.pan_validation import PanValidationSkillet
 from skilletlib.skillet.template import TemplateSkillet
+from yaml.constructor import ConstructorError
 from yaml.scanner import ScannerError
 
 from cnc.models import RepositoryDetails
@@ -850,6 +850,9 @@ class UpdateSkilletView(PanhandlerAppFormView):
         if skillet is None:
             raise SnippetRequiredException('Could not find skillet to edit')
 
+        if skillet_contents is None:
+            raise SnippetRequiredException('Could not read skillet metadata file!')
+
         skillet_path = skillet_dict.get('snippet_path')
 
         # save these values to the user session for later use on form_submit
@@ -858,8 +861,14 @@ class UpdateSkilletView(PanhandlerAppFormView):
 
         self.prepopulated_form_values['skillet_contents'] = skillet_contents
 
+        try:
+            cleaned_skillet_contents = re.sub(r'snippet_path:.*$', '', skillet_contents)
+        except TypeError as te:
+            print(te)
+            print(skillet_contents)
+
         context = super().get_context_data(**kwargs)
-        context['skillet_contents'] = re.sub(r'snippet_path:.*$', '', skillet_contents)
+        context['skillet_contents'] = cleaned_skillet_contents
         context['skillet_json'] = skillet_json
         context['skillet'] = skillet
         context['repo_name'] = repo_name
@@ -988,9 +997,13 @@ class UpdateSkilletYamlView(UpdateSkilletView):
         try:
             return yaml.safe_load(skillet_contents)
 
-        except ScannerError as ve:
+        except (ScannerError, ConstructorError) as ve:
             print('Could not load Skillet from request!')
+            print(skillet_contents)
             print(ve)
+            messages.add_message(self.request, messages.ERROR,
+                                 'YAML Syntax Error! Refusing to overwrite metadata file.')
+
             return None
 
 
