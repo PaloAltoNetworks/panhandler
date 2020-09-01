@@ -344,8 +344,8 @@ The resulting UI form will include 4 Text inputs. The item in the list will be a
   The optional 'toggle_hint' attribute will show a field only when the 'source' variable's value matches the
   configured 'value'. If the 'source' is not found, or it's current value does not match 'value', this form
   control will be hidden. This is especially useful when paired with a 'dropdown' select control. You may provide
-  more than one option for the 'value' by passing in a comma separated list. The field will be shown if any of the
-  values in the comma separated 'value' attribute match.
+  more than one option for the 'value' by passing in a list. The field will be shown if any of the
+  values match.
 
 .. code-block:: yaml
 
@@ -356,4 +356,28 @@ The resulting UI form will include 4 Text inputs. The item in the list will be a
         toggle_hint:
           source: bgp_type
           value: enable
+
+      - name: move_rule
+        description: move rule location
+        default: top
+        type_hint: dropdown
+        dd_list:
+         - key: after
+           value: after
+         - key: before
+           value: before
+         - key: top
+           value: top
+         - key: bottom
+           value: bottom
+
+      - name: ref_rule_name
+        description: rule to move if before or after selected
+        default: rule name
+        type_hint: text
+        toggle_hint:
+          source: move_rule
+          value:
+            - before
+            - after
 
