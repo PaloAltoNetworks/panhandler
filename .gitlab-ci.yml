@@ -28,6 +28,12 @@ docker-build:
     - docker pull $TEST_IMAGE || true
     - docker build --pull --cache-from $TEST_IMAGE -t "$TEST_IMAGE" .
     - docker push $TEST_IMAGE
+  only:
+    changes:
+      - Dockerfile
+      - cnc/*
+      - src/*
+      - requirements.txt
 
 test:
   image: python:3.8-slim
