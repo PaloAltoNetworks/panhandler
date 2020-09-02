@@ -13,6 +13,14 @@ variables:
   TEST_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH-test"
   GIT_SUBMODULE_STRATEGY: recursive
 
+workflow:
+  rules:
+    - changes:
+      - Dockerfile
+      - cnc/*
+      - src/*
+      - requirements.txt
+
 cache:
   paths:
     - .cache/pip
@@ -28,12 +36,6 @@ docker-build:
     - docker pull $TEST_IMAGE || true
     - docker build --pull --cache-from $TEST_IMAGE -t "$TEST_IMAGE" .
     - docker push $TEST_IMAGE
-  only:
-    changes:
-      - Dockerfile
-      - cnc/*
-      - src/*
-      - requirements.txt
 
 test:
   image: python:3.8-slim
@@ -59,7 +61,7 @@ docker_test:
     GIT_STRATEGY: none
 
   image: $TEST_IMAGE
-  stage: docker_test
+  stage: test
   before_script:
     - source env/bin/activate
     - pip install tox
