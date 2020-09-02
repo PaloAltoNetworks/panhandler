@@ -1,5 +1,5 @@
 
-FROM python:3.8-slim
+FROM registry.gitlab.com/panw-gse/as/as-py-base-image:latest
 
 LABEL description="Panhandler"
 LABEL version="3.3"
@@ -21,11 +21,6 @@ RUN groupadd -g 999 cnc_group && \
     useradd -r -m cnc_user -u 9001 -s /bin/bash -g cnc_group -G docker -G root && \
     mkdir /home/cnc_user/.pan_cnc && \
     chown cnc_user:cnc_group /home/cnc_user/.pan_cnc
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends git build-essential libffi-dev curl unzip openssh-client && \
-    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false && \
-    rm -rf /var/lib/apt/lists/*
 
 RUN curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
     > terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
