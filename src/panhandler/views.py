@@ -1351,6 +1351,10 @@ class ViewValidationResultsView(EditTargetView):
         # let's grab the current workflow values (values saved from ALL forms in this app
         jinja_context.update(self.get_workflow())
 
+        for s in meta['snippets']:
+            if s['name'] in jinja_context:
+                jinja_context.pop(s["name"])
+
         debug = self.request.POST.get('debug', False)
 
         if mode == 'online':
