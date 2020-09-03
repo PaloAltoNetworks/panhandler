@@ -748,7 +748,7 @@
             // set output capture var name to full_output by default
             $('#id_' + skillet_type + '_output_name').val('raw_output');
             // set output capture type to pattern by default
-            $('#id_' + skillet_type + '_output_key').val('capture_pattern');
+            $('#id_' + skillet_type + '_output_key').val('capture_value');
             // set output capture pattern to pattern by default
             $('#id_' + skillet_type + '_output_value').val('.');
 
@@ -773,18 +773,20 @@
             if (snippet_def['output_type'] === 'text') {
                 if ('outputs' in snippet_def) {
                     let output_object = snippet_def['outputs'][0];
-                    add_output(output_object['name'], 'capture_pattern', '.', skillet_type);
+                    add_output(output_object['name'], 'capture_value', '.', skillet_type);
                 }
             } else {
                 // show output definitions
                 $(snippet_def['outputs']).each(function (index, output_object) {
                     let capture_type = 'capture_list';
                     if ('capture_pattern' in output_object) {
-                        capture_type = 'capture_pattern';
+                        capture_type = 'capture_value';
                     } else if ('capture_value' in output_object) {
                         capture_type = 'capture_value';
                     } else if ('capture_object' in output_object) {
                         capture_type = 'capture_object';
+                    } else if ('capture_expression' in output_object) {
+                        capture_type = 'capture_expression';
                     }
 
                     if ('filter_items' in output_object) {
@@ -2716,16 +2718,24 @@
                             </div>
                             <div class="card card-body collapse mt-2 mb-2 bg-light" id="panos_outputs_help">
                                 Outputs parse the data returned from the snippet. How that data is parsed depends on
-                                the
-                                'Output Type'. The 'name' attribute will create a new variable with that name that
-                                can
-                                then be referenced in later snippets. The 'capture_type' determines how the data
-                                will
-                                be processed. For example, a 'capture_list' will always return a list with 0 or more
-                                elements while 'capture_value' will always return a single value. The 'Query'
-                                is the query that will be used to parse the returned data. For 'xml' type data, this
-                                is
-                                an xpath query.
+                                the 'Output Type'. The 'name' attribute will create a new variable with that name that
+                                can then be referenced in later snippets.
+                                <br/>
+                                The 'capture_type' determines how the data
+                                will be processed. For example, a 'capture_list' will always return a list with 0 or
+                                more elements while 'capture_value' will always return a single value.
+                                The following options are currently supported:
+                                <ul>
+                                    <li>Capture Value: Always returns a single value from the query</li>
+                                    <li>Capture Object: Converts the results of the query into an Object</li>
+                                    <li>Capture List: Always returns a list with 0 or more items from the query</li>
+                                    <li>Capture Expression: Sets the variable with the results of a jinja expression</li>
+                                </ul>
+                                <br/>
+                                The 'Query' is the query that will be used to parse the returned data. For 'xml' type
+                                data this is an xpath query. For JSON data, this is a JSONPath expression, for 'text'
+                                this is a regular expression (regex). For 'manual' output types, this is a jinja
+                                expression.
                             </div>
                             <div class="form-group">
                                 <label for="id_panos_snippet_output_type">Output Type:</label>
@@ -2757,9 +2767,9 @@
                                         <label for="id_panos_output_key">Capture Type:</label>
                                         <select id="id_panos_output_key" class="form-control">
                                             <option value="capture_list" selected="selected">Capture List</option>
-                                            <option value="capture_pattern">Capture Pattern</option>
                                             <option value="capture_value">Capture Value</option>
                                             <option value="capture_object">Capture Object</option>
+                                            <option value="capture_expression">Capture Expression</option>
                                         </select>
                                     </div>
                                 </div>
@@ -2860,7 +2870,7 @@
                                id="id_rest_output_name">
                         <label for="id_rest_output_key">Capture Type:</label>
                         <select id="id_rest_output_key" class="form-control">
-                            <option value="capture_pattern">Capture Pattern</option>
+                            <option value="capture_value">Capture Pattern</option>
                         </select>
                         <label for="id_rest_output_value">Pattern:</label>
                         <div class="input-group">
@@ -3150,9 +3160,9 @@
                                             <label for="id_pan_validation_output_key">Capture Type:</label>
                                             <select id="id_pan_validation_output_key" class="form-control">
                                                 <option value="capture_list" selected="selected">Capture List</option>
-                                                <option value="capture_pattern">Capture Pattern</option>
                                                 <option value="capture_value">Capture Value</option>
                                                 <option value="capture_object">Capture Object</option>
+                                                <option value="capture_expression">Capture Expression</option>
                                             </select>
                                         </div>
                                     </div>
