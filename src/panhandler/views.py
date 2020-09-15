@@ -817,6 +817,27 @@ class UpdateSkilletView(PanhandlerAppFormView):
     next_url = '/provision'
     app_dir = 'panhandler'
     template_name = 'panhandler/edit_skillet.html'
+    unsupported_skillet_types = ('workflow', 'python3', 'docker', 'terraform')
+
+    def get(self, request, *args, **kwargs) -> Any:
+        """
+        Check to see if the intended skillet to edit is supported or unsupported, Unsupported skillets will
+        be redirected to the YAML editor
+
+        :param request: request object
+        :param args: supplied args
+        :param kwargs: supplied kwargs
+        :return: super().get Any
+        """
+
+        skillet_name = self.kwargs.get('skillet', None)
+        skillet_to_edit = db_utils.load_skillet_by_name(skillet_name)
+
+        if skillet_to_edit is not None and skillet_to_edit['type'] in self.unsupported_skillet_types:
+            repo_name = self.kwargs.get('repo_name', None)
+            return HttpResponseRedirect(f'/panhandler/edit_skillet_yaml/{repo_name}/{skillet_name}')
+
+        return super().get(request, *args, **kwargs)
 
     def get_header(self) -> str:
         """
@@ -995,6 +1016,7 @@ class UpdateSkilletView(PanhandlerAppFormView):
 class UpdateSkilletYamlView(UpdateSkilletView):
     snippet = 'edit_skillet_yaml'
     template_name = 'pan_cnc/dynamic_form.html'
+    unsupported_skillet_types = ()
 
     def get_skillet_dict_to_edit(self, skillet_contents: str) -> (dict, None):
         """
