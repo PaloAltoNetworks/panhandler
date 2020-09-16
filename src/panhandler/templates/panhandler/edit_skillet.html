@@ -116,6 +116,21 @@
                     snippet_def['parse_result'] = $('#id_pan_validation_snippet_op_parse_result').val();
                     extract_variables(snippet_def['cmd_str']);
                     break;
+
+                case 'validate':
+                    $.each(['label', 'documentation_link', 'test', 'severity', 'pass_message', 'fail_message'],
+                        function (k, v) {
+                            let ui = $('#id_pan_validation_snippet_' + v);
+                            let ui_val = ui.val();
+                            if (ui_val !== '') {
+                                snippet_def[v] = ui_val;
+                            }
+                        });
+                    break;
+
+                case 'parse':
+                    snippet_def['variable'] = $('#id_pan_validation_snippet_variable').val();
+                    break;
             }
 
             update_snippet('pan_validation');
@@ -562,6 +577,13 @@
                 snippet_def['xpath'] = '';
                 snippet_def['element'] = '';
 
+            } else if (skillet['type'] === 'pan_validation') {
+                snippet_def['cmd'] = 'validate';
+                snippet_def['test'] = 'true';
+                snippet_def['label'] = '';
+                snippet_def['documentation_link'] = '';
+                snippet_def['severity'] = 'low';
+
             } else if (skillet['type'] === 'template') {
                 snippet_def['element'] = '';
             }
@@ -905,7 +927,7 @@
             });
 
             // fix for #1 - do not add blank attributes
-            if (snippet_def['outputs'] === []) {
+            if (snippet_def['outputs'].length === 0) {
                 delete snippet_def['outputs'];
             }
             // don't add blank str attributes - this can happen when changing snippet cmd types
