@@ -148,6 +148,11 @@
 
             snippet_def['cmd'] = cmd;
 
+            // fix for #104
+            if ('file' in snippet_def) {
+                delete snippet_def['file'];
+            }
+
             // set options for the given cmd
             switch (cmd) {
                 case 'set':
@@ -418,9 +423,17 @@
                 let snippet_def = get_snippet_definition(snippet_name);
 
                 // fix for #1 - do not add blank attributes
-                if (snippet_def['outputs'] === []) {
+                if (($.isArray(snippet_def['outputs'])) && (snippet_def['outputs'].length === 0)) {
                     delete snippet_def['outputs'];
                 }
+
+                // check for #104 - delete old style 'file' attributes
+                if (is_pan_type_skillet()) {
+                    if ('file' in snippet_def) {
+                        delete snippet_def['file'];
+                    }
+                }
+
                 // don't add blank str attributes - this can happen when changing snippet cmd types
                 for (let attribute_name in snippet_def) {
                     if (snippet_def[attribute_name] === '') {
