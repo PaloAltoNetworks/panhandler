@@ -382,9 +382,14 @@ class RepoDetailsView(CNCView):
         repo_detail = db_utils.get_repository_details(repo_name)
         repo_dir = self.__get_repo_dir(repo_name)
 
-        if not repo_detail or 'branches' not in repo_detail:
-            # no db record exists or json is not parsable
+        if not repo_detail:
+            # no db record exists
             repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+
+        elif 'branches' not in repo_detail:
+            # record exists, but no branches means we need to update from the git details
+            repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+            db_utils.update_repository_details(repo_name, repo_detail)
 
         # initialize will set up db object only if needed
         skillets_from_repo = db_utils.initialize_repo(repo_detail)
@@ -805,6 +810,10 @@ class CreateSkilletView(PanhandlerAppFormView):
 
         messages.add_message(self.request, messages.SUCCESS, 'Skillet Created!')
 
+        # always keep the repo_detail record up to date
+        repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+        db_utils.update_repository_details(repo_name, repo_detail)
+
         # go ahead and refresh all the found skillet
         db_utils.refresh_skillets_from_repo(repo_name)
 
@@ -1006,6 +1015,10 @@ class UpdateSkilletView(PanhandlerAppFormView):
         git_utils.commit_local_changes(repo_dir, commit_message, skillet_file_path)
 
         messages.add_message(self.request, messages.SUCCESS, 'Skillet updated!')
+
+        # always keep the repo_detail record up to date
+        repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
+        db_utils.update_repository_details(repo_name, repo_detail)
 
         db_utils.refresh_skillets_from_repo(repo_name)
 
