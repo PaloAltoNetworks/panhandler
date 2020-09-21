@@ -1,7 +1,8 @@
 Running Panhandler
 ==================
 
-The recommended way to run Panhandler is to pull and run the docker container.
+The recommended way to run Panhandler is to pull and run the docker container. For Windows users,
+refer to the :ref:`Windows` installation document.
 
 
 Quick Start
@@ -43,7 +44,7 @@ non-standard ports, you set the following environment variables prior to launchi
 Running the Panhandler Docker Container
 ---------------------------------------
 
-If you need to manage the Panhandler container manually for some reason, following these steps:
+If you need to manage the Panhandler container manually:
 
 Using a standard web port
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,6 +149,8 @@ and 'panhandler'
 Requirements
 ------------
 
-Panhandler has been tested to work on Docker version: 18.09.1 (Mac) and 18.09.0 (Linux).
+Panhandler has been tested to work on Docker version: 18.09.1 (Mac) and 18.09.0 (Linux). :ref:`Windows` users
+are encouraged to use WSL2.
+
 Please ensure you have the latest docker version installed for the best results.
 
