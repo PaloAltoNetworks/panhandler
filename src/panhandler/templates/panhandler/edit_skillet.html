@@ -91,7 +91,6 @@
         }
 
         function update_pan_validation_snippet() {
-
             let snippet_name_input = $('#id_pan_validation_snippet_name');
             let snippet_cmd_input = $('#id_pan_validation_snippet_cmd');
 
@@ -130,6 +129,12 @@
 
                 case 'parse':
                     snippet_def['variable'] = $('#id_pan_validation_snippet_variable').val();
+                    $.each(['label', 'documentation_link', 'test', 'severity', 'pass_message', 'fail_message'],
+                        function (k, v) {
+                            if (v in snippet_def) {
+                                delete snippet_def[v];
+                            }
+                        });
                     break;
             }
 
@@ -880,7 +885,7 @@
 
             if (is_pan_type_skillet(snippet_type)) {
                 update_panos_snippet();
-            } else if (snippet_type === 'pan-validation') {
+            } else if (snippet_type === 'pan_validation') {
                 update_pan_validation_snippet();
             } else {
                 update_snippet(snippet_type);
