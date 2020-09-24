@@ -251,7 +251,7 @@
             let opt_val_field = $('#id_' + output_type + '_output_value');
             let opt_filter_field = $('#id_' + output_type + '_output_filter');
 
-            if (capture_key === 'capture_list') {
+            if (capture_key === 'capture_list' || capture_key ==='capture_expression') {
                 opt_filter_field.closest('.form-group').show();
             } else {
                 opt_filter_field.closest('.form-group').hide();
@@ -1303,7 +1303,7 @@
             let opt_val = opt_val_field.val();
             let opt_name = opt_name_field.val();
 
-            if (opt_key === 'capture_list') {
+            if (opt_key === 'capture_list' || opt_key === 'capture_expression') {
 
                 let opt_filter_field = $('#id_' + output_type + '_output_filter');
                 let filter_expression = opt_filter_field.val();
@@ -2820,7 +2820,8 @@
                                 <div class="form-group">
                                     <label for="id_panos_output_filter">Filter Items:</label>
                                     <input type="text" value="" class="form-control" id="id_panos_output_filter"
-                                           data-modal_source="id_panos_output_key" data-modal_value="capture_list"
+                                           data-modal_source="id_panos_output_key"
+                                           data-modal_value="capture_list,capture_expression"
                                            placeholder="item == 'some_value'"
                                            title="Boolean Expression where only passing items will be added to the captured list">
                                 </div>
@@ -3211,13 +3212,19 @@
                                         </div>
                                     </div>
                                     <div class="form-group">
-                                        <label for="id_pan_validation_output_filter">Filter Items:</label>
-                                        <input type="text" value="" class="form-control"
-                                               id="id_pan_validation_output_filter"
-                                               placeholder="item == 'some_value'"
-                                               data-modal_source="id_pan_validation_output_key"
-                                               data-modal_value="capture_list"
-                                               title="Boolean Expression where only passing items will be added to the captured list">
+                                       <label for="id_pan_validation_output_filter">Filter Items:</label>
+                                       <textarea class="form-control" rows="2"
+                                                 id="id_pan_validation_output_filter"
+                                                 placeholder="item == 'some_value'"
+                                                 data-modal_source="id_pan_validation_output_key"
+                                                 data-modal_value="capture_list,capture_expression"
+                                                 title="Boolean Expression where only passing items will be added to
+                                                 the captured list"></textarea>
+                                       <p class="small muted text-right m-0">
+                                           <a href="#" onclick="enlarge_text_area('id_pan_validation_output_filter')">
+                                               <i class="fa fa-edit"></i>
+                                           </a>
+                                       </p>
                                     </div>
                                     <div class="form-group">
                                         <label for="id_pan_validation_output_value">Pattern:</label>
