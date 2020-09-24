@@ -2819,11 +2819,18 @@
                                 </div>
                                 <div class="form-group">
                                     <label for="id_panos_output_filter">Filter Items:</label>
-                                    <input type="text" value="" class="form-control" id="id_panos_output_filter"
-                                           data-modal_source="id_panos_output_key"
-                                           data-modal_value="capture_list,capture_expression"
-                                           placeholder="item == 'some_value'"
-                                           title="Boolean Expression where only passing items will be added to the captured list">
+                                    <textarea class="form-control" rows="2"
+                                              id="id_panos_output_filter"
+                                              placeholder="item == 'some_value'"
+                                              data-modal_source="id_panos_output_key"
+                                              data-modal_value="capture_list,capture_expression"
+                                              title="Boolean Expression where only passing items will be added to
+                                                 the captured list"></textarea>
+                                    <p class="small muted text-right m-0">
+                                        <a href="#" onclick="enlarge_text_area('id_panos_output_filter')">
+                                            <i class="fa fa-edit"></i>
+                                        </a>
+                                    </p>
                                 </div>
                                 <div class="form-group">
                                     <label for="id_panos_output_value">XPath Query:</label>
