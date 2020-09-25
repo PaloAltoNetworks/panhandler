@@ -120,7 +120,12 @@
 
             $.each(current_variables, function (i, v) {
                 expression_variables.append($('<option></option>').val(v).text(v));
-            })
+            });
+
+            $.each(skillet_variables, function(i, variable_def) {
+                let v = variable_def['name'];
+                expression_variables.append($('<option></option>').val(v).text('User Input: ' + v));
+            });
 
             expression_input.val(source_text);
 
@@ -2022,6 +2027,8 @@
             let expression_var_def = $('#expression_variable_def');
             let selected_var = $('#expression_variables').val();
 
+            let found = false;
+
             $.each(skillet_snippets, function (index, snippet) {
                 if ('outputs' in snippet) {
                     $.each(snippet['outputs'], function (inner_index, output) {
@@ -2029,11 +2036,29 @@
                         if (selected_var === var_name) {
                             let output_json = JSON.stringify(output, null, 2);
                             expression_var_def.val(output_json);
+                            found = true;
+                            // break the each loop here
+                            return false;
                         }
                     });
                 }
+                if (found) {
+                    return false;
+                }
             });
 
+            if (!found) {
+                $.each(skillet_variables, function (index, variable_def) {
+                    let var_name = variable_def['name'];
+                    if (selected_var === var_name) {
+                        let var_json = JSON.stringify(variable_def, null, 2);
+                        expression_var_def.val(var_json);
+                        found = true;
+                        // break the each loop here
+                        return false;
+                    }
+                });
+            }
         }
 
         $(document).ready(function () {
