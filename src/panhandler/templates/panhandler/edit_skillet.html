@@ -81,6 +81,7 @@
             $('#show_textarea_modal').modal();
         }
 
+
         function update_text_area_source() {
             let text_area_input = $('#text_area_input')
             let text_area_target_input = $('#text_area_target')
@@ -88,6 +89,56 @@
             let target = text_area_target_input.val();
             let source_text_input = $('#' + target);
             source_text_input.val(text_area_input.val());
+        }
+
+        function enlarge_expression_area(target) {
+            /*
+             * Called from the snippet editor screen. Shows the expression editor modal.
+             * Also loads all currently defined variables
+             */
+
+            try {
+                event.preventDefault();
+            } catch (e) {
+                console.log('no event to cancel');
+            }
+
+            let expression_input = $('#expression_input');
+            let expression_variables = $('#expression_variables');
+            let expression_variable_def = $('#expression_variable_def');
+
+            let expression_target_input = $('#expression_target');
+            expression_target_input.val(target);
+
+            let source_text_input = $('#' + target);
+            let source_text = source_text_input.val();
+
+            let current_variables = get_all_context_variables();
+
+            expression_variables.empty();
+            expression_variable_def.val('');
+
+            $.each(current_variables, function (i, v) {
+                expression_variables.append($('<option></option>').val(v).text(v));
+            })
+
+            expression_input.val(source_text);
+
+            $('#show_expression_modal').modal();
+        }
+
+        function update_expression_source() {
+            /*
+             * Called from the expression editor modal. Updates the source expression input
+             * and closes the modal.
+             */
+
+            let expression_input = $('#expression_input')
+            let expression_target_input = $('#expression_target')
+
+            let target = expression_target_input.val();
+            let source_text_input = $('#' + target);
+            source_text_input.val(expression_input.val());
         }
 
         function update_pan_validation_snippet() {
@@ -1948,6 +1999,43 @@
 
         }
 
+        function get_all_context_variables() {
+            let all_variables = [];
+
+            $.each(skillet_snippets, function (index, snippet) {
+                if ('outputs' in snippet) {
+                    $.each(snippet['outputs'], function (inner_index, output) {
+                        let var_name = output['name'];
+                        all_variables.push(var_name);
+
+                    });
+                }
+            });
+            return all_variables;
+        }
+
+        function show_output_variable_def() {
+            /*
+            called from the expression editor when a variable is selected. It will grab the output definition
+            and dump it into a textarea as a json string.
+             */
+            let expression_var_def = $('#expression_variable_def');
+            let selected_var = $('#expression_variables').val();
+
+            $.each(skillet_snippets, function (index, snippet) {
+                if ('outputs' in snippet) {
+                    $.each(snippet['outputs'], function (inner_index, output) {
+                        let var_name = output['name'];
+                        if (selected_var === var_name) {
+                            let output_json = JSON.stringify(output, null, 2);
+                            expression_var_def.val(output_json);
+                        }
+                    });
+                }
+            });
+
+        }
+
         $(document).ready(function () {
             let label_vals = JSON.parse('{{ skillet.labels | tojson | safe }}');
             console.log(label_vals);
@@ -3046,6 +3134,64 @@
         </div>
     </div>
 
+    <!-- Expression Edit Modal -->
+    <div class="modal fade" id="show_expression_modal" tabindex="-1" role="dialog"
+         aria-labelledby="show_expression_modal" style="z-index: 1051;"
+         aria-hidden="true">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Expression Editor</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="overflow-y: auto">
+                    <div class="text-right">
+                        <a href="#pan_validation_expression_help"
+                           data-toggle="collapse" title="Expression Help">
+                            <i class="fa fa-question-circle"></i>
+                        </a>
+                    </div>
+                    <div class="collapse p-4 mt-2 mb-2 bg-light" id="pan_validation_expression_help">
+                        Expressions are written using the <a
+                            href="https://jinja.palletsprojects.com/en/2.11.x/templates/#expressions"
+                            target="_blank">Jinja2 expression language</a>. Panhandler also provides a rich set of
+                        custom <a
+                            href="https://skilletbuilder.readthedocs.io/en/latest/reference_examples/jinja_custom_filters.html"
+                            target="_blank">Jinja Filters</a> to ease working with the PAN-OS
+                        configuration structure. See the <a href="https://skilletbuilder.readthedocs.io/en/latest/"
+                                                            target="_blank">Skillet Builder</a> documentation for even
+                        more examples.
+                    </div>
+
+                    <label for="expression_input">Edit</label>
+                    <textarea class="form-control text-monospace small mb-3 text-nowrap"
+                              style="width: 100%; font-size: 80%" rows="10" id="expression_input"></textarea>
+                    <input type="hidden" id="expression_target" value=""/>
+                    <div class="form-row">
+                        <div class="form-group col-md-3">
+                            <label for="expression_variables">Available Variables</label>
+                            <select id="expression_variables" class="form-control"
+                                    onchange="show_output_variable_def();"></select>
+                        </div>
+                        <div class="form-group col-md-9">
+                            <label for="expression_variable_def">Variable Definition</label>
+                            <textarea class="form-control text-monospace small mb-3 text-nowrap"
+                                      style="font-size: 80%" rows="5" id="expression_variable_def"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="update_expression_source()"
+                            data-dismiss="modal">Update
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Edit PAN-OS Validation Snippet Modal -->
     <div class="modal fade" id="edit_pan_validation_snippet_modal" tabindex="-1" role="dialog"
          aria-labelledby="edit_pan_validation_snippet_label"
@@ -3127,7 +3273,7 @@
                                           data-modal_source="id_pan_validation_snippet_cmd"
                                           data-modal_value="validate"></textarea>
                                 <p class="small muted text-right m-0">
-                                    <a href="#" onclick="enlarge_text_area('id_pan_validation_snippet_test')">
+                                    <a href="#" onclick="enlarge_expression_area('id_pan_validation_snippet_test')">
                                         <i class="fa fa-edit"></i>
                                     </a>
                                 </p>
