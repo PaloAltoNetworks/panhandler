@@ -3220,7 +3220,7 @@
     <!-- Edit PAN-OS Validation Snippet Modal -->
     <div class="modal fade" id="edit_pan_validation_snippet_modal" tabindex="-1" role="dialog"
          aria-labelledby="edit_pan_validation_snippet_label"
-         aria-hidden="true">
+         aria-hidden="true" style="overflow: auto; !important">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -3399,7 +3399,8 @@
                                                  title="Boolean Expression where only passing items will be added to
                                                  the captured list"></textarea>
                                        <p class="small muted text-right m-0">
-                                           <a href="#" onclick="enlarge_text_area('id_pan_validation_output_filter')">
+                                           <a href="#"
+                                              onclick="enlarge_expression_area('id_pan_validation_output_filter')">
                                                <i class="fa fa-edit"></i>
                                            </a>
                                        </p>
