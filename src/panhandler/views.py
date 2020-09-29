@@ -1469,6 +1469,10 @@ class ViewValidationResultsView(EditTargetView):
             context['skillet'] = skillet
             context['results'] = validation_output
 
+            if 'output_template' in skillet_output:
+                context['output_template'] = skillet_output['output_template']
+                return render(self.request, 'pan_cnc/results.html', context=context)
+
         except SkilletLoaderException:
             print("Could not load it for some reason")
             return render(self.request, 'pan_cnc/results.html', context)

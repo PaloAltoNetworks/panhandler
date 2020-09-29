@@ -22,4 +22,4 @@ virtualenv==20.0.21
 xmldiff==2.4
 xmltodict==0.12.0
 #skilletlib==0.3.9.5
-git+https://github.com/PaloAltoNetworks/skilletlib.git@968a601d4f1632c4d8d7ae563da05ff24e0be26c#egg=skilletlib
+git+https://github.com/PaloAltoNetworks/skilletlib.git@583ece670dbed277a6931a60d8b9daeba9306d33#egg=skilletlib
