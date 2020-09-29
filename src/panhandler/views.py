@@ -1470,7 +1470,15 @@ class ViewValidationResultsView(EditTargetView):
             context['results'] = validation_output
 
             if 'output_template' in skillet_output:
-                context['output_template'] = skillet_output['output_template']
+                output_template = skillet_output['output_template']
+
+                # allow skillet builder to include markup if desired
+                if not output_template.startswith('<div'):
+                    context['output_template_markup'] = False
+                else:
+                    context['output_template_markup'] = True
+
+                context['output_template'] = output_template
                 return render(self.request, 'pan_cnc/results.html', context=context)
 
         except SkilletLoaderException:
