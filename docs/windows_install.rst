@@ -139,3 +139,48 @@ You can delete the old container, running or stopped, with this command:
 You then can use the 'docker pull' and 'docker run' commands exactly as they are above to download a newer panhandler
 image and start it. The volumes you created earlier will be still be available and assigned to the new container if
 you use the commands as they are.
+
+Troubleshooting Panhandler
+--------------------------
+
+If you run into either of the following errors when trying to install a Linux distribution: 
+
+.. code-block::
+
+  Installing, this may take a few minutes...
+  WslRegisterDistribution failed with error: 0x80370102
+  Error: 0x80370102 The virtual machine could not be started 
+      because a required feature is not installed. 
+  
+or when trying to run the Docker Desktop GUI: 
+  
+.. code-block::
+
+  Hardware assisted virtualization and data execution protection
+  must be enabled in BIOS.  
+  
+Please attempt the following steps.
+
+1. If the Windows' Hyper-V feature is totally disabled or not installed, enable Hyper-V by 
+   opening the PowerShell as administrator and running the following command: 
+ 
+.. code-block:: powershell
+  
+  dism.exe /Online /Enable-Feature:Microsoft-Hyper-V /All
+  
+2. If the Windows' Hyper-Vfeature is enabled and not working, enable Hypervisor with the 
+   following command and restart your system:
+     
+.. code-block:: powershell
+
+  bcdedit /set hypervisorlaunchtype auto
+
+3. If the problem persists probably Hyper-V on your system is corrupted, so turn off all Hyper-V
+   related Windows' features under *Control Panel* -> *Programs* -> *Windows Features*. Restart
+   your system and attempt to enable Hyper-V again. 
+     
+This troubleshooting guide was found from: 
+
+  https://stackoverflow.com/questions/39684974/docker-for-windows-error-hardware-assisted-virtualization-and-data-execution-p 
+  
+
