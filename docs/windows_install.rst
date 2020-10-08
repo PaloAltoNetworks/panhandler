@@ -140,8 +140,8 @@ You then can use the 'docker pull' and 'docker run' commands exactly as they are
 image and start it. The volumes you created earlier will be still be available and assigned to the new container if
 you use the commands as they are.
 
-Troubleshooting Panhandler
---------------------------
+Troubleshooting Windows Install
+-------------------------------
 
 If you run into either of the following errors when trying to install a Linux distribution: 
 
