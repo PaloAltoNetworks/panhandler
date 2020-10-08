@@ -13,6 +13,7 @@ Panhandler
    overview
    release_history
    running
+   windows_install
    using
    switching_dev_latest
    importing_skillets
