@@ -159,7 +159,8 @@ or when trying to run the Docker Desktop GUI:
   Hardware assisted virtualization and data execution protection
   must be enabled in BIOS.  
   
-Please attempt the following steps.
+After verifying that virtualization is enabled in BIOS by opening *Task Manager* > *Performance* > *Virtualization*,
+please attempt the following steps.
 
 1. If the Windows' Hyper-V feature is totally disabled or not installed, enable Hyper-V by 
    opening the PowerShell as administrator and running the following command: 
@@ -176,7 +177,7 @@ Please attempt the following steps.
   bcdedit /set hypervisorlaunchtype auto
 
 3. If the problem persists probably Hyper-V on your system is corrupted, so turn off all Hyper-V
-   related Windows' features under *Control Panel* -> *Programs* -> *Windows Features*. Restart
+   related Windows' features under *Control Panel* > *Programs* > *Windows Features*. Restart
    your system and attempt to enable Hyper-V again. 
      
 This troubleshooting guide was found from: 
