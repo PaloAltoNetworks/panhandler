@@ -145,17 +145,17 @@ Troubleshooting Windows Install
 
 If you run into either of the following errors when trying to install a Linux distribution: 
 
-.. code-block::
+.. code-block:: powershell
 
   Installing, this may take a few minutes...
   WslRegisterDistribution failed with error: 0x80370102
   Error: 0x80370102 The virtual machine could not be started 
-      because a required feature is not installed. 
+    because a required feature is not installed. 
   
 or when trying to run the Docker Desktop GUI: 
   
-.. code-block::
-
+  
+.. code-block:: powershell  
   Hardware assisted virtualization and data execution protection
   must be enabled in BIOS.  
   
