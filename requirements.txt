@@ -21,5 +21,5 @@ urllib3==1.25.9
 virtualenv==20.0.21
 xmldiff==2.4
 xmltodict==0.12.0
-skilletlib==0.3.9.7
+skilletlib==0.3.9.8
 #git+https://github.com/PaloAltoNetworks/skilletlib.git@927a5bc7c553f7111332f8e7ec2ff342fdb3d313#egg=skilletlib

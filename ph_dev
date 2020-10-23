@@ -91,7 +91,7 @@ function find_panhandler_container_id() {
   # finally, only return the first match found in case we have more than 1 for some reason...
   PANHANDLER_ID=$(
     docker ps -a --format "{{.ID}} {{.Command}} {{ .Ports}}" -f expose="${EXPOSED_PORT}" |
-      grep '/app/cnc/start_app' |
+      grep '/app/cnc/tools/ph.sh' |
       grep 'tcp' |
       head -1 |
       awk '{ print $1} '

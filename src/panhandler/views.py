@@ -2206,6 +2206,10 @@ class GenerateSetSkilletOnlineView(PanhandlerAppFormView):
 
             set_cli_cmds = panos.generate_set_cli_from_configs(pre_config_str, post_config_str)
 
+            if len(set_cli_cmds) == 0:
+                messages.add_message(self.request, messages.ERROR, 'No Changes found on device!')
+                return self.form_invalid(form)
+
             snippet = dict()
             snippet['name'] = 'set_cli'
             snippet['element'] = "\n".join(set_cli_cmds)
