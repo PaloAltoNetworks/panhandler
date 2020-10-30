@@ -55,6 +55,8 @@ from skilletlib.skillet.pan_validation import PanValidationSkillet
 from skilletlib.skillet.template import TemplateSkillet
 from yaml.constructor import ConstructorError
 from yaml.scanner import ScannerError
+from doculib import Report
+import base64
 
 from cnc.models import RepositoryDetails
 from pan_cnc.lib import cnc_utils
@@ -1484,6 +1486,18 @@ class ViewValidationResultsView(EditTargetView):
         except SkilletLoaderException:
             print("Could not load it for some reason")
             return render(self.request, 'pan_cnc/results.html', context)
+        
+        # Render doculib report if found in repository
+        report_definition = meta['snippet_path'] + '/report'
+        if os.path.exists(report_definition):
+            try:
+                report = Report(report_definition)
+                report.load_data(validation_output)
+                report_html = report.render_html()
+                context['report'] = base64.encodestring(report_html.encode()).decode()
+                return render(self.request, 'panhandler/report.html', context)
+            except Exception as e:
+                print(f'Exception while rendering report - {e}')
 
         return render(self.request, 'panhandler/validation-results.html', context)
 

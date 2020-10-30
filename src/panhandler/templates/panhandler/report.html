@@ -1,0 +1,34 @@
+{% extends base_html|default:'pan_cnc/base.html' %}
+{% load static %}
+{% block head %}
+    <script type="text/javascript">
+        function show_modal(url) {
+            console.log('setting url to ' + url);
+            let m = $('#test_modal');
+            let b = $('#modal_container');
+            b.empty();
+            let i = $('<iframe class="embed-responsive-item" allowfullscreen></iframe>');
+            b.append(i);
+            i.attr('src', url);
+            m.modal('toggle');
+        }
+    </script>
+{% endblock %}
+{% block content %}
+    <div style="position:fixed;top:60;left:5;right:5;height:50px;">
+        {% if request.session.next_step %}
+            {% if request.session.last_step %}
+                <a href="/workflow/{{ request.session.next_step }}" class="btn btn-primary">Complete</a>
+            {% else %}
+                <a href="/workflow/{{ request.session.next_step }}" class="btn btn-primary">Continue</a>
+            {% endif %}
+        {% else %}
+            <a href="{{ request.session.last_page|urlencode }}" class="btn btn-primary">Continue</a>
+        {% endif %}
+        <a href="{{ request.session.last_page|urlencode }}" class="btn btn-primary">Print / Save</a>
+    </div>
+    <div style="position:fixed;top:102;bottom:0;left:0;right:0;">
+        <iframe src="data:text/html;base64,{{ report }}" style="border:none;width:100%;height:100%;">
+        </iframe>
+    </div>
+{% endblock %}
