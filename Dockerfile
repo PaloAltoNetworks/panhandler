@@ -1,9 +1,9 @@
 
 FROM registry.gitlab.com/panw-gse/as/as-py-base-image:latest
 
-LABEL description="Panhandler"
-LABEL version="4.0"
-LABEL maintainer="tsautomatedsolutions@paloaltonetworks.com"
+#LABEL description="Panhandler"
+#LABEL version="4.0"
+#LABEL maintainer="tsautomatedsolutions@paloaltonetworks.com"
 
 ENV TERRAFORM_VERSION=0.11.13
 ENV TERRAFORM_SHA256SUM=5925cd4d81e7d8f42a0054df2aafd66e2ab7408dbed2bd748f0022cfe592f8d2
@@ -29,7 +29,9 @@ RUN curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraf
     sha256sum -c --status --quiet terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
     unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /bin && \
     rm -f terraform_${TERRAFORM_VERSION}_linux_amd64.zip  && \
-    rm -f terraform_${TERRAFORM_VERSION}_SHA256SUMS
+    rm -f terraform_${TERRAFORM_VERSION}_SHA256SUMS && \
+    apt update && \
+    apt install dos2unix
 
 COPY requirements.txt /app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
@@ -38,6 +40,8 @@ COPY --chown=cnc_user:cnc_group tox.ini /app/
 COPY --chown=cnc_user:cnc_group tests /app/tests/
 COPY --chown=cnc_user:cnc_group cnc /app/cnc/
 COPY --chown=cnc_user:cnc_group src /app/src/
+
+RUN dos2unix cnc/tools/*
 
 EXPOSE 8080
 CMD ["/app/cnc/tools/ph.sh"]
