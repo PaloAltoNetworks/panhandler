@@ -460,6 +460,27 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
         level = messages.INFO
 
+        # get the previous repo details json object from the db
+        previous_details_json = repository_object.details_json
+        previous_details = json.loads(previous_details_json)
+
+        # check previous commit log and verify if we have any local commits
+        # use the current commit log and compare against the last commit log stored in the db
+        found_commits = list()
+        previous_commits = list()
+        for new_commit in repo_detail.get('commits', []):
+            found_commits.append(new_commit.get('id', ''))
+
+        for commit in previous_details.get('commits', []):
+            previous_commits.append(commit.get('id', ''))
+
+        for c in found_commits:
+            if c not in previous_commits:
+                # we have a commit in the commit log that was not previously recorded in the db
+                # this means we need to re-index skillets
+                needs_index = True
+                break
+
         if 'Error' in msg:
             level = messages.ERROR
             cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
