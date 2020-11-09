@@ -12,13 +12,6 @@
             i.attr('src', url);
             m.modal('toggle');
         }
-        function printable(){
-            var wnd = window.open("about:blank", "_blank");
-            var html = document.getElementById('reportHtml').innerHTML;
-            wnd.document.body.innerHTML = atob(html);
-        }
-        function save(){
-        }
     </script>
 {% endblock %}
 {% block content %}
@@ -33,8 +26,8 @@
         {% else %}
             <a href="{{ request.session.last_page|urlencode }}" class="btn btn-primary">Continue</a>
         {% endif %}
-        <a onclick='printable();' class="btn btn-primary" href="#">Print</a>
-        <a onclick='save();' class="btn btn-primary" href="#">Save</a>
+        <a target="_blank" class="btn btn-primary" href="/panhandler/report">Print</a>
+        <a  class="btn btn-primary" href="/panhandler/report" download>Save</a>
     </div>
     <div style="position:fixed;top:102;bottom:0;left:0;right:0;">
         <iframe src="data:text/html;base64,{{ report }}" style="border:none;width:100%;height:100%;">

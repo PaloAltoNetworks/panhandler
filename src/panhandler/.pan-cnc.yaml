@@ -103,6 +103,9 @@ views:
   - name: validate-results
     class: ViewValidationResultsView
 
+  - name: report
+    class: ReportView
+
   - name: export_valiation_results
     class: ExportValidationResultsView
     parameter: skillet

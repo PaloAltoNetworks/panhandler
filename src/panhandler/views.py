@@ -1494,12 +1494,29 @@ class ViewValidationResultsView(EditTargetView):
                 report = Report(report_definition)
                 report.load_data(validation_output)
                 report_html = report.render_html()
+                if os.path.exists(settings.REPORT_PATH):
+                    os.remove(settings.REPORT_PATH)
+                with open(settings.REPORT_PATH, 'w') as f:
+                    f.write(report_html)
                 context['report'] = base64.encodestring(report_html.encode()).decode()
                 return render(self.request, 'panhandler/report.html', context)
             except Exception as e:
                 print(f'Exception while rendering report - {e}')
 
         return render(self.request, 'panhandler/validation-results.html', context)
+
+class ReportView(CNCBaseAuth, View):
+    """
+    View last report generated
+    """
+
+    def get(self, request, *args, **kwargs) -> Any:
+        try:
+            with open(settings.REPORT_PATH, 'r') as f:
+                return HttpResponse(f.read())
+        except:
+            redirect_url = self.request.session.get('last_page', '/')
+            return HttpResponseRedirect(redirect_url)
 
 
 class ExportValidationResultsView(CNCBaseAuth, View):
