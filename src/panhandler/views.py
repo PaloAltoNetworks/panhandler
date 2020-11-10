@@ -57,6 +57,7 @@ from yaml.constructor import ConstructorError
 from yaml.scanner import ScannerError
 from doculib import Report
 import base64
+import lxml
 
 from cnc.models import RepositoryDetails
 from pan_cnc.lib import cnc_utils
@@ -1491,7 +1492,16 @@ class ViewValidationResultsView(EditTargetView):
         report_definition = meta['snippet_path'] + '/report'
         if os.path.exists(report_definition):
             try:
+
+                # Extract info from device config for reporting purposes
+                device_meta = {}
+                config_tree = lxml.etree.fromstring(skillet.context['config'])
+                if config_tree:
+                    host_node = config_tree.find('devices/entry/deviceconfig/system/hostname')
+                    if host_node is not None:
+                        device_meta['hostname'] = host_node.text
                 report = Report(report_definition)
+                report.load_header(device_meta)
                 report.load_data(validation_output)
                 report_html = report.render_html()
                 if os.path.exists(settings.REPORT_PATH):
