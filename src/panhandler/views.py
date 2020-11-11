@@ -1496,7 +1496,7 @@ class ViewValidationResultsView(EditTargetView):
                 # Extract info from device config for reporting purposes
                 device_meta = {}
                 config_tree = lxml.etree.fromstring(skillet.context['config'])
-                if config_tree:
+                if config_tree is not None:
                     host_node = config_tree.find('devices/entry/deviceconfig/system/hostname')
                     if host_node is not None:
                         device_meta['hostname'] = host_node.text
