@@ -1499,7 +1499,7 @@ class ViewValidationResultsView(EditTargetView):
                 if config_tree is not None:
                     host_node = config_tree.find('devices/entry/deviceconfig/system/hostname')
                     if host_node is not None:
-                        device_meta['hostname'] = host_node.text
+                        device_meta['Hostname'] = host_node.text
                 report = Report(report_definition)
                 report.load_header(device_meta)
                 report.load_data(validation_output)
