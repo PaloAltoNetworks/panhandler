@@ -34,7 +34,7 @@ RUN curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraf
     apt install dos2unix
 
 COPY requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade -r requirements.txt
 
 COPY --chown=cnc_user:cnc_group tox.ini /app/
 COPY --chown=cnc_user:cnc_group tests /app/tests/
