@@ -18,6 +18,7 @@ Panhandler
    switching_dev_latest
    importing_skillets
    creating_panos_skillets
+   creating_validation_skillets
    environments
    skillets
    variables

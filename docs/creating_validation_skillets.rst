@@ -94,3 +94,5 @@ and filtered items in the 'outputs' key.
     pip install git+https://github.com/PaloAltoNetworks/skilletlib.git@develop#egg=skilletlib
 
 
+
+For more information, see the `Skillet Builder <https://skilletbuilder.readthedocs.io/en/latest/>`_ documentation.

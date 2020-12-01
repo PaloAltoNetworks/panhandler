@@ -42,3 +42,4 @@ The Skillet Editor currently supports the following skillet types:
 .. image:: images/ph-skillet-editor-edit-snippet.png
 
 
+For more information, see the `Skillet Builder <https://skilletbuilder.readthedocs.io/en/latest/>`_ documentation.
