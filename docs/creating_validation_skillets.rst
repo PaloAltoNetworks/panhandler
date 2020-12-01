@@ -46,7 +46,7 @@ In some cases, it may be desirable to use Python or a debugger like PyCharm or p
 skillet. Here is an example python script that will load a config file from the local filesystem and run a
 skillet. You may use the 'filter_snippets' option to only run specified snippets as desired.
 
-.. code-block::
+.. code-block:: python
 
     import json
 
@@ -88,7 +88,7 @@ skillet. You may use the 'filter_snippets' option to only run specified snippets
 The above requires 'click' and 'skilletlib' to be installed. The output will contain all captured values
 and filtered items in the 'outputs' key.
 
-.. code-block::
+.. code-block:: bash
 
     pip install click
     pip install git+https://github.com/PaloAltoNetworks/skilletlib.git@develop#egg=skilletlib
