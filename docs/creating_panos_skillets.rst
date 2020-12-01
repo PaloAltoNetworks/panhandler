@@ -1,3 +1,5 @@
+.. _creating_skillets_doc:
+
 Creating and Editing Skillets
 -----------------------------
 
