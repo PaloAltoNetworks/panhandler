@@ -1383,12 +1383,11 @@ class ViewValidationResultsView(EditTargetView):
             for snippet_var in meta['variables']:
                 jinja_context[snippet_var['name']] = snippet_var['default']
 
+        for s in meta['snippets']:
+            self.pop_value_from_workflow(s['name'])
+
         # let's grab the current workflow values (values saved from ALL forms in this app
         jinja_context.update(self.get_workflow())
-
-        for s in meta['snippets']:
-            if s['name'] in jinja_context:
-                jinja_context.pop(s["name"])
 
         debug = self.request.POST.get('debug', False)
 
@@ -1469,9 +1468,20 @@ class ViewValidationResultsView(EditTargetView):
             context['skillet'] = skillet
             context['results'] = validation_output
 
-        except SkilletLoaderException:
-            print("Could not load it for some reason")
-            return render(self.request, 'pan_cnc/results.html', context)
+        # fix for #120 - ensure we catch all skilletlib errors here and return
+        # a form_invalid up the stack
+        except PanoplyException as pe:
+            err = f'Skillet Error: {pe}'
+            print(err)
+            messages.add_message(self.request, messages.ERROR, err)
+            # no way to clean up here, just bail out, clean up and let the user start over
+            self.clean_up_workflow()
+            return HttpResponseRedirect(self.request.session.get('last_page', '/'))
+
+        except Exception as e:
+            print(f'ERROR: {e}')
+            messages.add_message(self.request, messages.ERROR, str(e))
+            return self.form_invalid(form)
 
         return render(self.request, 'panhandler/validation-results.html', context)
 
