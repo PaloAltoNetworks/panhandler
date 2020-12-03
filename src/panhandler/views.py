@@ -1509,9 +1509,12 @@ class ViewValidationResultsView(EditTargetView):
         # fix for #120 - ensure we catch all skilletlib errors here and return
         # a form_invalid up the stack
         except PanoplyException as pe:
-            print(f'Skillet Error: {pe}')
-            messages.add_message(self.request, messages.ERROR, str(pe))
-            return self.form_invalid(form)
+            err = f'Skillet Error: {pe}'
+            print(err)
+            messages.add_message(self.request, messages.ERROR, err)
+            # no way to clean up here, just bail out, clean up and let the user start over
+            self.clean_up_workflow()
+            return HttpResponseRedirect(self.request.session.get('last_page', '/'))
 
         except Exception as e:
             print(f'ERROR: {e}')
