@@ -1407,12 +1407,13 @@ class ViewValidationResultsView(EditTargetView):
             for snippet_var in meta['variables']:
                 jinja_context[snippet_var['name']] = snippet_var['default']
 
-        # let's grab the current workflow values (values saved from ALL forms in this app
-        jinja_context.update(self.get_workflow())
-
+        # FIX for #120 - ensure we remove old validation results prior to running skilletlib
+        # in the event of a crash or other issue, we do not want to redisplay old values to the end user
         for s in meta['snippets']:
-            if s['name'] in jinja_context:
-                jinja_context.pop(s["name"])
+            self.pop_value_from_workflow(s['name'])
+
+        # let's grab the current workflow values (values saved from ALL forms in this app)
+        jinja_context.update(self.get_workflow())
 
         debug = self.request.POST.get('debug', False)
 
@@ -1505,10 +1506,18 @@ class ViewValidationResultsView(EditTargetView):
                 context['output_template'] = output_template
                 return render(self.request, 'pan_cnc/results.html', context=context)
 
-        except SkilletLoaderException:
-            print("Could not load it for some reason")
-            return render(self.request, 'pan_cnc/results.html', context)
-        
+        # fix for #120 - ensure we catch all skilletlib errors here and return
+        # a form_invalid up the stack
+        except PanoplyException as pe:
+            print(f'Skillet Error: {pe}')
+            messages.add_message(self.request, messages.ERROR, str(pe))
+            return self.form_invalid(form)
+
+        except Exception as e:
+            print(f'ERROR: {e}')
+            messages.add_message(self.request, messages.ERROR, str(e))
+            return self.form_invalid(form)
+
         # Render doculib report if found in repository
         report_definition = meta['snippet_path'] + '/report'
         if os.path.exists(report_definition):
@@ -1536,6 +1545,7 @@ class ViewValidationResultsView(EditTargetView):
 
         return render(self.request, 'panhandler/validation-results.html', context)
 
+
 class ReportView(CNCBaseAuth, View):
     """
     View last report generated
@@ -1545,7 +1555,8 @@ class ReportView(CNCBaseAuth, View):
         try:
             with open(settings.REPORT_PATH, 'r') as f:
                 return HttpResponse(f.read())
-        except:
+        except Exception as e:
+            print(f'Caught exception in ReportView: {e}')
             redirect_url = self.request.session.get('last_page', '/')
             return HttpResponseRedirect(redirect_url)
 
