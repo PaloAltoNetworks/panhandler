@@ -883,6 +883,8 @@
                         capture_type = 'capture_object';
                     } else if ('capture_expression' in output_object) {
                         capture_type = 'capture_expression';
+                    } else if ('capture_variable' in output_object) {
+                        capture_type = 'capture_variable';
                     }
 
                     if ('filter_items' in output_object) {
@@ -2927,6 +2929,7 @@
                                             <option value="capture_value">Capture Value</option>
                                             <option value="capture_object">Capture Object</option>
                                             <option value="capture_expression">Capture Expression</option>
+                                            <option value="capture_variable">Capture Variable</option>
                                         </select>
                                     </div>
                                 </div>
@@ -3386,6 +3389,7 @@
                                                 <option value="capture_value">Capture Value</option>
                                                 <option value="capture_object">Capture Object</option>
                                                 <option value="capture_expression">Capture Expression</option>
+                                                <option value="capture_variable">Capture Variable</option>
                                             </select>
                                         </div>
                                     </div>
