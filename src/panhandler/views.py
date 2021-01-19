@@ -1191,8 +1191,12 @@ class ViewSkilletView(ProvisionSnippetView):
         return skillet
 
     def load_skillet_by_name(self, skillet_name) -> (dict, None):
-        return db_utils.load_skillet_by_name(skillet_name)
+        db_skillet = db_utils.load_skillet_by_name(skillet_name)
+        if db_skillet is None:
+            # check for a workflow_skillet in the session.
+            return self.request.session.get('workflow_skillet', None)
 
+        return db_skillet
 
 class CheckAppUpdateView(CNCBaseAuth, RedirectView):
 
