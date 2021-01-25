@@ -23,4 +23,4 @@ xmldiff==2.4
 xmltodict==0.12.0
 #skilletlib==0.4.0
 git+https://github.com/PaloAltoNetworks/skilletlib.git@develop#egg=skilletlib
-doculib
+panforge==0.0.0.1
