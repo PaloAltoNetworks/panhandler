@@ -55,7 +55,7 @@ from skilletlib.skillet.pan_validation import PanValidationSkillet
 from skilletlib.skillet.template import TemplateSkillet
 from yaml.constructor import ConstructorError
 from yaml.scanner import ScannerError
-from doculib import Report
+from panforge import Report
 import base64
 import lxml
 
@@ -1525,7 +1525,7 @@ class ViewValidationResultsView(EditTargetView):
             messages.add_message(self.request, messages.ERROR, str(e))
             return self.form_invalid(form)
 
-        # Render doculib report if found in repository
+        # Render panforge report if found in repository
         report_definition = meta['snippet_path'] + '/report'
         if os.path.exists(report_definition):
             try:
