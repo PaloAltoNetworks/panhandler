@@ -5,7 +5,7 @@ celery==4.4.5
 django==3.1.4
 django-widget-tweaks==1.4.8
 docker==4.2.1
-cryptography==2.9.2
+cryptography==3.2
 jinja2==3.0.0a1
 jsonpath-ng==1.5.1
 netaddr==0.7.19
@@ -21,6 +21,6 @@ urllib3==1.25.9
 virtualenv==20.0.21
 xmldiff==2.4
 xmltodict==0.12.0
-#skilletlib==0.4.0
+#skilletlib==0.4.1
 git+https://github.com/PaloAltoNetworks/skilletlib.git@develop#egg=skilletlib
 panforge==0.0.0.1
