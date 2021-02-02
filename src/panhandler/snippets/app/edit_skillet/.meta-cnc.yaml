@@ -19,7 +19,7 @@ variables:
     help_text: Name of the branch in which to save these local changes
   - name: commit_message
     description: Commit Message
-    default: Update .meta-cnc from Panhandler
+    default: Update Skillet from Panhandler
     type_hint: text
     allow_special_characters: false
     help_text: Message to add to commit log for this edit

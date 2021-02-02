@@ -660,6 +660,7 @@
 
             } else if (skillet['type'] === 'template') {
                 snippet_def['element'] = '';
+                snippet_def['template_title'] = '';
             }
 
             if (skillet_snippets.findIndex(i => i.name === snippet_name) === -1) {
@@ -965,7 +966,6 @@
         function update_snippet(snippet_type) {
             let snippet_name_input = $('#id_' + snippet_type + '_snippet_name');
             let snippet_name = snippet_name_input.val();
-
             let snippet_def = get_snippet_definition(snippet_name);
             for (let attribute_name in snippet_def) {
                 let z = $('#id_' + snippet_type + '_snippet_' + attribute_name);
@@ -3086,7 +3086,13 @@
                         <label for="id_template_snippet_name">Name:</label>
                         <input type="hidden" value="" id="id_template_snippet_name">
                         <input type="text" value="" class="form-control"
-                            id="id_template_snippet_new_name">
+                               id="id_template_snippet_new_name">
+
+                        <label for="id_template_snippet_template_title">Title:</label>
+                        <input type="text" value="" placeholder="Template Title"
+                               class="form-control" id="id_template_snippet_template_title">
+
+
                         <label for="id_template_snippet_element">Template:</label>
                         <textarea class="form-control" rows="7" id="id_template_snippet_element"></textarea>
                         <p class="small muted text-right m-0">
@@ -3095,17 +3101,16 @@
                             </a>
                         </p>
                     </div>
-                    <hr/>
-                    <div class="form-group">
-                        <label for="id_template_snippet_output_type">Output Type:</label>
-                        <select id="id_template_snippet_output_type" class="form-control">
-                            <option selected>xml</option>
-                            <option>json</option>
-                            <option>text</option>
-                        </select>
-                    </div>
-
-
+{#                    Hide this until full output capturing is implemented for template types #}
+{#                    <hr/>#}
+{#                    <div class="form-group">#}
+{#                        <label for="id_template_snippet_output_type">Output Type:</label>#}
+{#                        <select id="id_template_snippet_output_type" class="form-control">#}
+{#                            <option selected="selected">xml</option>#}
+{#                            <option>json</option>#}
+{#                            <option>text</option>#}
+{#                        </select>#}
+{#                    </div>#}
                 </div>
 
                 <div class="modal-footer">
