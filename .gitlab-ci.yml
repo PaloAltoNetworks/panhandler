@@ -26,6 +26,7 @@ variables:
 workflow:
   rules:
     - changes:
+      - .gitlab-ci.yml
       - Dockerfile
       - cnc/*
       - src/*
