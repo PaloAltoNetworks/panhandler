@@ -824,7 +824,8 @@ class CreateSkilletView(PanhandlerAppFormView):
 
         git_utils.checkout_local_branch(repo_dir, local_branch)
 
-        skillet_file_path = os.path.join(skillet_path, '.meta-cnc.yaml')
+        safe_skillet_name = re.sub(r'[^\w\d-]', '_', skillet_name)
+        skillet_file_path = os.path.join(skillet_path, safe_skillet_name + '.skillet.yaml')
 
         with open(skillet_file_path, 'w') as skillet_file:
             skillet_file.write(skillet_content)
