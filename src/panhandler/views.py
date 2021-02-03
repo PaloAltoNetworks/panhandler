@@ -105,7 +105,6 @@ class WelcomeView(CNCView):
 
 
 class PanhandlerAppFormView(CNCBaseFormView):
-
     required_session_vars = list()
 
     def get_snippet(self):
@@ -915,6 +914,11 @@ class UpdateSkilletView(PanhandlerAppFormView):
 
         self.prepopulated_form_values['skillet_contents'] = skillet_contents
 
+        # ensure we remove this here as prepopulated form values do not take precedence over cached workflow values
+        self.pop_value_from_workflow('skillet_contents')
+
+        cleaned_skillet_contents = ''
+
         try:
             cleaned_skillet_contents = re.sub(r'snippet_path:.*$', '', skillet_contents)
         except TypeError as te:
@@ -1031,7 +1035,14 @@ class UpdateSkilletView(PanhandlerAppFormView):
 
         git_utils.checkout_local_branch(repo_dir, local_branch)
 
-        skillet_file_path = os.path.join(skillet_path, '.meta-cnc.yaml')
+        # ensure this skillet name does not already exist
+        skillet_name = skillet_dict.get('name')
+        existing_skillet = db_utils.load_skillet_by_name(skillet_name)
+
+        if existing_skillet and existing_skillet.get('snippet_path', None) == skillet_path:
+            skillet_file_path = os.path.join(skillet_path, existing_skillet.get('skillet_filename', '.meta-cnc.yaml'))
+        else:
+            skillet_file_path = os.path.join(skillet_path, '.meta-cnc.yaml')
 
         with open(skillet_file_path, 'w') as skillet_file:
             skillet_file.write(skillet_yaml)
@@ -1197,6 +1208,7 @@ class ViewSkilletView(ProvisionSnippetView):
             return self.request.session.get('workflow_skillet', None)
 
         return db_skillet
+
 
 class CheckAppUpdateView(CNCBaseAuth, RedirectView):
 
@@ -2052,7 +2064,6 @@ class GenerateSkilletChooserView(CNCView):
     app_dir = 'panhandler'
 
     def get_context_data(self, **kwargs):
-
         repo_name = self.kwargs['repo_name']
 
         # save this value into the session so we do not need to pass it around via kwargs going further
