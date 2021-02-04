@@ -641,7 +641,6 @@
         }
 
         function add_new_snippet() {
-
             let snippet_name = $('#id_new_snippet_name').val();
             let snippet_def = {};
             snippet_def['name'] = snippet_name;
@@ -661,6 +660,12 @@
             } else if (skillet['type'] === 'template') {
                 snippet_def['element'] = '';
                 snippet_def['template_title'] = '';
+
+            } else if (skillet['type'] === 'rest') {
+                snippet_def['element'] = '';
+                snippet_def['path'] = '';
+                snippet_def['operation'] = 'post';
+                snippet_def['output_type'] = 'json';
             }
 
             if (skillet_snippets.findIndex(i => i.name === snippet_name) === -1) {
