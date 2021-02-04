@@ -921,7 +921,9 @@ class UpdateSkilletView(PanhandlerAppFormView):
         cleaned_skillet_contents = ''
 
         try:
-            cleaned_skillet_contents = re.sub(r'snippet_path:.*$', '', skillet_contents)
+            # fix for #142 - regex to match the 3 full line and sub with ''
+            cleaned_skillet_contents = re.sub(r'(?:snippet_path|skillet_path|skillet_filename):.*$',
+                                              '', skillet_contents, re.MULTILINE)
         except TypeError as te:
             print(te)
             print(skillet_contents)
