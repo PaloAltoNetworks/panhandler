@@ -3,6 +3,16 @@
 {% block head %}
     <script type="text/javascript">
 
+    function set_cursor_busy(btn_object) {
+        let doc = $(document.documentElement);
+        doc.css('cursor', 'progress');
+
+        let btn = $(btn_object);
+        btn.addClass('disabled');
+        // wait for page reload
+
+    }
+
     function push_local_changes() {
 
         let doc = $(document.documentElement);
@@ -73,7 +83,7 @@
             </p>
             <p class="card-text mt-4 mb-4">
                 <a href="/panhandler/update_repo/{{ repo_name }}/{{ repo_detail.branch }}"
-                   class="btn btn-primary mr-2">Update To Latest</a>
+                   id='update_button' class="btn btn-primary mr-2" onclick="set_cursor_busy(this)">Update To Latest</a>
                 <a href="/panhandler/remove_repo/{{ repo_name }}" class="btn btn-danger mr-2">Remove Repository</a>
                 <a href="/panhandler/repos" class="btn btn-secondary mr-2">Repositories</a>
                 <a href="/panhandler/generate_skillet/{{ repo_detail.name }}"
@@ -207,6 +217,7 @@
 
     <script type="application/javascript">
         function update_repo() {
+            $('#submit_button').addClass('disabled');
             let branch = $('#branch_select').val();
             if (branch === "{{ repo_detail.branch }}") {
                 console.log('nothing to switch to!');
@@ -241,7 +252,9 @@
             </p>
         </div>
         <div class="card-footer text-right">
-            <button type="submit" class="btn btn-primary" id="submit_button" onclick="update_repo()">Checkout</button>
+            <button type="submit" class="btn btn-primary" id="submit_button" onclick="update_repo()">
+                Checkout
+            </button>
         </div>
     </div>
 

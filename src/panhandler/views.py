@@ -2023,6 +2023,8 @@ class DeleteSkilletView(UpdateRepoView):
 
         skillet_path_str = skillet.get('snippet_path', None)
 
+        skillet_filename = skillet.get('skillet_filename', None)
+
         if skillet_path_str is None:
             print(f'Error deleting skillet!')
             messages.add_message(self.request, messages.ERROR, 'Could not delete skillet!')
@@ -2041,16 +2043,22 @@ class DeleteSkilletView(UpdateRepoView):
             messages.add_message(self.request, messages.ERROR, 'Could not delete skillet!')
             return redir_url
 
-        # catch meta-cnc.yaml and .meta-cnc.yml
-        meta_name = '.meta-cnc.yaml'
-        for meta_file in skillet_path.glob('.meta-cnc.y*'):
-            meta_file.unlink()
-            meta_name = meta_file.name
+        if skillet_filename:
+            full_path = skillet_path.joinpath(skillet_filename)
+            full_path.unlink()
+        else:
+            # catch meta-cnc.yaml and .meta-cnc.yml
+            meta_name = '.meta-cnc.yaml'
+            for meta_file in skillet_path.glob('.meta-cnc.y*'):
+                print(f'Removing {meta_file.absolute()}')
+                meta_file.unlink()
+                meta_name = meta_file.name
 
         # remove blank directories that share the same name as the skillet
         if skillet_path.name == skillet_name:
             children = [c for c in skillet_path.iterdir()]
             if len(children) == 0:
+                print(f'Removing dir: {skillet_path.absolute()}')
                 skillet_path.rmdir()
 
         messages.add_message(self.request, messages.SUCCESS, 'Skillet Deleted successfully')
