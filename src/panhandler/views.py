@@ -24,6 +24,7 @@ Please see http://panhandler.readthedocs.io for more information
 This software is provided without support, warranty, or guarantee.
 Use at your own risk.
 """
+import base64
 import json
 import os
 import re
@@ -31,6 +32,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import lxml
 import yaml
 from django.conf import settings
 from django.contrib import messages
@@ -44,6 +46,7 @@ from django.shortcuts import render
 from django.utils.safestring import mark_safe
 from django.views.generic import RedirectView
 from django.views.generic import View
+from panforge import Report
 from skilletlib import Panoply
 from skilletlib import Panos
 from skilletlib import SkilletLoader
@@ -55,9 +58,6 @@ from skilletlib.skillet.pan_validation import PanValidationSkillet
 from skilletlib.skillet.template import TemplateSkillet
 from yaml.constructor import ConstructorError
 from yaml.scanner import ScannerError
-from panforge import Report
-import base64
-import lxml
 
 from cnc.models import RepositoryDetails
 from pan_cnc.lib import cnc_utils
@@ -65,6 +65,7 @@ from pan_cnc.lib import db_utils
 from pan_cnc.lib import git_utils
 from pan_cnc.lib import snippet_utils
 from pan_cnc.lib import task_utils
+from pan_cnc.lib.exceptions import DuplicateSkilletException
 from pan_cnc.lib.exceptions import ImportRepositoryException
 from pan_cnc.lib.exceptions import RepositoryPermissionsException
 from pan_cnc.lib.exceptions import SnippetRequiredException
@@ -97,7 +98,11 @@ class WelcomeView(CNCView):
 
         context['update_required'] = update_required
 
-        db_utils.initialize_default_repositories('panhandler')
+        try:
+            db_utils.initialize_default_repositories('panhandler')
+
+        except DuplicateSkilletException as dse:
+            print('Refusing to import duplicate skillets...')
 
         self.request.session['app_dir'] = 'panhandler'
 
@@ -243,7 +248,13 @@ class ImportRepoView(PanhandlerAppFormView):
             cnc_utils.set_long_term_cached_value(self.app_dir, 'imported_repositories', repos, 604800,
                                                  'imported_git_repos')
 
-            db_utils.initialize_repo(repo_detail)
+            try:
+                db_utils.initialize_repo(repo_detail)
+
+            except DuplicateSkilletException as dse:
+                messages.add_message(self.request, messages.ERROR, str(dse))
+                db_utils.update_skillet_cache()
+                return HttpResponseRedirect('repos')
 
             debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
 
@@ -339,9 +350,15 @@ class ListReposView(CNCView):
                     repo_detail = db_utils.get_repository_details(d.name)
                     if not repo_detail:
                         repo_detail = git_utils.get_repo_details(d.name, d, self.app_dir)
-                        db_utils.initialize_repo(repo_detail)
+                        # nembery - 022521 - seems like duplicate logic here? Commenting out as it seems like this has
+                        # no effect
+                        # db_utils.initialize_repo(repo_detail)
                     repos.append(repo_detail)
-                    db_utils.initialize_repo(repo_detail)
+                    try:
+                        db_utils.initialize_repo(repo_detail)
+                    except DuplicateSkilletException as dse:
+                        print('Refusing to index duplicate skillet names...')
+
                     continue
 
             # cache the repos list for 1 week. this will be cleared when we import a new repository or otherwise
@@ -394,7 +411,11 @@ class RepoDetailsView(CNCView):
             db_utils.update_repository_details(repo_name, repo_detail)
 
         # initialize will set up db object only if needed
-        skillets_from_repo = db_utils.initialize_repo(repo_detail)
+        try:
+            skillets_from_repo = db_utils.initialize_repo(repo_detail)
+
+        except DuplicateSkilletException as dse:
+            print('Refusing to index duplicate skillet names...')
 
         if 'error' in repo_detail:
             messages.add_message(self.request, messages.ERROR, repo_detail['error'])
@@ -510,8 +531,15 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         # check each snippet found for dependencies
         repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
 
+        loaded_skillets = list()
+
         if needs_index:
-            loaded_skillets = db_utils.refresh_skillets_from_repo(repo_name)
+            try:
+                loaded_skillets = db_utils.refresh_skillets_from_repo(repo_name)
+
+            except DuplicateSkilletException as dse:
+                messages.add_message(self.request, messages.ERROR, str(dse))
+
         else:
             loaded_skillets = db_utils.load_skillets_from_repo(repo_name)
 
