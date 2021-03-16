@@ -16,12 +16,8 @@ ENV COLUMNS=80
 ENV PYTHONHTTPSVERIFY=0
 WORKDIR /app
 
-RUN groupadd -g 999 cnc_group && \
-    groupadd -g 998 docker && \
-    useradd -r -m cnc_user -u 9001 -s /bin/bash -g cnc_group -G docker -G root && \
-    mkdir /home/cnc_user/.pan_cnc && \
-    chown cnc_user:cnc_group /home/cnc_user/.pan_cnc
-
+RUN groupadd -g 998 docker && \
+    usermod cnc_user -G docker,root
 
 RUN curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
     > terraform_${TERRAFORM_VERSION}_linux_amd64.zip && \
