@@ -1,3 +1,13 @@
+include:
+  - template: Dependency-Scanning.gitlab-ci.yml
+  - template: Container-Scanning.gitlab-ci.yml
+  - template: Security/SAST.gitlab-ci.yml
+
+container_scanning:
+  variables:
+    GIT_STRATEGY: fetch
+    DOCKER_IMAGE: "$CI_REGISTRY_IMAGE:$CI_COMMIT_BRANCH-test"
+
 image: docker:latest
 services:
   - docker:dind
@@ -16,6 +26,7 @@ variables:
 workflow:
   rules:
     - changes:
+      - .gitlab-ci.yml
       - Dockerfile
       - cnc/*
       - src/*
@@ -27,12 +38,11 @@ cache:
     - env/
     - .tox/
 
-before_script:
-  - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
 
 docker-build:
   stage: build
   script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - docker pull $TEST_IMAGE || true
     - docker build --pull --cache-from $TEST_IMAGE -t "$TEST_IMAGE" .
     - docker push $TEST_IMAGE
@@ -74,6 +84,7 @@ docker_test:
 push_dev:
   stage: push
   script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - docker pull $TEST_IMAGE
     - docker tag $TEST_IMAGE "$CI_REGISTRY_IMAGE:dev"
     - docker push "$CI_REGISTRY_IMAGE:dev"
@@ -83,6 +94,7 @@ push_dev:
 push_master:
   stage: push
   script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
     - docker pull $TEST_IMAGE
     - docker tag $TEST_IMAGE "$CI_REGISTRY_IMAGE:latest"
     - docker push "$CI_REGISTRY_IMAGE:latest"

@@ -4,7 +4,7 @@ label: Panhandler
 repositories:
   - name: Iron-Skillet
     url: https://github.com/PaloAltoNetworks/iron-skillet.git
-    branch: panos_v9.0
+    branch: panos_v10.0
     destination_directory: Iron-Skillet
 
 application_data:
@@ -102,6 +102,9 @@ views:
 
   - name: validate-results
     class: ViewValidationResultsView
+
+  - name: report
+    class: ReportView
 
   - name: export_valiation_results
     class: ExportValidationResultsView

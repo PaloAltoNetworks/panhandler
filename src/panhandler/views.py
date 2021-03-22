@@ -24,6 +24,7 @@ Please see http://panhandler.readthedocs.io for more information
 This software is provided without support, warranty, or guarantee.
 Use at your own risk.
 """
+import base64
 import json
 import os
 import re
@@ -31,6 +32,7 @@ import shutil
 from pathlib import Path
 from typing import Any
 
+import lxml
 import yaml
 from django.conf import settings
 from django.contrib import messages
@@ -44,6 +46,7 @@ from django.shortcuts import render
 from django.utils.safestring import mark_safe
 from django.views.generic import RedirectView
 from django.views.generic import View
+from panforge import Report
 from skilletlib import Panoply
 from skilletlib import Panos
 from skilletlib import SkilletLoader
@@ -62,6 +65,7 @@ from pan_cnc.lib import db_utils
 from pan_cnc.lib import git_utils
 from pan_cnc.lib import snippet_utils
 from pan_cnc.lib import task_utils
+from pan_cnc.lib.exceptions import DuplicateSkilletException
 from pan_cnc.lib.exceptions import ImportRepositoryException
 from pan_cnc.lib.exceptions import RepositoryPermissionsException
 from pan_cnc.lib.exceptions import SnippetRequiredException
@@ -94,7 +98,11 @@ class WelcomeView(CNCView):
 
         context['update_required'] = update_required
 
-        db_utils.initialize_default_repositories('panhandler')
+        try:
+            db_utils.initialize_default_repositories('panhandler')
+
+        except DuplicateSkilletException as dse:
+            print('Refusing to import duplicate skillets...')
 
         self.request.session['app_dir'] = 'panhandler'
 
@@ -102,7 +110,6 @@ class WelcomeView(CNCView):
 
 
 class PanhandlerAppFormView(CNCBaseFormView):
-
     required_session_vars = list()
 
     def get_snippet(self):
@@ -241,7 +248,13 @@ class ImportRepoView(PanhandlerAppFormView):
             cnc_utils.set_long_term_cached_value(self.app_dir, 'imported_repositories', repos, 604800,
                                                  'imported_git_repos')
 
-            db_utils.initialize_repo(repo_detail)
+            try:
+                db_utils.initialize_repo(repo_detail)
+
+            except DuplicateSkilletException as dse:
+                messages.add_message(self.request, messages.ERROR, str(dse))
+                db_utils.update_skillet_cache()
+                return HttpResponseRedirect('repos')
 
             debug_errors = snippet_utils.debug_snippets_in_repo(Path(repo_dir), list())
 
@@ -337,9 +350,15 @@ class ListReposView(CNCView):
                     repo_detail = db_utils.get_repository_details(d.name)
                     if not repo_detail:
                         repo_detail = git_utils.get_repo_details(d.name, d, self.app_dir)
-                        db_utils.initialize_repo(repo_detail)
+                        # nembery - 022521 - seems like duplicate logic here? Commenting out as it seems like this has
+                        # no effect
+                        # db_utils.initialize_repo(repo_detail)
                     repos.append(repo_detail)
-                    db_utils.initialize_repo(repo_detail)
+                    try:
+                        db_utils.initialize_repo(repo_detail)
+                    except DuplicateSkilletException as dse:
+                        print('Refusing to index duplicate skillet names...')
+
                     continue
 
             # cache the repos list for 1 week. this will be cleared when we import a new repository or otherwise
@@ -392,7 +411,11 @@ class RepoDetailsView(CNCView):
             db_utils.update_repository_details(repo_name, repo_detail)
 
         # initialize will set up db object only if needed
-        skillets_from_repo = db_utils.initialize_repo(repo_detail)
+        try:
+            skillets_from_repo = db_utils.initialize_repo(repo_detail)
+
+        except DuplicateSkilletException as dse:
+            print('Refusing to index duplicate skillet names...')
 
         if 'error' in repo_detail:
             messages.add_message(self.request, messages.ERROR, repo_detail['error'])
@@ -460,6 +483,27 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
 
         level = messages.INFO
 
+        # get the previous repo details json object from the db
+        previous_details_json = repository_object.details_json
+        previous_details = json.loads(previous_details_json)
+
+        # check previous commit log and verify if we have any local commits
+        # use the current commit log and compare against the last commit log stored in the db
+        found_commits = list()
+        previous_commits = list()
+        for new_commit in repo_detail.get('commits', []):
+            found_commits.append(new_commit.get('id', ''))
+
+        for commit in previous_details.get('commits', []):
+            previous_commits.append(commit.get('id', ''))
+
+        for c in found_commits:
+            if c not in previous_commits:
+                # we have a commit in the commit log that was not previously recorded in the db
+                # this means we need to re-index skillets
+                needs_index = True
+                break
+
         if 'Error' in msg:
             level = messages.ERROR
             cnc_utils.evict_cache_items_of_type(self.app_dir, 'imported_git_repos')
@@ -487,8 +531,15 @@ class UpdateRepoView(CNCBaseAuth, RedirectView):
         # check each snippet found for dependencies
         repos = cnc_utils.get_long_term_cached_value(self.app_dir, 'imported_repositories')
 
+        loaded_skillets = list()
+
         if needs_index:
-            loaded_skillets = db_utils.refresh_skillets_from_repo(repo_name)
+            try:
+                loaded_skillets = db_utils.refresh_skillets_from_repo(repo_name)
+
+            except DuplicateSkilletException as dse:
+                messages.add_message(self.request, messages.ERROR, str(dse))
+
         else:
             loaded_skillets = db_utils.load_skillets_from_repo(repo_name)
 
@@ -801,7 +852,8 @@ class CreateSkilletView(PanhandlerAppFormView):
 
         git_utils.checkout_local_branch(repo_dir, local_branch)
 
-        skillet_file_path = os.path.join(skillet_path, '.meta-cnc.yaml')
+        safe_skillet_name = re.sub(r'[^\w\d-]', '_', skillet_name)
+        skillet_file_path = os.path.join(skillet_path, safe_skillet_name + '.skillet.yaml')
 
         with open(skillet_file_path, 'w') as skillet_file:
             skillet_file.write(skillet_content)
@@ -891,8 +943,15 @@ class UpdateSkilletView(PanhandlerAppFormView):
 
         self.prepopulated_form_values['skillet_contents'] = skillet_contents
 
+        # ensure we remove this here as prepopulated form values do not take precedence over cached workflow values
+        self.pop_value_from_workflow('skillet_contents')
+
+        cleaned_skillet_contents = ''
+
         try:
-            cleaned_skillet_contents = re.sub(r'snippet_path:.*$', '', skillet_contents)
+            # fix for #142 - regex to match the 3 full line and sub with ''
+            cleaned_skillet_contents = re.sub(r'(?:snippet_path|skillet_path|skillet_filename):.*$',
+                                              '', skillet_contents, re.MULTILINE)
         except TypeError as te:
             print(te)
             print(skillet_contents)
@@ -1007,7 +1066,14 @@ class UpdateSkilletView(PanhandlerAppFormView):
 
         git_utils.checkout_local_branch(repo_dir, local_branch)
 
-        skillet_file_path = os.path.join(skillet_path, '.meta-cnc.yaml')
+        # ensure this skillet name does not already exist
+        skillet_name = skillet_dict.get('name')
+        existing_skillet = db_utils.load_skillet_by_name(skillet_name)
+
+        if existing_skillet and existing_skillet.get('snippet_path', None) == skillet_path:
+            skillet_file_path = os.path.join(skillet_path, existing_skillet.get('skillet_filename', '.meta-cnc.yaml'))
+        else:
+            skillet_file_path = os.path.join(skillet_path, '.meta-cnc.yaml')
 
         with open(skillet_file_path, 'w') as skillet_file:
             skillet_file.write(skillet_yaml)
@@ -1167,7 +1233,12 @@ class ViewSkilletView(ProvisionSnippetView):
         return skillet
 
     def load_skillet_by_name(self, skillet_name) -> (dict, None):
-        return db_utils.load_skillet_by_name(skillet_name)
+        db_skillet = db_utils.load_skillet_by_name(skillet_name)
+        if db_skillet is None:
+            # check for a workflow_skillet in the session.
+            return self.request.session.get('workflow_skillet', None)
+
+        return db_skillet
 
 
 class CheckAppUpdateView(CNCBaseAuth, RedirectView):
@@ -1383,10 +1454,12 @@ class ViewValidationResultsView(EditTargetView):
             for snippet_var in meta['variables']:
                 jinja_context[snippet_var['name']] = snippet_var['default']
 
+        # FIX for #120 - ensure we remove old validation results prior to running skilletlib
+        # in the event of a crash or other issue, we do not want to redisplay old values to the end user
         for s in meta['snippets']:
             self.pop_value_from_workflow(s['name'])
 
-        # let's grab the current workflow values (values saved from ALL forms in this app
+        # let's grab the current workflow values (values saved from ALL forms in this app)
         jinja_context.update(self.get_workflow())
 
         debug = self.request.POST.get('debug', False)
@@ -1468,6 +1541,18 @@ class ViewValidationResultsView(EditTargetView):
             context['skillet'] = skillet
             context['results'] = validation_output
 
+            if 'output_template' in skillet_output:
+                output_template = skillet_output['output_template']
+
+                # allow skillet builder to include markup if desired
+                if not output_template.startswith('<div'):
+                    context['output_template_markup'] = False
+                else:
+                    context['output_template_markup'] = True
+
+                context['output_template'] = output_template
+                return render(self.request, 'pan_cnc/results.html', context=context)
+
         # fix for #120 - ensure we catch all skilletlib errors here and return
         # a form_invalid up the stack
         except PanoplyException as pe:
@@ -1483,7 +1568,47 @@ class ViewValidationResultsView(EditTargetView):
             messages.add_message(self.request, messages.ERROR, str(e))
             return self.form_invalid(form)
 
+        # Render panforge report if found in repository
+        report_definition = meta['snippet_path'] + '/report'
+        if os.path.exists(report_definition):
+            try:
+
+                # Extract info from device config for reporting purposes
+                device_meta = {}
+                config_tree = lxml.etree.fromstring(skillet.context['config'])
+                if config_tree is not None:
+                    host_node = config_tree.find('devices/entry/deviceconfig/system/hostname')
+                    if host_node is not None:
+                        device_meta['Hostname'] = host_node.text
+                report = Report(report_definition)
+                report.load_header(device_meta)
+                report.load_data(validation_output)
+                report_html = report.render_html()
+                if os.path.exists(settings.REPORT_PATH):
+                    os.remove(settings.REPORT_PATH)
+                with open(settings.REPORT_PATH, 'w') as f:
+                    f.write(report_html)
+                context['report'] = base64.encodestring(report_html.encode()).decode()
+                return render(self.request, 'panhandler/report.html', context)
+            except Exception as e:
+                print(f'Exception while rendering report - {e}')
+
         return render(self.request, 'panhandler/validation-results.html', context)
+
+
+class ReportView(CNCBaseAuth, View):
+    """
+    View last report generated
+    """
+
+    def get(self, request, *args, **kwargs) -> Any:
+        try:
+            with open(settings.REPORT_PATH, 'r') as f:
+                return HttpResponse(f.read())
+        except Exception as e:
+            print(f'Caught exception in ReportView: {e}')
+            redirect_url = self.request.session.get('last_page', '/')
+            return HttpResponseRedirect(redirect_url)
 
 
 class ExportValidationResultsView(CNCBaseAuth, View):
@@ -1926,6 +2051,8 @@ class DeleteSkilletView(UpdateRepoView):
 
         skillet_path_str = skillet.get('snippet_path', None)
 
+        skillet_filename = skillet.get('skillet_filename', None)
+
         if skillet_path_str is None:
             print(f'Error deleting skillet!')
             messages.add_message(self.request, messages.ERROR, 'Could not delete skillet!')
@@ -1944,16 +2071,22 @@ class DeleteSkilletView(UpdateRepoView):
             messages.add_message(self.request, messages.ERROR, 'Could not delete skillet!')
             return redir_url
 
-        # catch meta-cnc.yaml and .meta-cnc.yml
-        meta_name = '.meta-cnc.yaml'
-        for meta_file in skillet_path.glob('.meta-cnc.y*'):
-            meta_file.unlink()
-            meta_name = meta_file.name
+        if skillet_filename:
+            full_path = skillet_path.joinpath(skillet_filename)
+            full_path.unlink()
+        else:
+            # catch meta-cnc.yaml and .meta-cnc.yml
+            meta_name = '.meta-cnc.yaml'
+            for meta_file in skillet_path.glob('.meta-cnc.y*'):
+                print(f'Removing {meta_file.absolute()}')
+                meta_file.unlink()
+                meta_name = meta_file.name
 
         # remove blank directories that share the same name as the skillet
         if skillet_path.name == skillet_name:
             children = [c for c in skillet_path.iterdir()]
             if len(children) == 0:
+                print(f'Removing dir: {skillet_path.absolute()}')
                 skillet_path.rmdir()
 
         messages.add_message(self.request, messages.SUCCESS, 'Skillet Deleted successfully')
@@ -1970,7 +2103,6 @@ class GenerateSkilletChooserView(CNCView):
     app_dir = 'panhandler'
 
     def get_context_data(self, **kwargs):
-
         repo_name = self.kwargs['repo_name']
 
         # save this value into the session so we do not need to pass it around via kwargs going further

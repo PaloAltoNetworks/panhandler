@@ -24,6 +24,10 @@ export PANHANDLER_VOLUME=panhandler_volume
 export DEV_EXPOSED_PORT=8080
 export LATEST_EXPOSED_PORT=8080
 
+# used to check if the user has supplied a non-default port
+export DEV_DEFAULT_PORT=8081
+export LATEST_DEFAULT_PORT=8080
+
 # default panhandler auth if not set from the environment
 export CNC_USERNAME="${CNC_USERNAME:=paloalto}"
 export CNC_PASSWORD="${CNC_PASSWORD:=panhandler}"
@@ -88,7 +92,7 @@ function find_panhandler_container_id() {
   # finally, only return the first match found in case we have more than 1 for some reason...
   PANHANDLER_ID=$(
     docker ps -a --format "{{.ID}} {{.Command}} {{ .Ports}}" -f expose="${EXPOSED_PORT}" |
-      grep '/app/cnc/start_app' |
+      grep '/app/cnc/tools/ph.sh' |
       grep 'tcp' |
       head -1 |
       awk '{ print $1} '
@@ -280,8 +284,13 @@ else
     if [[ ${FORCE_DEFAULT_PORT} == false ]]; then
       echo " "
       echo "  Getting existing port mapping for re-use"
-      # convert "HostPort": "8080" into 8080
-      DEFAULT_PORT=$(get_existing_published_port)
+
+      # check if the user has passed in a port that is not the default. If so
+      # we should always use that one
+      if [[ ${LATEST_DEFAULT_PORT} == {$DEFAULT_PORT} ]]; then
+        DEFAULT_PORT=$(get_existing_published_port)
+      fi
+
       echo " "
       echo "  Using ${DEFAULT_PORT} as local port mapping"
     fi
