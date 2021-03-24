@@ -4,7 +4,7 @@ Example Skillet with When Conditionals
 =======================================
 
 This is a basic 'validation' Skillet example that uses 'when' conditionals to 'skip' certain snippets. This can be
-useful to perhaps skip validation tests that are not relevant. For example, there is not need to test a sub-element's
+useful to perhaps skip validation tests that are not relevant. For example, there is no need to test a sub-element's
 value if the parent element does not exist.
 
 
@@ -17,7 +17,7 @@ value if the parent element does not exist.
     # Example When Conditional
     #
     # In order to properly validate a config, it is often necessary to convert the XML structure to an object, which
-    # can then be used in jinja expression to perform basic logic and validation. These examples demonstrate how
+    # can then be used in jinja expressions to perform basic logic and validation. These examples demonstrate how
     # skillets are optimized for this task.
     #
 
