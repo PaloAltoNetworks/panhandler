@@ -101,7 +101,7 @@ class WelcomeView(CNCView):
         try:
             db_utils.initialize_default_repositories('panhandler')
 
-        except DuplicateSkilletException as dse:
+        except DuplicateSkilletException:
             print('Refusing to import duplicate skillets...')
 
         self.request.session['app_dir'] = 'panhandler'
@@ -143,7 +143,7 @@ class PanhandlerAppFormView(CNCBaseFormView):
 
         for v in self.required_session_vars:
             if v not in self.request.session:
-                messages.add_message(self.request, messages.ERROR, f'Process Error')
+                messages.add_message(self.request, messages.ERROR, 'Process Error')
                 return HttpResponseRedirect(self.request.session.get('last_page', '/'))
 
         return super().get(request, *args, **kwargs)
@@ -356,7 +356,7 @@ class ListReposView(CNCView):
                     repos.append(repo_detail)
                     try:
                         db_utils.initialize_repo(repo_detail)
-                    except DuplicateSkilletException as dse:
+                    except DuplicateSkilletException:
                         print('Refusing to index duplicate skillet names...')
 
                     continue
@@ -414,7 +414,7 @@ class RepoDetailsView(CNCView):
         try:
             skillets_from_repo = db_utils.initialize_repo(repo_detail)
 
-        except DuplicateSkilletException as dse:
+        except DuplicateSkilletException:
             print('Refusing to index duplicate skillet names...')
 
         if 'error' in repo_detail:
@@ -2054,7 +2054,7 @@ class DeleteSkilletView(UpdateRepoView):
         skillet_filename = skillet.get('skillet_filename', None)
 
         if skillet_path_str is None:
-            print(f'Error deleting skillet!')
+            print('Error deleting skillet!')
             messages.add_message(self.request, messages.ERROR, 'Could not delete skillet!')
             return redir_url
 
@@ -2067,7 +2067,7 @@ class DeleteSkilletView(UpdateRepoView):
         repo_path = Path(repo_dir)
 
         if repo_path not in skillet_path.parents:
-            print(f'Error deleting skillet!')
+            print('Error deleting skillet!')
             messages.add_message(self.request, messages.ERROR, 'Could not delete skillet!')
             return redir_url
 
@@ -2267,7 +2267,7 @@ class GenerateSkilletOfflineView(PanhandlerAppFormView):
 
         # save results into the context
         self.save_value_to_workflow('snippets', snippets)
-        self.save_value_to_workflow('skillet_description', f'Skillet Generated from uploaded configs')
+        self.save_value_to_workflow('skillet_description', 'Skillet Generated from uploaded configs')
 
         return HttpResponseRedirect(self.next_url)
 
@@ -2409,7 +2409,7 @@ class GenerateSetSkilletOfflineView(PanhandlerAppFormView):
 
         # save results into the context
         self.save_value_to_workflow('snippets', snippets)
-        self.save_value_to_workflow('skillet_description', f'Skillet Generated from uploaded configs')
+        self.save_value_to_workflow('skillet_description', 'Skillet Generated from uploaded configs')
 
         return HttpResponseRedirect(self.next_url)
 
