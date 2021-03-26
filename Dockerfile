@@ -1,5 +1,5 @@
 
-FROM registry.gitlab.com/panw-gse/as/as-py-base-image:latest
+FROM registry.gitlab.com/panw-gse/as/as-py-base-image@sha256:b189d625a5386b7aff598d44e6822e02f0731e30061b890eaec68d658ac52e36
 
 LABEL description="Panhandler"
 LABEL version="4.3"
