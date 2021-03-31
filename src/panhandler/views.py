@@ -651,7 +651,15 @@ class UpdateAllReposView(CNCBaseAuth, RedirectView):
                         tf.unlink()
 
                     # re-index skillets in this dir
-                    db_utils.refresh_skillets_from_repo(str(d))
+                    try:
+                        # go ahead and refresh all the found skillet
+                        db_utils.refresh_skillets_from_repo(str(d))
+
+                    except DuplicateSkilletException as dse:
+                        messages.add_message(self.request, messages.ERROR, str(dse))
+                        messages.add_message(self.request, messages.ERROR,
+                                             'This repository may not be updated correctly!'
+                                             'Please remove the offending skillet and try again!')
 
         if not err_condition:
             repos = ", ".join(updates)
@@ -1092,7 +1100,11 @@ class UpdateSkilletView(PanhandlerAppFormView):
         repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
         db_utils.update_repository_details(repo_name, repo_detail)
 
-        db_utils.refresh_skillets_from_repo(repo_name)
+        try:
+            db_utils.refresh_skillets_from_repo(repo_name)
+
+        except DuplicateSkilletException as dse:
+            messages.add_message(self.request, messages.ERROR, str(dse))
 
         cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
         return HttpResponseRedirect(f'/panhandler/repo_detail/{repo_name}')
@@ -2097,7 +2109,14 @@ class DeleteSkilletView(UpdateRepoView):
 
         messages.add_message(self.request, messages.SUCCESS, 'Skillet Deleted successfully')
 
-        db_utils.refresh_skillets_from_repo(repo_name)
+        try:
+            # go ahead and refresh all the found skillet
+            db_utils.refresh_skillets_from_repo(repo_name)
+
+        except DuplicateSkilletException as dse:
+            messages.add_message(self.request, messages.ERROR, str(dse))
+            messages.add_message(self.request, messages.ERROR, 'This repository may not be updated correctly!'
+                                                               'Please remove the offending skillet and try again!')
 
         git_utils.commit_local_changes(repo_dir, f'Deleted {skillet_name}', os.path.join(skillet_path_str, meta_name))
 
