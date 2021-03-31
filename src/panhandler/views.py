@@ -866,8 +866,14 @@ class CreateSkilletView(PanhandlerAppFormView):
         repo_detail = git_utils.get_repo_details(repo_name, repo_dir, self.app_dir)
         db_utils.update_repository_details(repo_name, repo_detail)
 
-        # go ahead and refresh all the found skillet
-        db_utils.refresh_skillets_from_repo(repo_name)
+        try:
+            # go ahead and refresh all the found skillet
+            db_utils.refresh_skillets_from_repo(repo_name)
+
+        except DuplicateSkilletException as dse:
+            messages.add_message(self.request, messages.ERROR, str(dse))
+            messages.add_message(self.request, messages.ERROR, 'This repository may not be updated correctly!'
+                                                               'Please remove the offending skillet and try again!')
 
         cnc_utils.set_long_term_cached_value(self.app_dir, f'{repo_name}_detail', None, 0, 'snippet')
         return HttpResponseRedirect(f'/panhandler/edit_skillet/{repo_name}/{skillet_name}')
