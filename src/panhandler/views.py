@@ -1503,6 +1503,7 @@ class ViewValidationResultsView(EditTargetView):
                 self.save_value_to_workflow('TARGET_IP', target_ip)
                 # self.save_value_to_workflow('TARGET_PORT', target_port)
                 self.save_value_to_workflow('TARGET_USERNAME', target_username)
+                self.save_value_to_workflow('TARGET_PASSWORD', target_username)
 
             err_condition = False
 
