@@ -1378,7 +1378,11 @@ class ViewValidationResultsView(EditTargetView):
                 # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
                 target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
                 target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
-                data = {'TARGET_IP': target_ip, 'TARGET_USERNAME': target_username, 'TARGET_PASSWORD': target_password}
+                data = {'TARGET_IP': target_ip,
+                        'TARGET_USERNAME': target_username,
+                        'TARGET_PASSWORD': target_password,
+                        'debug': False
+                        }
                 form = self.generate_dynamic_form(data=data)
 
                 # this is part of a workflow, and we already have this information in the context
@@ -1492,7 +1496,9 @@ class ViewValidationResultsView(EditTargetView):
             # values previously saved!
             workflow_name = self.request.session.get('workflow_name', False)
 
-            if workflow_name:
+            # check if TARGET_IP is in the request, if so, use that value, otherwise
+            # use what's in the workflow context if we have a workflow_name around
+            if 'TARGET_IP' not in self.request.POST and workflow_name:
                 target_ip = self.get_value_from_workflow('TARGET_IP', '')
                 # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
                 target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
@@ -1508,7 +1514,7 @@ class ViewValidationResultsView(EditTargetView):
                 self.save_value_to_workflow('TARGET_IP', target_ip)
                 # self.save_value_to_workflow('TARGET_PORT', target_port)
                 self.save_value_to_workflow('TARGET_USERNAME', target_username)
-                self.save_value_to_workflow('TARGET_PASSWORD', target_username)
+                self.save_value_to_workflow('TARGET_PASSWORD', target_password)
 
             err_condition = False
 
