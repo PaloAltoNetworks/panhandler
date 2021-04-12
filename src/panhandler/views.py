@@ -932,8 +932,13 @@ class UpdateSkilletView(PanhandlerAppFormView):
         # get skillet metadata
         skillet_dict = db_utils.load_skillet_by_name(skillet_name)
 
-        # get the contents of the meta-cnc.yaml file as a str
-        skillet_contents = snippet_utils.read_skillet_metadata(skillet_dict)
+        try:
+            # get the contents of the meta-cnc.yaml file as a str
+            skillet_contents = snippet_utils.read_skillet_metadata(skillet_dict)
+        except AttributeError as ae:
+            print('Error reading Skillet Metadata')
+            print(ae)
+            return None
 
         skillet_loader = SkilletLoader()
         skillet = skillet_loader.create_skillet(skillet_dict=skillet_dict)
@@ -2099,7 +2104,7 @@ class DeleteSkilletView(UpdateRepoView):
             for meta_file in skillet_path.glob('.meta-cnc.y*'):
                 print(f'Removing {meta_file.absolute()}')
                 meta_file.unlink()
-                meta_name = meta_file.name
+                skillet_filename = meta_file.name
 
         # remove blank directories that share the same name as the skillet
         if skillet_path.name == skillet_name:
@@ -2119,7 +2124,8 @@ class DeleteSkilletView(UpdateRepoView):
             messages.add_message(self.request, messages.ERROR, 'This repository may not be updated correctly!'
                                                                'Please remove the offending skillet and try again!')
 
-        git_utils.commit_local_changes(repo_dir, f'Deleted {skillet_name}', os.path.join(skillet_path_str, meta_name))
+        git_utils.commit_local_changes(repo_dir, f'Deleted {skillet_name}',
+                                       os.path.join(skillet_path_str, skillet_filename))
 
         return super().get_redirect_url(*args, **kwargs)
 
