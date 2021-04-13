@@ -106,6 +106,14 @@ class WelcomeView(CNCView):
 
         self.request.session['app_dir'] = 'panhandler'
 
+        current_context = self.get_workflow()
+        # only populate with default env if no context exists
+        if not current_context:
+            defaults = cnc_utils.load_user_defaults()
+            if 'default' in defaults and isinstance(defaults["default"], dict):
+                for k, v in defaults["default"].items():
+                    self.save_value_to_workflow(k, v)
+
         return context
 
 
