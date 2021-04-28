@@ -106,6 +106,14 @@ class WelcomeView(CNCView):
 
         self.request.session['app_dir'] = 'panhandler'
 
+        current_context = self.get_workflow()
+        # only populate with default env if no context exists
+        if not current_context:
+            defaults = cnc_utils.load_user_defaults()
+            if 'default' in defaults and isinstance(defaults["default"], dict):
+                for k, v in defaults["default"].items():
+                    self.save_value_to_workflow(k, v)
+
         return context
 
 
@@ -932,8 +940,13 @@ class UpdateSkilletView(PanhandlerAppFormView):
         # get skillet metadata
         skillet_dict = db_utils.load_skillet_by_name(skillet_name)
 
-        # get the contents of the meta-cnc.yaml file as a str
-        skillet_contents = snippet_utils.read_skillet_metadata(skillet_dict)
+        try:
+            # get the contents of the meta-cnc.yaml file as a str
+            skillet_contents = snippet_utils.read_skillet_metadata(skillet_dict)
+        except AttributeError as ae:
+            print('Error reading Skillet Metadata')
+            print(ae)
+            return None
 
         skillet_loader = SkilletLoader()
         skillet = skillet_loader.create_skillet(skillet_dict=skillet_dict)
@@ -1373,7 +1386,11 @@ class ViewValidationResultsView(EditTargetView):
                 # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
                 target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
                 target_password = self.get_value_from_workflow('TARGET_PASSWORD', '')
-                data = {'TARGET_IP': target_ip, 'TARGET_USERNAME': target_username, 'TARGET_PASSWORD': target_password}
+                data = {'TARGET_IP': target_ip,
+                        'TARGET_USERNAME': target_username,
+                        'TARGET_PASSWORD': target_password,
+                        'debug': False
+                        }
                 form = self.generate_dynamic_form(data=data)
 
                 # this is part of a workflow, and we already have this information in the context
@@ -1487,7 +1504,9 @@ class ViewValidationResultsView(EditTargetView):
             # values previously saved!
             workflow_name = self.request.session.get('workflow_name', False)
 
-            if workflow_name:
+            # check if TARGET_IP is in the request, if so, use that value, otherwise
+            # use what's in the workflow context if we have a workflow_name around
+            if 'TARGET_IP' not in self.request.POST and workflow_name:
                 target_ip = self.get_value_from_workflow('TARGET_IP', '')
                 # target_port = self.get_value_from_workflow('TARGET_PORT', 443)
                 target_username = self.get_value_from_workflow('TARGET_USERNAME', '')
@@ -1503,7 +1522,7 @@ class ViewValidationResultsView(EditTargetView):
                 self.save_value_to_workflow('TARGET_IP', target_ip)
                 # self.save_value_to_workflow('TARGET_PORT', target_port)
                 self.save_value_to_workflow('TARGET_USERNAME', target_username)
-                self.save_value_to_workflow('TARGET_PASSWORD', target_username)
+                self.save_value_to_workflow('TARGET_PASSWORD', target_password)
 
             err_condition = False
 
@@ -2099,7 +2118,7 @@ class DeleteSkilletView(UpdateRepoView):
             for meta_file in skillet_path.glob('.meta-cnc.y*'):
                 print(f'Removing {meta_file.absolute()}')
                 meta_file.unlink()
-                meta_name = meta_file.name
+                skillet_filename = meta_file.name
 
         # remove blank directories that share the same name as the skillet
         if skillet_path.name == skillet_name:
@@ -2119,7 +2138,8 @@ class DeleteSkilletView(UpdateRepoView):
             messages.add_message(self.request, messages.ERROR, 'This repository may not be updated correctly!'
                                                                'Please remove the offending skillet and try again!')
 
-        git_utils.commit_local_changes(repo_dir, f'Deleted {skillet_name}', os.path.join(skillet_path_str, meta_name))
+        git_utils.commit_local_changes(repo_dir, f'Deleted {skillet_name}',
+                                       os.path.join(skillet_path_str, skillet_filename))
 
         return super().get_redirect_url(*args, **kwargs)
 
