@@ -1,0 +1,26 @@
+# part of the panhandler application with docs at
+# https://github.com/PaloAltoNetworks/panhandler/blob/develop/docs/metadata_configuration.rst
+name: config_diff_ansible_output
+label: Ansible Template
+description: |
+  Used to show config diff in Ansible Format
+
+type: template
+
+labels:
+  collection:
+   - Kitchen Sink
+
+variables:
+
+  - name: snippets
+    type_hint: hidden
+    default: ''
+
+snippets:
+  - name: meta-cnc-skeleton.conf
+    file: output.skillet.yaml.j2
+    template_title: Generated Skillet
+    output_type: text
+    outputs:
+      - name: SKILLET_CONTENT

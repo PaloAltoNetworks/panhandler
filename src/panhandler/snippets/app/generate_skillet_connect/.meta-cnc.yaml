@@ -11,7 +11,7 @@ variables:
     default: 10.10.10.10
     type_hint: fqdn_or_ip
   - name: TARGET_PORT
-    description: Panorama port
+    description: API Port
     default: 443
     type_hint: number
   - name: TARGET_USERNAME

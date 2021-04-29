@@ -123,6 +123,28 @@ class PanhandlerAppFormView(CNCBaseFormView):
     def get_snippet(self):
         return self.snippet
 
+    def get_simple_context(self):
+        """
+        Simple method to create a minimal context for render out to results.html and the like
+
+        :return: dict
+        """
+        context = dict()
+        context['header'] = self.header
+        context['title'] = self.title
+        context['base_html'] = self.base_html
+        context['app_dir'] = self.app_dir
+        context['snippet_name'] = self.get_snippet()
+        context['view'] = self
+        return context
+
+    def next_action(self):
+        """
+        Subclasses can override this to point their output to a different redirect or rendered template
+        :return: template or redirect
+        """
+        return HttpResponseRedirect(self.next_url)
+
     def load_skillet_by_name(self, skillet_name) -> (dict, None):
         """
         Loads application specific skillet
@@ -2187,12 +2209,21 @@ class GenerateSkilletConnectView(PanhandlerAppFormView):
             # grab the list of all named / saved configuration files
             saved_configs = panos.list_saved_configurations()
 
+            all_config_versions = panos.get_configuration_versions()
+            config_versions = sorted(all_config_versions, key=lambda x: int(x["version"]))[:-1]
+
             # create a pre_configs list so we can add a special item called 'Generate Baseline'
             # we also do not want 'running_config.xml' here as it never makes sense as the 'before' config
             pre_configs = list()
             for config in saved_configs:
                 if config != 'running_config.xml':
                     pre_configs.append(config)
+
+            # add these items to the pre and post configuration lists
+            for v in config_versions:
+                version_title = f'Previous_Running_{v.get("version", 1)}_{v.get("date", "Unknown")}'
+                pre_configs.append(version_title)
+                saved_configs.append(version_title)
 
             pre_configs.insert(0, 'Generated Baseline')
 
@@ -2225,8 +2256,8 @@ class GenerateSkilletOnlineView(PanhandlerAppFormView):
     def form_valid(self, form):
         try:
             workflow = self.get_workflow()
-            pre_config = workflow['pre_config']
-            post_config = workflow['post_config']
+            pre_config: str = workflow['pre_config']
+            post_config: str = workflow['post_config']
 
             # these values should be here from the previous step
             hostname = workflow['TARGET_IP']
@@ -2244,11 +2275,17 @@ class GenerateSkilletOnlineView(PanhandlerAppFormView):
 
             if pre_config == 'Generated Baseline':
                 pre_config_str = panos.generate_baseline(reset_hostname=False)
+            elif pre_config.startswith('Previous_Running_'):
+                version = pre_config.split('_')[2]
+                pre_config_str = panos.get_configuration_version(version)
             else:
                 pre_config_str = panos.get_saved_configuration(pre_config)
 
             if post_config == 'Candidate Config':
                 post_config_str = panos.get_configuration(config_source='candidate')
+            elif post_config.startswith('Previous_Running_'):
+                version = post_config.split('_')[2]
+                post_config_str = panos.get_configuration_version(version)
             else:
                 post_config_str = panos.get_saved_configuration(post_config)
 
@@ -2263,7 +2300,7 @@ class GenerateSkilletOnlineView(PanhandlerAppFormView):
             else:
                 self.save_value_to_workflow('skillet_type', 'panos')
 
-            return HttpResponseRedirect(self.next_url)
+            return self.next_action()
 
         except LoginException as le:
             messages.add_message(self.request, messages.ERROR, f'Could not Authenticate to device: {le}')
@@ -2372,11 +2409,17 @@ class GenerateSetSkilletOnlineView(PanhandlerAppFormView):
 
             if pre_config == 'Generated Baseline':
                 pre_config_str = panos.generate_baseline(reset_hostname=False)
+            elif pre_config.startswith('Previous_Running_'):
+                version = pre_config.split('_')[2]
+                pre_config_str = panos.get_configuration_version(version)
             else:
                 pre_config_str = panos.get_configuration(pre_config)
 
             if post_config == 'Candidate Config':
                 post_config_str = panos.get_configuration(config_source='candidate')
+            elif post_config.startswith('Previous_Running_'):
+                version = post_config.split('_')[2]
+                post_config_str = panos.get_configuration_version(version)
             else:
                 post_config_str = panos.get_saved_configuration(post_config)
 
@@ -2394,11 +2437,12 @@ class GenerateSetSkilletOnlineView(PanhandlerAppFormView):
             snippets.append(snippet)
 
             self.save_value_to_workflow('snippets', snippets)
+            self.save_value_to_workflow('set_cli_cmds', set_cli_cmds)
             self.save_value_to_workflow('skillet_description', f'Skillet Generated from {hostname} using {pre_config}'
                                                                f'and {post_config}')
             self.save_value_to_workflow('skillet_type', 'template')
 
-            return HttpResponseRedirect(self.next_url)
+            return self.next_action()
 
         except LoginException as le:
             messages.add_message(self.request, messages.ERROR, f'Could not Authenticate to device: {le}')
@@ -2550,3 +2594,65 @@ class GenerateConfigTemplateView(PanhandlerAppFormView):
         except TargetConnectionException as tce:
             messages.add_message(self.request, messages.ERROR, f'Could not connect to device: {tce}')
             return self.form_invalid(form)
+
+
+class ConfigDiffSetCliConnectView(GenerateSkilletConnectView):
+    next_url = '/panhandler/show_config_diff_cli'
+    required_session_vars = []
+
+
+class ConfigDiffSetCLIOutput(GenerateSetSkilletOnlineView):
+    required_session_vars = []
+    header = "Configuration Differences (Set CLI)"
+    title = "Choose two configuration files"
+
+    def next_action(self):
+        context = self.get_simple_context()
+        snippets = self.get_value_from_workflow('set_cli_cmds', [])
+        context["results"] = "<br/>".join(snippets)
+        return render(self.request, 'pan_cnc/results.html', context=context)
+
+
+class ConfigDiffSkilletConnectView(GenerateSkilletConnectView):
+    next_url = '/panhandler/show_config_diff_skillet'
+    required_session_vars = []
+
+
+class ConfigDiffSkilletOutput(GenerateSkilletOnlineView):
+    required_session_vars = []
+    header = "Configuration Differences (Skillet)"
+    title = "Choose two configuration files"
+
+    def next_action(self):
+        self.title = "Skillet Format"
+        context = self.get_simple_context()
+        snippets = self.get_value_from_workflow('snippets', [])
+
+        template_skillet = self.load_skillet_by_name('config_diff_skillet_output')
+        t = TemplateSkillet(template_skillet)
+        output = t.execute({'snippets': snippets})
+        context['output_template'] = output.get('template', '')
+        return render(self.request, 'pan_cnc/results.html', context=context)
+
+
+class ConfigDiffAnsibleConnectView(GenerateSkilletConnectView):
+    next_url = '/panhandler/show_config_diff_ansible'
+    required_session_vars = []
+
+
+class ConfigDiffAnsibleOutput(GenerateSkilletOnlineView):
+    required_session_vars = []
+    header = "Configuration Differences"
+    title = "Choose two configuration files"
+
+    def next_action(self):
+        self.title = "Ansible Format"
+        context = self.get_simple_context()
+        snippets = self.get_value_from_workflow('snippets', [])
+
+        template_skillet = self.load_skillet_by_name('config_diff_ansible_output')
+
+        t = TemplateSkillet(template_skillet)
+        output = t.execute({'snippets': snippets})
+        context['output_template'] = output.get('template', '')
+        return render(self.request, 'pan_cnc/results.html', context=context)
