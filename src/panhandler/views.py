@@ -2607,9 +2607,14 @@ class ConfigDiffSetCLIOutput(GenerateSetSkilletOnlineView):
     title = "Choose two configuration files"
 
     def next_action(self):
+        self.title = "Set Command Format"
         context = self.get_simple_context()
         snippets = self.get_value_from_workflow('set_cli_cmds', [])
-        context["results"] = "<br/>".join(snippets)
+
+        template_skillet = self.load_skillet_by_name('config_diff_setcli_output')
+        t = TemplateSkillet(template_skillet)
+        output = t.execute({'set_cli_cmds': snippets})
+        context['output_template'] = output.get('template', '')
         return render(self.request, 'pan_cnc/results.html', context=context)
 
 
