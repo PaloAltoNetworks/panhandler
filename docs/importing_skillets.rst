@@ -1,10 +1,10 @@
 Adding a New Skillet Repository
-===============================
+-------------------------------
 
 Panhandler is preloaded with a wide set of skillets yet you may still have to manually add skillet repos.
 
 Import a New Skillet
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 From the main menu, choose `Import Skillets`.
 
@@ -45,7 +45,7 @@ At this stage, going to the `Template Library` will show any additional skillets
 
 
 Update a Skillet Repository
----------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 From the main menu, choose `Repositories`.
 
@@ -65,7 +65,7 @@ Choose `Update to Latest` to check for and pull template updates.
 
 
 Using a Private Git Repository
-------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to use private repositories, you must first import the Panhandler public SSH key
 into your upstream repository or account.

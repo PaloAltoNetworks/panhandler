@@ -1,5 +1,5 @@
 PAN-OS Validation Skillets
-==========================
+--------------------------
 
 
 PAN-OS Validation skillets are used to check the compliance of a PAN-OS device configuration. They are comprised
@@ -16,7 +16,7 @@ things like configuration backups, or devices where direct API access is not pos
 
 
 Validation Tests
------------------
+----------------
 
 Each test is evaluated using jinja_ boolean expressions. This means each test can only result in a pass or fail. In
 order to perform simple logical operations on the XML configuration, it must first be converted into variables that
@@ -25,7 +25,7 @@ with some logical operation.
 
 
 Variable Capturing
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Panhandler will automatically inject the 'config' variable into the validation skillet
 context to simplify capturing additional variables from it. The 'config' variable is the 'running'
@@ -60,7 +60,7 @@ what you want to capture are 'capture_pattern' and 'capture_object'. Both types 
 using an XPATH expression. The main difference is in how the results of that query are processed and returned.
 
 Capture Pattern
-^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~
 
 The 'capture_pattern' attribute will try to intelligently interpret the results of the XPATH query. This is most useful
 as in the above when you would like to return a list of element attributes, or a list of element text values.
@@ -77,7 +77,7 @@ In the above example, the variable 'zone_names' will be a list with the followin
 
 
 Capture Object
-^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~
 
 The 'capture_object' attribute will convert the returned XML into an dictionary object using the python 'xmltodict'
 library. This is especially useful when you want to perform a large number of tests on the same basic part of the
@@ -100,7 +100,7 @@ In the example above, the variable 'interface_with_ip' will have the value:
 
 
 Validation Testing
-------------------
+~~~~~~~~~~~~~~~~~~
 
 Once you have captured the various variables you want to test, use the 'validate' cmd type.
 
@@ -121,7 +121,7 @@ this example, if zone_names is defined and has a value, then the test will pass.
 
 
 A more complex example
-^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~
 
 This example is slightly more complex and uses a number of features to accomplish this compliance check:
 
@@ -202,10 +202,11 @@ for `STIG <https://public.cyber.mil/stigs/>`_ compliance.
 
 
 Hints, Tips, Tricks
---------------------
+-------------------
+
 
 Start with a Pass
-^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~
 
 Because you often need to know the structure of the configuration and the resulting objects, it is always a good idea
 to start with a fully configured PAN-OS NGFW that will 'pass' the validation test you are writing.
@@ -214,7 +215,7 @@ to start with a fully configured PAN-OS NGFW that will 'pass' the validation tes
 .. _`example validation`: https://github.com/PaloAltoNetworks/skilletlib/tree/master/example_skillets
 
 Use Tools to explore the config
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You can also use the `Skillet Builder`_ tools found on github here: https://github.com/PaloAltoNetworks/skilletbuilder.
 These are a set of Skillets designed to aid in building Skillets and especially Validation Skillets. Start with an

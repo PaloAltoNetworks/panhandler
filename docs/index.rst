@@ -11,16 +11,9 @@ Panhandler
    :caption: Contents:
 
    overview
-   release_history
    running
    using
-   importing_skillets
-   creating_panos_skillets
-   creating_validation_skillets
-   environments
    skillets
-   variables
-   validation_skillets
    example_skillet
    examples/example_skillets
    debugging

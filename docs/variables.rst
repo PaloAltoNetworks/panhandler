@@ -8,7 +8,7 @@ generated into a web form that a user can fill out. Each variable can have it's 
 attribute in the variable declaration. This page lists all the available type hints for reference.
 
 Variable Types
-^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~
 
 * text
 
