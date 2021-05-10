@@ -30,7 +30,7 @@ to be configured, select the skillet to load, enter the form data, and submit. P
 grabs each configuration element, and loads into the specified device.
 
 Example Skillets
-================
+~~~~~~~~~~~~~~~~
 
 Many more examples can be found `on Github <https://github.com/topics/skillets>`_.
 

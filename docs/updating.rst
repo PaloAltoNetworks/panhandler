@@ -2,14 +2,14 @@
 .. _here: https://cloud.docker.com/u/paloaltonetworks/repository/docker/paloaltonetworks/panhandler/general
 
 Keeping Up to Date
-===================
+-------------------
 
 As panhandler is a quickly evolving project with new features added frequently, it is advisable to ensure you update
 to the latest periodically.
 
 
 Update Script
--------------
+~~~~~~~~~~~~~
 
 The following script is useful to update your version of Panhandler to the latest while retaining all your settings,
 port mappings, etc.
@@ -29,7 +29,7 @@ port mapping as the previous version.
 
 
 Manually updating the Panhandler Container
--------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Panhandler is primarily distributed as a docker image on Docker Hub_. To ensure you have the latest version, check
 for new releases here_. To manually launch a newer version via docker:
@@ -58,7 +58,7 @@ To ensure you have the most up to date software, perform a docker pull and speci
 
 
 Ensuring your Panhandler container is using the latest image
-------------------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you already have Panhandler running, you may need to use the following commands to first stop the existing
 container. Note the image tag in the PANHANDLER_IMAGE variable below. You may want to change this to 'latest'
@@ -75,7 +75,7 @@ or some other specific release tag like '2.2'
 
 
 Cleaning up old versions
-------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once you update to a newer version of Panhandler, the older images can still be left around, taking up space on your
 hard drive. A common best practice is to occasionally remove old images with the following docker command:

@@ -1,7 +1,7 @@
 .. _Windows:
 
 Windows Installation
-====================
+--------------------
 
 Running panhandler on Windows is possible through docker. The most reliable setup method at this time is to run docker
 commands directly through PowerShell backed by WSL 2. This process will require multiple reboots so plan accordingly.
@@ -9,7 +9,7 @@ Other installation methods may not provide appropriate access to the docker daem
 container resulting in certain skillet types not functioning.
 
 Install WSL 2
--------------
+~~~~~~~~~~~~~
 
 Begin by installing WSL 2. Microsoft has good documentation on how to do this here:
 
@@ -18,7 +18,7 @@ https://docs.microsoft.com/en-us/windows/wsl/install-win10
 If unsure about a Linux distribution to use, choose the latest Ubuntu. Verify you can access WSL 2 before continuing.
  
 Install Docker Desktop
------------------------
+~~~~~~~~~~~~~~~~~~~~~~
  
 After WSL 2 functionality is verified, install the latest Docker Desktop for Windows using the following tutorial from
 docker.
@@ -53,7 +53,7 @@ You should get an output similar to this:
 .. image:: images/ph-windows-2.png
 
 Install Panhandler
-------------------
+~~~~~~~~~~~~~~~~~~
 
 At this point, you are ready to install and start panhandler. In PowerShell, issue this command to pull down the latest
 panhandler image.
@@ -108,7 +108,7 @@ http://localhost:8080/
 The installation process is now complete.
 
 Stopping and Starting Panhandler
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you wish to stop panhandler from running until you restart it, you can do so with the PowerShell command:
 
@@ -123,7 +123,7 @@ Likewise, this process can be restarted with the command:
   docker start panhandler
 
 Upgrading Panhandler
---------------------
+~~~~~~~~~~~~~~~~~~~~
 
 Only one more command is required to upgrade panhandler. The process is to delete the old container, update the image,
 and start a new container.
@@ -141,7 +141,7 @@ image and start it. The volumes you created earlier will be still be available a
 you use the commands as they are.
 
 Troubleshooting Windows Install
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 If you run into either of the following errors when trying to install a Linux distribution: 
 

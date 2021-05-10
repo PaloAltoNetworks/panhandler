@@ -154,3 +154,9 @@ are encouraged to use WSL2.
 
 Please ensure you have the latest docker version installed for the best results.
 
+.. include:: windows_install.rst
+
+
+.. include:: switching_dev_latest.rst
+
+.. include:: updating.rst
