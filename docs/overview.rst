@@ -16,16 +16,23 @@ including:
 
     + panorama: load into Panorama and commit
 
-    + gpcs: load into Panorama with a push to GPCS
-
     + template: simple text render to the screen
+
+    + terraform: deploy infra via Terraform templates
+
+    + rest: interact with REST based APIs
+
+    + docker: launch docker containers
 
 
 To load a configuration into a device with panhandler, the user simply has to add the target information for the device
 to be configured, select the skillet to load, enter the form data, and submit. Panhandler then captures the form data,
 grabs each configuration element, and loads into the specified device.
 
+Example Skillets
+================
 
+Many more examples can be found `on Github <https://github.com/topics/skillets>`_.
 
 
 

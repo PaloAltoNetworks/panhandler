@@ -1,8 +1,14 @@
+.. _SLI: https://gitlab.com/panw-gse/as/sli
+.. _Skillet Builder: https://skilletbuilder.readthedocs.io/en/latest/building_blocks/xml_and_skillets.html#tools-to-find-the-xpath
+.. _YAML Syntax:
+
 Example Skillet
 ---------------
 
 
-In this example, we will create a skillet that allows the user to customize a single variable.
+In this example, we will create a skillet that allows the user to customize a single variable. Of
+course, finding the correct XML and XPath information is not at all obvious. However, there are
+many tools available to assist with this such as `SLI`_ and `Skillet Builder`_.
 
 
 XML Fragment
@@ -41,8 +47,11 @@ For example, this portion of the configuration describes the log-settings we wou
 Notice here we have defined one variable: `MGMT_IP`. This will allow the user to insert their own management ip when
 deploying.
 
-.meta-cnc file
-==============
+Skillet file
+============
+
+The skillet file itself is a YAML file with a suffix of `.skillet.yaml`. You may also
+prefix the filename, for example: `example.skillet.yaml`. See `YAML Syntax`_ for complete details.
 
 .. code-block:: yaml
 
@@ -77,7 +86,7 @@ configuration this fragment should be inserted (xpath) and where to find the fra
 Rendered Form
 ==============
 
-This `.meta-cnc.yaml` will produce the following web form in Panhandler:
+This `example.skillet.yaml` will produce the following web form in Panhandler:
 
 .. image:: images/ph-example-skillet.png
 

@@ -189,6 +189,17 @@ separated list of attributes to check.
 For more information about all available custom filters and their example uses, see the `list of filters`_ documentation
 here_.
 
+PAN-OS Validation Examples
+--------------------------
+
+To get a sense of all that is possible, here are a couple of complete examples.
+
+`CIS Benchmarks <https://gitlab.com/panw-gse/as/cis-benchmarks>`_ will validate a PAN-OS
+device for `CIS <https://www.cisecurity.org/>`_ compliance.
+
+`STIG Benchmarks <https://gitlab.com/panw-gse/as/stig_skillets>`_ will validate a PAN-OS device
+for `STIG <https://public.cyber.mil/stigs/>`_ compliance.
+
 
 Hints, Tips, Tricks
 --------------------
