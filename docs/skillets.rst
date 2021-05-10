@@ -1,11 +1,11 @@
 Skillets
 ========
 
-The heart of Panhandler is the `.meta-cnc.yaml` file. This allows a set of configuration snippets, known as a skillet,
+The heart of Panhandler is the `.skillet.yaml` file. This allows a set of configuration snippets, known as a skillet,
 to be shared and consumed as a single unit. For example, to configure a default security profile you may need to
 configure multiple different parts of the PAN-OS configuration. Panhandler allows you to group those different 'pieces'
 and share them among different devices as a single unit. Often times these configuration bits
-(affectionately called 'skillets') need slight customization before deployment to a new device. The `.meta-cnc.yaml`
+(affectionately called 'skillets') need slight customization before deployment to a new device. The `.skillet.yaml`
 file provides a means to templatize these configurations and present a list of customization points, or variables,
 to the end user or consumer.
 
@@ -27,12 +27,12 @@ Basic concepts
 In order to add multiple 'bits' of configuration to a device, we need to know the following things:
 
 * XML Configuration fragment with optional variables defined in jinja2 format
-* xpath where this xml fragment should be inserted into the candidate configuration
+* XPath where this xml fragment should be inserted into the candidate configuration
 * the order in which these XML fragments must be inserted
 * a list of all variables that require user input
 * target version requirements. For example: PAN-OS 8.0 or higher
 
-This is all accomplished by adding multiple files each containing an XML configuration fragment and a `.meta-cnc.yaml`
+This is all accomplished by adding multiple files each containing an XML configuration fragment and a `.skillet.yaml`
 file that describes the load order, variables, target requirements, etc.
 
 
@@ -40,9 +40,9 @@ YAML syntax
 -----------
 
 Each `skillet` is structured as a series of files in a single directory. This directory may contain
-a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. Note the following:
+a number of template files (XML, YAML, JSON, etc) and a `.skillet.yaml` file. Note the following:
 
-1. A `.meta-cnc.yaml` file that is formatted with using YAML with the following format:
+1. A `.skillet.yaml` file that is formatted with using YAML with the following format:
 
 .. code-block:: yaml
 
@@ -67,6 +67,10 @@ a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. N
 
 
 
+.. note::
+    You may also use an 'element' attribute instead of the 'file' attribute if you would rather include
+    the XML fragment inline as opposed to in a separate file.
+
 2. Multiple configuration files. Each should contain a valid template fragment and may use jinja2 variables.
    These templates may be XML, JSON, YAML, Text, etc. For PAN-OS devices, these are XML fragments from specific stanzas
    of the PAN-OS device configuration tree.
@@ -75,7 +79,7 @@ a number of template files (XML, YAML, JSON, etc) and a `.meta-cnc.yaml` file. N
 Metadata details
 ----------------
 
-Each .meta-cnc.yaml file must contain the following top-level attributes:
+Each .skillet.yaml file must contain the following top-level attributes:
 
 * name: unique name of this Skillet
 * label: Human readable label that will be displayed in the Panhandler UI

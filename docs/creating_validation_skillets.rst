@@ -39,6 +39,40 @@ You may also use the 'Skip Ahead to Snippet' in order to test a specific snippet
     you'll need play the snippets in order to get the proper context values in place.
 
 
+Manual Debugging with SLI
+=========================
+
+`SLI <https://gitlab.com/panw-gse/as/sli>`_ is a command line interface to
+`skilletlib <https://github.com/paloaltonetworks/skilletlib>`_ and offers
+a great way to test and discover all the various features of skillets.
+
+SLI makes it easy to quickly verify XPath queries, capture queries, and so on.
+
+.. code-block:: bash
+
+    # Test and output a capture_list that displays names of all decryption policies
+    sli capture list  "/config/devices/entry[@name='localhost.localdomain']/vsys/entry/rulebase/decryption/rules/entry/@name"
+
+    # Same as above, except this command will store the output to the default context in the variable "decryption_rules"
+    sli capture -uc list "/config/devices/entry[@name='localhost.localdomain']/vsys/entry/rulebase/decryption/rules/entry/@name" decryption_rules
+
+    # Capturing an object works similar to capturing a list
+    sli capture object "/config/devices/entry[@name='localhost.localdomain']/vsys/entry/rulebase/decryption"
+
+    # Capturing an expression allows further processing on data already stored in the context
+    sli capture -uc expression "decryption_rules | json_query('[].entry[].category.member[]')"
+
+    # Windows requires an additional escape character on double quotes, a ` is required in addition to the \
+    sli capture -uc expression "decryption_obj | json_query('decryption.rules.entry[].\`"@name\`"')"
+
+
+SLI is available on `Pypi.org <https://pypi.org/project/sli/>`_ and can be easily installed like this:
+
+.. code-block:: bash
+
+    pip install sli
+
+
 Manual Debugging with Python
 ============================
 
