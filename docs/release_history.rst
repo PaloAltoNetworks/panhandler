@@ -2,7 +2,7 @@
 .. _inputs: https://github.com/PaloAltoNetworks/Skillets/blob/master/inputs/all_inputs/.meta-cnc.yaml
 
 Release History
-===============
+---------------
 
 
 V4.0

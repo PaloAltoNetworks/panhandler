@@ -1,5 +1,5 @@
 Switching between Latest and Develop Containers
-===============================================
+-----------------------------------------------
 
 PanHandler runs in a Docker container, the main build tagged as 'latest'.
 
@@ -8,7 +8,7 @@ want to work with develop and explore new features. Some skillets being develope
 
 
 Updating the Running Latest Version
------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 This script will install or update to the latest 'dev' image for Panhandler. This is recommended for developers
 or power-users who understand this code may be unstable and not all features may work all the time.
@@ -32,7 +32,7 @@ and run again. The example uses port 9999 for web access.
 
 
 Updating the Running Develop Version
-------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The following bash script can be copy-pasted into the terminal to stop the PanHandler process, pull the develop version,
 and run again. The example uses port 9999 for web access.
@@ -48,7 +48,7 @@ and run again. The example uses port 9999 for web access.
 
 
 Switching from Latest to Develop
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These commands still stop the latest main release version then pull down and run the latest develop version.
 The latest release container will be deleted.
@@ -65,7 +65,7 @@ The latest release container will be deleted.
 
 
 Switching from Develop to Latest
---------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 These commands still stop the develop  version then pull down and run the latest main release version.
 The develop version container will be deleted.
@@ -81,6 +81,6 @@ The develop version container will be deleted.
     docker run -t -p 9999:80 -t -v $HOME/.pan_cnc:/home/cnc_user/.pan_cnc $PANHANDLER_IMAGE_M
 
 
-When switching between dev and latest clear the cache with:
+When switching between dev and latest clear the cache with the following link:
 
 http://localhost:9999/clear_cache

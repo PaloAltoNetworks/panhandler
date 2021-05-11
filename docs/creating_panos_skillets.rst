@@ -19,7 +19,7 @@ supported options for skillet generation are:
 
 
 Skillet Editor
-==============
+~~~~~~~~~~~~~~
 
 The Skillet Editor allows you to copy, edit, create, and delete Skillets in a local branch
 of a repository. The Editor allows GUI based editing of all aspects of a Skillet including
@@ -43,7 +43,7 @@ The Skillet Editor currently supports the following skillet types:
 
 
 Other Tools
-===========
+~~~~~~~~~~~
 
 If you prefer a CLI experience, check out `SLI <https://gitlab.com/panw-gse/as/sli>`_
 

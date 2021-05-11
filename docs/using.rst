@@ -94,4 +94,8 @@ rendered XML snippets and the xpaths where they will be inserted into the config
 
 
 
+.. include:: importing_skillets.rst
+
+
+.. include:: environments.rst
 

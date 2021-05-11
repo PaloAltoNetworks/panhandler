@@ -94,7 +94,8 @@ Optional top level attributes:
 
 * depends: List of dicts containing repository urls and branches that this skillet depends on
 * labels: Extensible list of key/value pairs that offers additional, optional, functionality. See here for a
- complete list :ref:`Labels`.
+    complete list :ref:`Labels`.
+
 
 .. note::
 
@@ -103,7 +104,7 @@ Optional top level attributes:
 
 
 Skillet Collections
-^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~
 
 Each Skillet should belong to at least one 'Collection'. Collections are used to group like skillets. SKillets
 with no `collection` label will be placed in the 'Unknown' Collection.
@@ -123,7 +124,7 @@ See :ref:`Labels` for a complete list of all labels supported by Panhandler.
 
 
 Snippet details per Metadata type
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Required fields for each metadata type is listed below:
 
@@ -177,7 +178,7 @@ Required fields for each metadata type is listed below:
     See Example here: :ref:`example_python`
 
 Defining Variables for User input
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+----------------------------------
 
 Each skillet can define multiple variables that will be interpolated using the Jinja2 templating language. Each
 variable defined in the `variables` list should define the following:
@@ -209,8 +210,8 @@ variable defined in the `variables` list should define the following:
     character of a variable name cannot be a digit.
 
 
-Variable Examples:
-^^^^^^^^^^^^^^^^^^
+Variable Example:
+~~~~~~~~~~~~~~~~~~
 
 Here is an example variable declaration.
 
@@ -234,7 +235,7 @@ Hints
 -----
 
 Ensuring all variables are defined
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 When working with a large amount of configuration temlates, it's easy to miss a variable definition. Use this one-liner
 to find them all.
@@ -256,14 +257,14 @@ more than one variable defined:
 
 
 YAML Syntax
-^^^^^^^^^^^
+~~~~~~~~~~~
 
 YAML is notoriously finicky about whitespace and formatting. While it's a relatively simple structure and easy to learn,
 it can often also be frustrating to work with, especially for large files. A good reference to use to check your
 YAML syntax is the `YAML Lint site <http://www.yamllint.com/>`_.
 
 Jinja Whitespace control
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 Care must usually be taken to ensure no extra whitespace creeps into your templates due to Jinja looping
 constructs or control characters. For example, consider the following fragment:
@@ -291,4 +292,12 @@ so:
 .. note:: Note the '-' after the leading '{%'. This instructs jinja to remove these blank lines in the resulting
     parsed output template.
 
+
+.. include:: creating_panos_skillets.rst
+
+
+.. include:: validation_skillets.rst
+
+
+.. include:: creating_validation_skillets.rst
 

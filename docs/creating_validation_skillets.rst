@@ -16,7 +16,7 @@ At the bottom of the Skillet Editor, click the 'Debug' button to enter the Skill
 
 
 Skillet Debugger
-================
+----------------
 
 The Skillet Debugger allows you to step through each snippet and see the context between steps. This is
 especially useful to understand the various captures and filters available.
@@ -40,7 +40,7 @@ You may also use the 'Skip Ahead to Snippet' in order to test a specific snippet
 
 
 Manual Debugging with SLI
-=========================
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 `SLI <https://gitlab.com/panw-gse/as/sli>`_ is a command line interface to
 `skilletlib <https://github.com/paloaltonetworks/skilletlib>`_ and offers
@@ -74,7 +74,7 @@ SLI is available on `Pypi.org <https://pypi.org/project/sli/>`_ and can be easil
 
 
 Manual Debugging with Python
-============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In some cases, it may be desirable to use Python or a debugger like PyCharm or pdb for building your validation
 skillet. Here is an example python script that will load a config file from the local filesystem and run a

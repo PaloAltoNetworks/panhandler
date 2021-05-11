@@ -29,8 +29,12 @@ To load a configuration into a device with panhandler, the user simply has to ad
 to be configured, select the skillet to load, enter the form data, and submit. Panhandler then captures the form data,
 grabs each configuration element, and loads into the specified device.
 
+
+.. include:: release_history.rst
+
+
 Example Skillets
-================
+~~~~~~~~~~~~~~~~
 
 Many more examples can be found `on Github <https://github.com/topics/skillets>`_.
 

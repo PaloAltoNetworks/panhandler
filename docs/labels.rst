@@ -10,7 +10,7 @@ behaviour is very much influenced by BGPv4 labels and Kubernetes labels.
 
 
 Panhandler Supported Labels
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 Panhandler recognizes the following labels:

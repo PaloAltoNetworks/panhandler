@@ -11,21 +11,11 @@ Panhandler
    :caption: Contents:
 
    overview
-   release_history
    running
-   windows_install
    using
-   switching_dev_latest
-   importing_skillets
-   creating_panos_skillets
-   creating_validation_skillets
-   environments
    skillets
-   variables
-   validation_skillets
    example_skillet
    examples/example_skillets
-   updating
    debugging
 
 
