@@ -14,7 +14,7 @@ variables:
     help_text: This Configuration file will be used as the before state for the evaluation of differences
 
   - name: post_config
-    description: Post-Configuratin Source
+    description: Post-Configuration Source
     type_hint: dropdown
     source: post_configs
     help_text: This Configuration file will be used as the after state for the evaluation of differences
