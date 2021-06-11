@@ -2,7 +2,7 @@
 FROM registry.gitlab.com/panw-gse/as/as-py-base-image@sha256:b189d625a5386b7aff598d44e6822e02f0731e30061b890eaec68d658ac52e36
 
 LABEL description="Panhandler"
-LABEL version="4.3"
+LABEL version="4.5"
 LABEL maintainer="tsautomatedsolutions@paloaltonetworks.com"
 
 ENV TERRAFORM_VERSION=0.11.13
