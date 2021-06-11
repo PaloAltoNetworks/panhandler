@@ -1,4 +1,4 @@
-GitPython==3.1.14
+GitPython==3.1.17
 PyYAML~=5.4.1
 azure-cli==2.7.0
 celery==5.0.5
@@ -18,9 +18,9 @@ pyAesCrypt==0.4.3
 requests==2.25.1
 requests-toolbelt==0.9.1
 urllib3==1.26.5
-virtualenv==20.4.4
+virtualenv==20.4.7
 xmldiff==2.4
 xmltodict==0.12.0
-skilletlib~=1.1.4
+skilletlib~=1.1.5
 #git+https://github.com/PaloAltoNetworks/skilletlib.git@develop#egg=skilletlib
 panforge==0.0.0.1
