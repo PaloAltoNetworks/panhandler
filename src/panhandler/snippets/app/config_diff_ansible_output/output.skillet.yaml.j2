@@ -29,6 +29,6 @@
       xpath: |
         {{ snippet.xpath }}
       element: |
-        {{ snippet.element | e }}
+        {{ snippet.element | minimal_indent(8) | e }}
 
 {%- endfor %}
