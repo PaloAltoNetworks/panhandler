@@ -1,0 +1,21 @@
+name: some_unique_name
+label: Human Readable label
+description: |
+    Long form description about what this skillet does.
+
+type: panos
+labels:
+
+variables:
+  - name: some_variable
+    description: Some Variable that can be used in this Skillet
+    default: A default value
+    type_hint: text
+
+snippets:
+{%- for s in snippets %}
+  - name: {{ s.name }}
+    xpath: {{ s.xpath }}
+    element: |-
+        {{ s.element | indent(width=8) | e }}
+{% endfor %}

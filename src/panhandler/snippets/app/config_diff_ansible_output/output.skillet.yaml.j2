@@ -1,0 +1,34 @@
+# Copy and paste this into a new ansible playbook. This relies on the paloaltonetworks.panos collection
+# and uses the panos_type_cmd module to directly interact with the XML API.
+# Ensure you provide the 'provider' information below in the 'vars' stanza or via some other mechanism such
+# as host vars.
+
+- name: Example Playbook
+  hosts: all
+  connection: local
+  gather_facts: False
+
+  collections:
+    - paloaltonetworks.panos
+
+  vars:
+    provider:
+      ip_address: ''
+      username: ''
+      password: ''
+      api_key: ''
+
+  tasks:
+
+{%- for snippet in snippets %}
+
+  - name: {{ snippet.name }}
+    panos_type_cmd:
+      provider: '{{ '{{ provider }}' }}'
+      cmd: 'set'
+      xpath: |
+        {{ snippet.xpath }}
+      element: |
+        {{ snippet.element | e }}
+
+{%- endfor %}

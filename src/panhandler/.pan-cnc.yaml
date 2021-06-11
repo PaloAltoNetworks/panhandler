@@ -4,7 +4,7 @@ label: Panhandler
 repositories:
   - name: Iron-Skillet
     url: https://github.com/PaloAltoNetworks/iron-skillet.git
-    branch: panos_v10.0
+    branch: panos_v10.1
     destination_directory: Iron-Skillet
 
 application_data:
@@ -198,3 +198,33 @@ views:
 
   - name: generate_config_template
     class: GenerateConfigTemplateView
+
+  - name: generate_config_diff_cli
+    class: ConfigDiffSetCliConnectView
+    menu: PAN-OS Tools
+    menu_option: Configuration Diff (Set CLI)
+    attributes:
+      header: Configuration Diff (Set CLI)
+
+  - name: show_config_diff_cli
+    class: ConfigDiffSetCLIOutput
+
+  - name: generate_config_diff_skillet
+    class: ConfigDiffSkilletConnectView
+    menu: PAN-OS Tools
+    menu_option: Configuration Diff (Skillet)
+    attributes:
+      header: Configuration Diff (Skillet)
+
+  - name: show_config_diff_skillet
+    class: ConfigDiffSkilletOutput
+
+  - name: generate_config_diff_ansible
+    class: ConfigDiffAnsibleConnectView
+    menu: PAN-OS Tools
+    menu_option: Configuration Diff (Ansible)
+    attributes:
+      header: Configuration Diff (Ansible)
+
+  - name: show_config_diff_ansible
+    class: ConfigDiffAnsibleOutput

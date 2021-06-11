@@ -1,0 +1,9 @@
+####
+# Enter these set commands directly into a SSH session of a PAN-OS Device
+####
+
+{%- for s in set_cli_cmds %}
+{{ s | e }}
+{%- endfor %}
+
+####

@@ -1,0 +1,24 @@
+name: config_diff_skillet_output
+label: Skillet Template
+description: |
+  Used to show config diff
+
+type: template
+
+labels:
+  collection:
+   - Kitchen Sink
+
+variables:
+
+  - name: snippets
+    type_hint: hidden
+    default: ''
+
+snippets:
+  - name: meta-cnc-skeleton.conf
+    file: output.skillet.yaml.j2
+    template_title: Generated Skillet
+    output_type: text
+    outputs:
+      - name: SKILLET_CONTENT
