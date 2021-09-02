@@ -45,6 +45,6 @@ The Skillet Editor currently supports the following skillet types:
 Other Tools
 ~~~~~~~~~~~
 
-If you prefer a CLI experience, check out `SLI <https://gitlab.com/panw-gse/as/sli>`_
+If you prefer a CLI experience, check out `SLI <https://pypi.org/project/sli/>`_
 
 For more information, see the `Skillet Builder <https://skilletbuilder.readthedocs.io/en/latest/>`_ documentation.
