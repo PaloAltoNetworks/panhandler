@@ -1,4 +1,4 @@
-.. _SLI: https://gitlab.com/panw-gse/as/sli
+.. _SLI: https://pypi.org/project/sli/
 .. _Skillet Builder: https://skilletbuilder.readthedocs.io/en/latest/building_blocks/xml_and_skillets.html#tools-to-find-the-xpath
 .. _YAML Syntax:
 

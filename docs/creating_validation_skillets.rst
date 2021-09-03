@@ -42,7 +42,7 @@ You may also use the 'Skip Ahead to Snippet' in order to test a specific snippet
 Manual Debugging with SLI
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-`SLI <https://gitlab.com/panw-gse/as/sli>`_ is a command line interface to
+`SLI <https://pypi.org/project/sli/>`_ is a command line interface to
 `skilletlib <https://github.com/paloaltonetworks/skilletlib>`_ and offers
 a great way to test and discover all the various features of skillets.
 
