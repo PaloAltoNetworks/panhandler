@@ -16,7 +16,7 @@ ENV COLUMNS=80
 ENV PYTHONHTTPSVERIFY=0
 WORKDIR /app
 
-RUN groupadd -g 998 docker && \
+RUN addgroup -g 998 docker && \
     usermod cnc_user -G docker,root
 
 RUN curl -k https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip \
