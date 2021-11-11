@@ -88,11 +88,6 @@ push_dev:
     - docker pull $TEST_IMAGE
     - docker tag $TEST_IMAGE "$CI_REGISTRY_IMAGE:dev"
     - docker push "$CI_REGISTRY_IMAGE:dev"
-
-    - docker login -u "$DOCKERHUB_USER" -p "$DOCKERHUB_PASSWORD" $DOCKERHUB_CI_REGISTRY
-    - docker pull $TEST_IMAGE
-    - docker tag $TEST_IMAGE "$CI_REGISTRY_IMAGE:dev"
-    - docker push "$CI_REGISTRY_IMAGE:dev"
   only:
     - develop
 
@@ -100,11 +95,6 @@ push_master:
   stage: push
   script:
     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
-    - docker pull $TEST_IMAGE
-    - docker tag $TEST_IMAGE "$CI_REGISTRY_IMAGE:latest"
-    - docker push "$CI_REGISTRY_IMAGE:latest"
-
-    - docker login -u "$DOCKERHUB_USER" -p "$DOCKERHUB_PASSWORD" $DOCKERHUB_CI_REGISTRY
     - docker pull $TEST_IMAGE
     - docker tag $TEST_IMAGE "$CI_REGISTRY_IMAGE:latest"
     - docker push "$CI_REGISTRY_IMAGE:latest"
