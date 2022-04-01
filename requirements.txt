@@ -13,6 +13,7 @@ oyaml==1.0
 pan-python==0.16.0
 paramiko~=2.7.1
 passlib~=1.7.2
+pathlib~=1.0.1
 pyAesCrypt==0.4.3
 requests==2.25.1
 requests-toolbelt==0.9.1
