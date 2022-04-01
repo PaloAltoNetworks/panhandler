@@ -75,6 +75,7 @@ docker_test:
   before_script:
     - python3 -m venv env
     - source env/bin/activate
+    - pip install --upgrade pip
     - pip install tox
   script:
     - cd /app
