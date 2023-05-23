@@ -14,7 +14,7 @@ pan-python==0.16.0
 paramiko~=2.7.1
 passlib~=1.7.2
 pyAesCrypt==0.4.3
-requests==2.25.1
+requests==2.31.0
 requests-toolbelt==0.9.1
 urllib3==1.26.5
 virtualenv==20.4.7
