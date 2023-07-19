@@ -1,6 +1,6 @@
 GitPython==3.1.17
 PyYAML~=5.4.1
-azure-cli==2.7.0
+azure-cli==2.40.0
 celery==5.0.5
 django~=3.1.8
 django-widget-tweaks==1.4.8
